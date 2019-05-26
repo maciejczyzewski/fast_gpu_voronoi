@@ -1,8 +1,21 @@
+|     | Research | Authors |
+|:----|:---------|:--------|
+|\[[slides](https://maciejczyzewski.github.io/fast_gpu_voronoi/slides.pdf)\] | __GPU-Accelerated Jump Flooding Algorithm for Voronoi Diagram in log*(n)__ [this] | Maciej A. Czyzewski |
+| [article](https://vgl.csa.iisc.ac.in/pdf/pub/ICVGIP14_Talha.pdf) | __Facet-JFA: Faster computation of discrete Voronoi diagrams__ [2014] | Talha Bin Masood, Hari Krishna Malladi, Vijay Natarajan |
+| [article](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.101.8568&rep=rep1&type=pdf) | __Jump Flooding in GPU with Applications to Voronoi Diagram and Distance Transform__ [2006] | Guodong Rong, Tiow-Seng Tan |
+
 Active research --> looking for friends!
 
-# Purpose of Project
+# Implemented Algorithms
 
-\[[slides](https://maciejczyzewski.github.io/fast_gpu_voronoi/slides.pdf)\]
+|                      | JFA\*           | JFA+    | JFA     |
+|----------------------|-----------------|---------|---------|
+| used improvement     | noise+selection | noise   | --      |
+| num. of needed steps | __log\*(n)__    | log4(p) | log2(p) |
+| step size            | p/(3^i)         | p/(2^i) | p/(2^i) |
+| research             | (our)           | (our)   | [Guodong 2006] |
+
+# Project Purpose
 
 | Our method                      | Current best          |
 |:-------------------------------:|:---------------------:|
@@ -10,26 +23,11 @@ Active research --> looking for friends!
 | ![JFA_star](docs/jfa_star2.gif) | ![JFA](docs/jfa2.gif) |
 | steps = log*(2000) = 4          | steps = log(720) ~= 10 |
 
-for x = 720; y = 720; seeds = 2000 (read as n = 2000; p = 720).
-
-# Implemented Algorithms
-
-|                      | JFA\*           | JFA+    | JFA     |
-|----------------------|-----------------|---------|---------|
-| used improvement     | noise+selection | noise   | --      |
-| num. of needed steps | log\*(n)        | log4(p) | log2(p) |
-| step size            | p/3^i           | p/2^i   | p/2^i   |
-
-# Research Papers
-
-- "Jump Flooding in GPU with Applications to Voronoi Diagram and Distance
-	Transform", _Guodong Rong, Tiow-Seng Tan, 2006_
-- "Facet-JFA: Faster computation of discrete Voronoi diagrams", _Talha Bin
-	Masoodi, Hari Krishna Malladi, Vijay Natarajan, 2014_
+_...for x = 720; y = 720; seeds = 2000 (read as n = 2000; p = 720)._
 
 # Installation & Example
 
-Project can be installed using pip:
+Project can be installed using `pip`:
 
 ```bash
 $ pip3 install fast_gpu_voronoi
@@ -64,6 +62,6 @@ $ pytest
 # Thanks
 
 <div align="center">
+  <img src="docs/PP_logo.jpg" alt="Poznan University of Technology" width="600px" />
   <img src="docs/opencl_logo.svg" alt="OpenCl" width="200px" />
-  <img src="docs/PP_logo.jpg" alt="Poznan University of Technology" width="200px" />
 </div>
