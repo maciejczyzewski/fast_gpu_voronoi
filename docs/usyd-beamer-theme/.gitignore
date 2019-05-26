@@ -1,0 +1,8 @@
+# files from make
+output
+
+# PDF logo
+USYDLogo-eps-converted-to.pdf
+
+# All pdf files
+*.pdf

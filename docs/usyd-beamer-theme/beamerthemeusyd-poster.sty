@@ -1,0 +1,93 @@
+\ProvidesPackage{beamerthemeusyd-poster}  % this style was created by Malcolm Ramsay
+
+\selectcolormodel{cmyk}
+\RequirePackage{tcolorbox}
+\RequirePackage{etoolbox}
+
+\tcbuselibrary{raster, skins}
+
+\mode<presentation>
+
+\usecolortheme{usyd}
+\usefonttheme{usyd}
+
+% Define default logo
+\gdef\USYD@logo{USYDLogo}
+\gdef\USYD@affiliationlogo{}
+
+% Default left and right poster logos
+\xdef\poster@logoleft{\USYD@affiliationlogo}
+\xdef\poster@logoright{\USYD@logo}
+
+% The logo defined with \logo is by default placed on the right.
+\def\logo#1{\gdef\poster@logoright{#1}}
+\def\affiliationlogo#1{\gdef\poster@logoleft{#1}}
+
+% commands to define custom left and right logos
+\def\logoleft#1{\gdef\poster@logoleft{#1}}
+\def\logoright#1{\gdef\poster@logoright{#1}}
+
+\setbeamertemplate{navigation symbols}{}  % no navigation on a poster
+
+%% Define block for text in poster
+
+\defbeamertemplate*{block begin}{bordered}{%
+  \tcbset{colframe=usydred,boxsep=0.3em,boxrule=0.2em,sharp corners,colback=usydwhite,fonttitle=\bfseries}
+  \begin{tcolorbox}[title=\insertblocktitle]
+}
+
+\defbeamertemplate*{block end}{borderd}{%
+  \end{tcolorbox}
+  \vspace{1em}
+}
+
+%% Define the headline of the poster
+
+\setbeamertemplate{headline}{%
+  \begin{beamercolorbox}[wd=\paperwidth]{headline}
+    % Coloured space before start of header
+    \vspace{2.5em}
+    \begin{tcbraster}[raster equal height, raster columns=5, width=\pagewidth, raster halign=center,
+      opacityback=0, opacityframe=0]
+      % Create the column for the left hand logo
+      \begin{tcolorbox}[valign=top]
+        \ifdefempty{\poster@logoleft}{}{\includegraphics{\poster@logoleft}}
+      \end{tcolorbox}
+      % Create the middle column with title, author and attributions
+      \begin{tcolorbox}[raster multicolumn=3]
+        \begin{center}
+          \usebeamercolor{title in headline}{\color{fg}\textbf{\LARGE{\inserttitle}}\\[2em]}
+          \usebeamercolor{author in headline}{\color{fg}\large{\insertauthor}\\[0.5em]}
+          \usebeamercolor{institute in headline}{\color{fg}\large{\insertinstitute}\\[0.5em]}
+        \end{center}
+      \end{tcolorbox}
+      % Create column for the right hand logo
+      \begin{tcolorbox}[valign=top]
+        \includegraphics[]{\poster@logoright}
+    \end{tcolorbox}
+    \end{tcbraster}
+    % Coloured space before the end of the coloured header section
+    \vspace{1em}
+  \end{beamercolorbox}
+
+  \begin{beamercolorbox}[wd=\paperwidth]{lower separation line head}
+  \end{beamercolorbox}
+}
+
+%% The bottom line of the poster
+
+\setbeamertemplate{footline}{
+  \leavevmode%
+  \begin{beamercolorbox}[ht=4ex,leftskip=1em,rightskip=1em]{author in head/foot}%
+    \hfill
+    \vskip1ex
+  \end{beamercolorbox}
+  \vskip0pt%
+  \begin{beamercolorbox}[wd=\paperwidth]{lower separation line foot}
+  \end{beamercolorbox}
+}
+
+\mode<all>
+
+% Use numbered bibliography labels instead of image
+\setbeamertemplate{bibliography item}{\insertbiblabel}
