@@ -2,6 +2,8 @@
   <img src="docs/figure_jka_star_intro.png" alt="JFA*" width="500px" /><br />
 </div>
 
+<br/>
+
 |     | Research | Authors |
 |:----|:---------|:--------|
 | \[[slides](https://maciejczyzewski.github.io/fast_gpu_voronoi/slides.pdf)\] | __GPU-Accelerated Jump Flooding Algorithm for Voronoi Diagram in log*(n)__ [this] | Maciej A. Czyzewski |
