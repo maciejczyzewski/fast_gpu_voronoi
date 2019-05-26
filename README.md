@@ -1,8 +1,13 @@
+<div align="center">
+  <img src="figure_jka_star_intro.png" alt="JFA*" width="500px" /><br />
+</div>
+
 |     | Research | Authors |
 |:----|:---------|:--------|
-|\[[slides](https://maciejczyzewski.github.io/fast_gpu_voronoi/slides.pdf)\] | __GPU-Accelerated Jump Flooding Algorithm for Voronoi Diagram in log*(n)__ [this] | Maciej A. Czyzewski |
-| [article](https://vgl.csa.iisc.ac.in/pdf/pub/ICVGIP14_Talha.pdf) | __Facet-JFA: Faster computation of discrete Voronoi diagrams__ [2014] | Talha Bin Masood, Hari Krishna Malladi, Vijay Natarajan |
-| [article](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.101.8568&rep=rep1&type=pdf) | __Jump Flooding in GPU with Applications to Voronoi Diagram and Distance Transform__ [2006] | Guodong Rong, Tiow-Seng Tan |
+| \[[slides](https://maciejczyzewski.github.io/fast_gpu_voronoi/slides.pdf)\] | __GPU-Accelerated Jump Flooding Algorithm for Voronoi Diagram in log*(n)__ [this] | Maciej A. Czyzewski |
+| \[[article](https://vgl.csa.iisc.ac.in/pdf/pub/ICVGIP14_Talha.pdf)\] | Facet-JFA: Faster computation of discrete Voronoi diagrams [2014] | Talha Bin Masood, Hari Krishna Malladi, Vijay Natarajan |
+| \[[article](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.101.8568&rep=rep1&type=pdf)\] | Jump Flooding in GPU with Applications to Voronoi Diagram and Distance Transform [2006] | Guodong Rong, Tiow-Seng Tan |
+
 
 Active research --> looking for friends!
 
@@ -21,7 +26,7 @@ Active research --> looking for friends!
 |:-------------------------------:|:---------------------:|
 | JFA\*                           | JFA                   |
 | ![JFA_star](docs/jfa_star2.gif) | ![JFA](docs/jfa2.gif) |
-| steps = log*(2000) = 4          | steps = log(720) ~= 10 |
+| steps = log\*(2000) = 4          | steps = log(720) ~= 10 |
 
 _...for x = 720; y = 720; seeds = 2000 (read as n = 2000; p = 720)._
 
@@ -62,6 +67,6 @@ $ pytest
 # Thanks
 
 <div align="center">
-  <img src="docs/PP_logo.jpg" alt="Poznan University of Technology" width="600px" />
+  <img src="docs/PP_logo.jpg" alt="Poznan University of Technology" width="600px" /><br />
   <img src="docs/opencl_logo.svg" alt="OpenCl" width="200px" />
 </div>
