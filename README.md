@@ -7,7 +7,7 @@ Active research --> looking for friends!
 | Our method                     | Current best          |
 |--------------------------------|-----------------------|
 | JFA\*                          | JFA                   |
-| ![JFA_star](docs/jfa_star.gif) | ![JFA](docs/jfa.gif)  |
+| ![JFA_star](docs/jfa_star2.gif) | ![JFA](docs/jfa2.gif)  |
 | steps = log*(2000) = 4         | steps = log(720) ~= 10|
 
 for x = 720; y = 720; seeds = 2000 (read as n = 2000; p = 720).
