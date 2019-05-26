@@ -35,6 +35,8 @@ from fast_gpu_voronoi.__version__ import __version__
 # convert jfa_star_intro.png -gravity center 
 #            -extent 800x800  jfa_star_intro2.png
 
+# gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/prepress -dNOPAUSE -dQUIET -dBATCH -sOutputFile=slides_small.pdf slides.pdf
+
 ##########################################################################
 
 

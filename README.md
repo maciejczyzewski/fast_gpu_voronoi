@@ -6,7 +6,7 @@
 
 |     | Research | Authors |
 |:----|:---------|:--------|
-| \[[slides](https://maciejczyzewski.github.io/fast_gpu_voronoi/slides.pdf)\] | __GPU-Accelerated Jump Flooding Algorithm for Voronoi Diagram in log*(n)__ [this] | Maciej A. Czyzewski |
+| \[[slides](https://maciejczyzewski.github.io/fast_gpu_voronoi/slides_small.pdf)\] | __GPU-Accelerated Jump Flooding Algorithm for Voronoi Diagram in log*(n)__ [this] | Maciej A. Czyzewski |
 | \[[article](https://vgl.csa.iisc.ac.in/pdf/pub/ICVGIP14_Talha.pdf)\] | Facet-JFA: Faster computation of discrete Voronoi diagrams [2014] | Talha Bin Masood, Hari Krishna Malladi, Vijay Natarajan |
 | \[[article](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.101.8568&rep=rep1&type=pdf)\] | Jump Flooding in GPU with Applications to Voronoi Diagram and Distance Transform [2006] | Guodong Rong, Tiow-Seng Tan |
 
