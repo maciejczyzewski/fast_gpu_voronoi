@@ -12,7 +12,12 @@
 
 # Implemented Algorithms
 
-![results](docs/figure_3d.png)
+
+<div align="right" width="300px">
+  <img src="docs/figure_3d.png" alt="results" width="300px" />
+</div>
+
+<div align="left" width="300px">
 
 |                      | JFA\*           | JFA+    | JFA     |
 |----------------------|-----------------|---------|---------|
@@ -20,6 +25,8 @@
 | num. of needed steps | __log\*(n)__    | log4(p) | log2(p) |
 | step size            | p/(3^i)         | p/(2^i) | p/(2^i) |
 | research             | (our)           | (our)   | [Guodong 2006] |
+
+</div>
 
 # Installation & Example
 
