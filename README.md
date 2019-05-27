@@ -12,6 +12,44 @@
 
 # Implemented Algorithms
 
+<table>
+<thead>
+<tr>
+<th></th>
+<th>JFA*</th>
+<th>JFA+</th>
+<th>JFA</th>
+<th rowspan="4"><img src="docs/figure_3d.png" alt="results" width="300px" /></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>used improvement</td>
+<td>noise+selection</td>
+<td>noise</td>
+<td>--</td>
+</tr>
+<tr>
+<td>num. of needed steps</td>
+<td><strong>log*(n)</strong></td>
+<td>log4(p)</td>
+<td>log2(p)</td>
+</tr>
+<tr>
+<td>step size</td>
+<td>p/(3^i)</td>
+<td>p/(2^i)</td>
+<td>p/(2^i)</td>
+</tr>
+<tr>
+<td>research</td>
+<td>(our)</td>
+<td>(our)</td>
+<td>[Guodong 2006]</td>
+</tr>
+</tbody>
+</table>
+
 <div align="left" width="300px">
 
 |                      | JFA\*           | JFA+    | JFA     |
