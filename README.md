@@ -12,6 +12,8 @@
 
 # Implemented Algorithms
 
+![results](docs/figure_3d.png)
+
 |                      | JFA\*           | JFA+    | JFA     |
 |----------------------|-----------------|---------|---------|
 | used improvement     | noise+selection | noise   | --      |
@@ -53,7 +55,7 @@ $ pip3 install -r requirements.txt
 $ pytest
 ```
 
-# Difference
+# Results
 
 | Our method                      | Current best          |
 |:-------------------------------:|:---------------------:|
