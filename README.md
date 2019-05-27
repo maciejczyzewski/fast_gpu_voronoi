@@ -19,7 +19,6 @@
 <th>JFA*</th>
 <th>JFA+</th>
 <th>JFA</th>
-<th rowspan="4"><img src="docs/figure_3d.png" alt="results" width="300px" /></th>
 </tr>
 </thead>
 <tbody>
@@ -28,6 +27,7 @@
 <td>noise+selection</td>
 <td>noise</td>
 <td>--</td>
+<td rowspan="4"><img src="docs/figure_3d.png" alt="results" width="350px" /></td>
 </tr>
 <tr>
 <td>num. of needed steps</td>
@@ -49,19 +49,6 @@
 </tr>
 </tbody>
 </table>
-
-<div align="left" width="300px">
-
-|                      | JFA\*           | JFA+    | JFA     |
-|----------------------|-----------------|---------|---------|
-| used improvement     | noise+selection | noise   | --      |
-| num. of needed steps | __log\*(n)__    | log4(p) | log2(p) |
-| step size            | p/(3^i)         | p/(2^i) | p/(2^i) |
-| research             | (our)           | (our)   | [Guodong 2006] |
-
-<img src="docs/figure_3d.png" alt="results" width="300px" />
-
-</div>
 
 # Installation & Example
 
