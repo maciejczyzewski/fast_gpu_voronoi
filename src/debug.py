@@ -3,7 +3,7 @@ import imageio
 import numpy as np
 from tqdm import tqdm
 
-DEBUG = False
+DEBUG = True
 
 debug_iterator = 0
 debug_name = 'debug'

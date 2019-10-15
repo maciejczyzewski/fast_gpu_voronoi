@@ -1,10 +1,12 @@
 from fast_gpu_voronoi import Instance
-from fast_gpu_voronoi.jfa import JFA_star
+from fast_gpu_voronoi.jfa import JFA, JFA_mod, JFA_star
 
-I = Instance(alg=JFA_star, x=50, y=50, \
+arr = [JFA, JFA_mod, JFA_star]
+
+I = Instance(alg=arr[2], x=1000, y=1000, \
         pts=[[ 7,14], [33,34], [27,10],
              [35,10], [23,42], [34,39]])
-I.run()
+print(I.run())
 
 def test_shape():
     print(I.M.shape)

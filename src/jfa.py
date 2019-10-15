@@ -1,14 +1,34 @@
 import time
 import math
 
-from .debug import save
-from .gpu import GPU_noise, GPUJFA9, GPUJFA9_noise, GPUJFA_star
+from .debug import save, DEBUG
 from .utils import do_boxes, do_split
+
+import pyopencl as cl
+import numpy as np
+
+# FIXME: szybsza metryka + rozne do testu
+# FIXME: optymalizacje GPU (triki z __local)
+# FIXME: przepisac na Cython?
+
+# tworzymy kontekst i preparujemy karte
+ctx = cl.create_some_context()
+queue = cl.CommandQueue(ctx)
+
+# flagi do obslugi pamieci
+mf = cl.mem_flags
 
 oo = 6666666666 # definicja nieskonczonosci
 
 # FIXME: [jfa_star] zrobic 2d tablice (rozdzielczosc -> rozny seed)/error
 #                   znalesc w ten sposob optymalna baze dla Log* (plynny error)
+
+def load_prg(name):
+    import os
+    name = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cl", name);
+    with open(name) as f:
+        prg = cl.Program(ctx, f.read()).build()
+    return prg
 
 class algorithm:
     def __init__(self, x_size, y_size, pts, ids):
@@ -21,6 +41,11 @@ class algorithm:
         self.prep_memory()
         self.prep_draw()
         self.prep_gpu()
+        self.prg_noise = load_prg("noise.cl")
+        self.prepare_prg()
+
+    def prepare_prg(self):
+        pass
 
     def prep_memory(self):
         """Przygotowanie pamieci."""
@@ -54,89 +79,95 @@ class algorithm:
         """Implementacja."""
         pass
 
+    def transferToGPU(self):
+        self.M_g = cl.Buffer(ctx, mf.COPY_HOST_PTR | mf.READ_ONLY, hostbuf=self.M)  # x*y*1
+        self.P1_g = cl.Buffer(
+            ctx,
+            mf.COPY_HOST_PTR | mf.READ_ONLY,
+            hostbuf=self.P1)  # x*y*1 a
+        self.P2_g = cl.Buffer(
+            ctx,
+            mf.COPY_HOST_PTR | mf.READ_ONLY,
+            hostbuf=self.P2)  # x*y*1 a
+
+        self.M_o = cl.Buffer(ctx, mf.WRITE_ONLY, self.M.nbytes)
+        self.P1_o = cl.Buffer(ctx, mf.WRITE_ONLY, self.P1.nbytes)
+        self.P2_o = cl.Buffer(ctx, mf.WRITE_ONLY, self.P2.nbytes)
+
+    def transferFromGPU(self):
+        cl.enqueue_copy(queue, self.M, self.M_g)
+        cl.enqueue_copy(queue, self.P1, self.P1_g)
+        cl.enqueue_copy(queue, self.P2, self.P2_g)
+
+    def swap(self):
+        self.M_g, self.M_o = self.M_o, self.M_g
+        self.P1_g, self.P1_o = self.P1_o, self.P1_g
+        self.P2_g, self.P2_o = self.P2_o, self.P2_g
+
+    def apply_noise(self):
+        """Arrays M, P should be on GPU"""
+        self.NOISE = np.random.randint(
+            len(self.pts), size=self.x_size * self.y_size, dtype=np.uint32)
+        self.PTS_g = cl.Buffer(ctx, mf.COPY_HOST_PTR | mf.READ_ONLY, hostbuf=self.pts)
+        self.IDS_g = cl.Buffer(ctx, mf.COPY_HOST_PTR | mf.READ_ONLY, hostbuf=self.ids)
+        self.NOISE_g = cl.Buffer(ctx, mf.COPY_HOST_PTR | mf.READ_ONLY, hostbuf=self.NOISE)
+        self.prg_noise.noise(queue, self.M.shape, None,
+                    self.M_g, self.P1_g, self.P2_g, self.PTS_g, self.IDS_g, self.NOISE_g, self.M_o, self.P1_o, self.P2_o,
+                    np.int32(self.x_size), np.int32(self.y_size))
+        self.swap()
+    def save(self, pref):
+        if DEBUG:
+            self.transferFromGPU()
+            save(self.M, self.x_size, self.y_size, prefix=pref)
+
 
 class JFA(algorithm):
+    def prepare_prg(self):
+        self.prg = load_prg("jfa.cl")
     def core(self):
         """JFA: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.101.8568&rep=rep1&type=pdf"""
+        self.transferToGPU()
         for factor in range(1, +oo, 1):
             f = math.ceil(max(self.x_size, self.y_size) / (2**(factor)))
             print("[step] = {}".format(f))
-            self.M, self.P1, self.P2 = \
-                GPUJFA9(self.M, self.P1, self.P2,
-                        self.x_size, self.y_size, step=f)
+            self.prg.JFA(queue, self.M.shape, None,
+              self.M_g, self.P1_g, self.P2_g, self.M_o, self.P1_o, self.P2_o,
+              np.int32(self.x_size), np.int32(self.y_size), np.int32(f))
+            self.swap()
             ################################################
-            save(self.M, self.x_size, self.y_size, prefix="jfa")
+            self.save("jfa")
             ################################################
             if f <= 1:
                 break
 
-
-class JFA_plus(algorithm):
-    def prep_gpu(self):
-        print("[PREP_GPU]")
-        self.M, self.P1, self.P2 = \
-            do_split(self.M, self.P)
-        import numpy as np # nalezy zaaplikowac szum
-        self.NOISE = np.random.randint(
-            len(self.pts), size=self.x_size * self.y_size, dtype=np.uint32)
-        self.M, self.P1, self.P2 = GPU_noise(self.M, self.P1, self.P2,
-                                             self.pts, self.ids, self.NOISE,
-                                             self.x_size, self.y_size)
-
+class JFA_mod(algorithm):
+    def prepare_prg(self):
+        self.prg = load_prg("jfa.cl")
     def core(self):
-        """Moja modyfikacja JFA: szum i redukcja kroku."""
-        for factor in range(1, +oo, 2):
-            f = math.ceil(max(self.x_size, self.y_size) / (2**(factor)))
+        """JFA: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.101.8568&rep=rep1&type=pdf"""
+        self.transferToGPU()
+        self.apply_noise()
+        import math
+        f = 2**int(math.log(max(self.x_size, self.y_size), 2))
+        print(math.log(2, max(self.x_size, self.y_size)))
+        while True:
             print("[step] = {}".format(f))
-            self.M, self.P1, self.P2 = \
-                GPUJFA9(self.M, self.P1, self.P2,
-                        self.x_size, self.y_size, step=f)
+            self.prg.JFA(queue, self.M.shape, None,
+              self.M_g, self.P1_g, self.P2_g, self.M_o, self.P1_o, self.P2_o,
+              np.int32(self.x_size), np.int32(self.y_size), np.int32(f))
+            self.swap()
             ################################################
-            save(self.M, self.x_size, self.y_size, prefix="jfa_plus")
+            self.save("jfa")
             ################################################
             if f <= 1:
                 break
-
-
-class JFA_plus_inplace(algorithm):
-    def prep_draw(self):
-        print("[PREP_DRAW]")
-        for i in range(0, len(self.pts)):
-            self.M[self.pts[i][0], self.pts[i][1]] = self.ids[i]
-            self.P[self.pts[i][0], self.pts[i][1]] = self.pts[i]
-        import numpy as np # nalezy zaaplikowac szum
-        self.NOISE = np.random.randint(
-            len(self.pts), size=self.x_size * self.y_size, dtype=np.uint32)
-
-    def core(self):
-        """Moja modyfikacja JFA: szum i redukcja kroku.
-        Wersja gdzie szum jest wykorzystywany tylko przy braku informacji."""
-        for factor in range(1, +oo, 2):
-            f = math.ceil(max(self.x_size, self.y_size) / (2**(factor)))
-            print("[step] = {}".format(f))
-            self.M, self.P1, self.P2 = \
-                GPUJFA9_noise(self.M, self.P1, self.P2,
-                              self.pts, self.ids, self.NOISE,
-                              self.x_size, self.y_size, step=f)
-            ################################################
-            save(self.M, self.x_size, self.y_size, prefix="jfa_plus_inplace")
-            ################################################
-            if f <= 1:
-                break
+            f/=2
 
 
 class JFA_star(algorithm):
-    def prep_gpu(self):
-        print("[PREP_GPU]")
-        self.M, self.P1, self.P2 = \
-            do_split(self.M, self.P)
-        import numpy as np # nalezy zaaplikowac szum
-        self.NOISE = np.random.randint(
-            len(self.pts), size=self.x_size * self.y_size, dtype=np.uint32)
-        self.M, self.P1, self.P2 = GPU_noise(self.M, self.P1, self.P2,
-                                             self.pts, self.ids, self.NOISE,
-                                             self.x_size, self.y_size)
-
+    def prepare_prg(self):
+        self.prg = load_prg("jfa_star.cl")
+        
     def core(self):
         """JFA*/JFA_star: szybka heurystyczna wersja JFA+1.
 
@@ -180,24 +211,29 @@ class JFA_star(algorithm):
         print("-------------------------> pts={} => {} LogStar"
               .format(len(self.pts), n))
 
+        self.transferToGPU()
+        self.apply_noise()
+
         i = 0
         for factor in range(1, +oo, 1):
             i += 1
             f = math.ceil(max(self.x_size, self.y_size) / (3**(factor)))
             print("[step] = {}".format(f))
-            self.M, self.P1, self.P2 = \
-                GPUJFA_star(self.M, self.P1, self.P2,
-                            self.x_size, self.y_size, step=f)
+            self.prg.JFA(queue, self.M.shape, None,
+              self.M_g, self.P1_g, self.P2_g, self.M_o, self.P1_o, self.P2_o,
+              np.int32(self.x_size), np.int32(self.y_size), np.int32(f))
+            self.swap()
             ################################################
-            save(self.M, self.x_size, self.y_size, prefix="jfa_star")
+            self.save("jfa_star")
             ################################################
             if f <= 1 or i == n + 1:
                 break
 
         f = 1 # tak jak JFA+1
         print("[step] = {}".format(f))
-        self.M, self.P1, self.P2 = \
-            GPUJFA_star(self.M, self.P1, self.P2,
-                        self.x_size, self.y_size, step=f)
+        self.prg.JFA(queue, self.M.shape, None,
+              self.M_g, self.P1_g, self.P2_g, self.M_o, self.P1_o, self.P2_o,
+              np.int32(self.x_size), np.int32(self.y_size), np.int32(f))
+        self.swap()
         ################################################
-        save(self.M, self.x_size, self.y_size, prefix="jfa_star")
+        self.save("jfa_star")

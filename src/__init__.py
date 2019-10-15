@@ -41,6 +41,7 @@ class Instance:
 
     def run(self):
         tmp = self.alg(self.x, self.y, self.pts, self.ids)
-        tmp.run()
+        ti = tmp.run()
         self.M_1d = tmp.M
         self.M    = np.reshape(self.M_1d, (self.x, self.y, 1))
+        return ti

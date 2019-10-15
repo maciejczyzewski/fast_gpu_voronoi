@@ -118,6 +118,7 @@ setup(
     license='MIT',
     packages=[NAME],
     package_dir={NAME: 'src'},
+    package_data={NAME: [os.path.join('cl', '*')]},
     classifiers=[
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
