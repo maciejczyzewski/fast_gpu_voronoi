@@ -31,7 +31,10 @@ __kernel void JFA(
 
     for(int i = 0; i < 3; i++)
         for(int j = 0; j < 3; j++) {
-            int idx = POS(x+pos[i], y+pos[j]);
+            int nx = x+pos[i];
+            int ny = y+pos[j];
+            if(nx < 0 || X_size <= nx || ny < 0 || Y_size <= ny) continue;
+            int idx = POS(nx, ny);
             if (P1_g[idx] == 0 && P2_g[idx] == 0) continue;
             float s2 = metric(P1_g[idx], P2_g[idx], x, y);
             if (bestS >= s2) {

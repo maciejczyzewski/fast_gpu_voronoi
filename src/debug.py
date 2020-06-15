@@ -3,7 +3,10 @@ import imageio
 import numpy as np
 from tqdm import tqdm
 
-DEBUG = True
+DEBUG = False
+
+if DEBUG:
+    os.environ["PYOPENCL_COMPILER_OUTPUT"] = "1"
 
 debug_iterator = 0
 debug_name = 'debug'
@@ -42,9 +45,11 @@ def save_to_file(M, prefix=""):
     else:
         name = '__{}_{}.png'.format(debug_iterator, debug_name)
     imageio.imwrite(name, M_color)
+    # imageio.imwrite("invalid"+name, (M < 1).astype(np.float))
 
 
 def save(M, x_size, y_size, force=False, prefix=""):
     """Szybki debug dowolnej postaci macierzy M."""
     if DEBUG or force:
         save_to_file(np.reshape(M, (x_size, y_size, 1)), prefix=prefix)
+

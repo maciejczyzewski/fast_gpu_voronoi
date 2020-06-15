@@ -31,7 +31,7 @@ def load_prg(name):
     return prg
 
 class algorithm:
-    def __init__(self, x_size, y_size, pts, ids):
+    def __init__(self, x_size, y_size, pts, ids, **kwargs):
         """Inicjalizuje algorytm instancja oraz szykuje GPU."""
         self.x_size = x_size
         self.y_size = y_size
@@ -42,26 +42,28 @@ class algorithm:
         self.prep_draw()
         self.prep_gpu()
         self.prg_noise = load_prg("noise.cl")
+        
+        self.dict = kwargs
         self.prepare_prg()
-
+        
     def prepare_prg(self):
         pass
 
     def prep_memory(self):
         """Przygotowanie pamieci."""
-        print("[PREP_MEMORY]")
+        # print("[PREP_MEMORY]")
         self.M, self.P = do_boxes(self.x_size, self.y_size)
 
     def prep_draw(self):
         """Narysowanie przykladu."""
-        print("[PREP_DRAW]")
+        # print("[PREP_DRAW]")
         for i in range(0, len(self.pts)):
             self.M[self.pts[i][0], self.pts[i][1]] = self.ids[i]
             self.P[self.pts[i][0], self.pts[i][1]] = self.pts[i]
 
     def prep_gpu(self):
         """Przygotowanie dla GPU."""
-        print("[PREP_GPU]")
+        # print("[PREP_GPU]")
         self.M, self.P1, self.P2 = \
             do_split(self.M, self.P)
 
@@ -80,19 +82,19 @@ class algorithm:
         pass
 
     def transferToGPU(self):
-        self.M_g = cl.Buffer(ctx, mf.COPY_HOST_PTR | mf.READ_ONLY, hostbuf=self.M)  # x*y*1
+        self.M_g = cl.Buffer(ctx, mf.COPY_HOST_PTR | mf.READ_WRITE, hostbuf=self.M)  # x*y*1
         self.P1_g = cl.Buffer(
             ctx,
-            mf.COPY_HOST_PTR | mf.READ_ONLY,
+            mf.READ_WRITE | mf.COPY_HOST_PTR,
             hostbuf=self.P1)  # x*y*1 a
         self.P2_g = cl.Buffer(
             ctx,
-            mf.COPY_HOST_PTR | mf.READ_ONLY,
+            mf.READ_WRITE | mf.COPY_HOST_PTR,
             hostbuf=self.P2)  # x*y*1 a
 
-        self.M_o = cl.Buffer(ctx, mf.WRITE_ONLY, self.M.nbytes)
-        self.P1_o = cl.Buffer(ctx, mf.WRITE_ONLY, self.P1.nbytes)
-        self.P2_o = cl.Buffer(ctx, mf.WRITE_ONLY, self.P2.nbytes)
+        self.M_o = cl.Buffer(ctx, mf.READ_WRITE, self.M.nbytes)
+        self.P1_o = cl.Buffer(ctx, mf.READ_WRITE, self.P1.nbytes)
+        self.P2_o = cl.Buffer(ctx, mf.READ_WRITE, self.P2.nbytes)
 
     def transferFromGPU(self):
         cl.enqueue_copy(queue, self.M, self.M_g)
@@ -120,10 +122,25 @@ class algorithm:
             self.transferFromGPU()
             save(self.M, self.x_size, self.y_size, prefix=pref)
 
+class Brute(algorithm):
+    def prepare_prg(self):
+        self.prg = load_prg("brute.cl")
+    def core(self):
+        self.PTS_g = cl.Buffer(ctx, mf.COPY_HOST_PTR | mf.READ_ONLY, hostbuf=self.pts)
+        self.IDS_g = cl.Buffer(ctx, mf.COPY_HOST_PTR | mf.READ_ONLY, hostbuf=self.ids)
+        self.M_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.M.nbytes)
+        self.P1_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.P1.nbytes)
+        self.P2_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.P2.nbytes)
+        self.prg.Brute(queue, self.M.shape, None,
+          self.PTS_g, self.IDS_g, self.M_g, self.P1_g, self.P2_g, 
+          np.int32(self.pts.shape[0]), np.int32(self.x_size), np.int32(self.y_size))
+        self.save("jfa")
+        self.transferFromGPU()
 
 class JFA(algorithm):
     def prepare_prg(self):
         self.prg = load_prg("jfa.cl")
+
     def core(self):
         """JFA: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.101.8568&rep=rep1&type=pdf"""
         self.transferToGPU()
@@ -139,6 +156,7 @@ class JFA(algorithm):
             ################################################
             if f <= 1:
                 break
+        self.transferFromGPU()
 
 class JFA_mod(algorithm):
     def prepare_prg(self):
@@ -162,7 +180,86 @@ class JFA_mod(algorithm):
             if f <= 1:
                 break
             f/=2
+        self.transferFromGPU()
 
+class JFA_test(algorithm):
+    """
+    options:
+        * method: square/circle/circle_random
+        * step_size: Integer
+        * step_as_power: True/False
+        * noise: True/False
+    """
+    def prepare_prg(self):
+        self.prg_square = load_prg("jfa.cl")
+        self.prg_circle = load_prg("jfa_star.cl")
+        self.prg_random_circle = load_prg("jfa_circle.cl")
+        self.prg_regular_circle = load_prg("jfa_regular.cl")
+    def core(self):
+        self.transferToGPU()
+        if self.dict.get("noise", False):
+            self.apply_noise()
+
+        base = self.dict.get("step_size", 2)
+        d = max(self.x_size, self.y_size)
+        steps = []
+        if self.dict.get("step_as_power", False):
+            f = 1
+            while f < d:
+                steps.append(f)
+                f*=base
+            steps=reversed(steps)
+        else:
+            f = 1
+            while True:
+                steps.append(d/f)
+                if steps[-1] <= 1:
+                    break
+                f*=base
+
+        # steps = [16, 8, 4, 2, 1, 2, 1]
+
+        method = self.dict.get("method", "square")
+        if method == "circle":
+            alg=self.prg_circle
+        elif method == "random_circle":
+            alg=self.prg_random_circle
+            angle = np.random.uniform(0, 2*np.pi, size=256)
+            angle.astype(np.float32)
+            cv = np.cos(angle, dtype=np.float32)
+            sv = np.sin(angle, dtype=np.float32)
+            self.cos_val = cl.Buffer(ctx, mf.COPY_HOST_PTR | mf.READ_ONLY, hostbuf=cv)
+            self.sin_val = cl.Buffer(ctx, mf.COPY_HOST_PTR | mf.READ_ONLY, hostbuf=sv)
+        elif method == "regular_circle":
+            alg=self.prg_regular_circle
+            angle = np.array([np.pi*i/6.0 for i in range(12)])
+            angle.astype(np.float32)
+            cv = np.cos(angle, dtype=np.float32)
+            sv = np.sin(angle, dtype=np.float32)
+            self.cos_val = cl.Buffer(ctx, mf.COPY_HOST_PTR | mf.READ_ONLY, hostbuf=cv)
+            self.sin_val = cl.Buffer(ctx, mf.COPY_HOST_PTR | mf.READ_ONLY, hostbuf=sv)
+        else:
+            alg=self.prg_square
+
+        for step in steps:
+            if method == "random_circle":
+                offset = np.random.randint(0, self.x_size*self.y_size)
+                alg.JFA(queue, self.M.shape, None,
+                  self.M_g, self.P1_g, self.P2_g, self.M_o, self.P1_o, self.P2_o,
+                  self.cos_val, self.sin_val, np.int32(offset),
+                  np.int32(self.x_size), np.int32(self.y_size), np.int32(step))
+            elif method == "regular_circle":
+                alg.JFA(queue, self.M.shape, None,
+                  self.M_g, self.P1_g, self.P2_g, self.M_o, self.P1_o, self.P2_o,
+                  self.cos_val, self.sin_val,
+                  np.int32(self.x_size), np.int32(self.y_size), np.int32(step))
+            else:
+                alg.JFA(queue, self.M.shape, None,
+                  self.M_g, self.P1_g, self.P2_g, self.M_o, self.P1_o, self.P2_o,
+                  np.int32(self.x_size), np.int32(self.y_size), np.int32(step))
+            self.swap()
+            self.save("jfa_test")
+        self.transferFromGPU()
 
 class JFA_star(algorithm):
     def prepare_prg(self):
@@ -237,3 +334,4 @@ class JFA_star(algorithm):
         self.swap()
         ################################################
         self.save("jfa_star")
+        self.transferFromGPU()

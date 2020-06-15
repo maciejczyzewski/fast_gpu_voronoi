@@ -1,12 +1,15 @@
-from fast_gpu_voronoi import Instance
-from fast_gpu_voronoi.jfa import JFA, JFA_mod, JFA_star
+from fast_gpu_voronoi import Instance, TestInstance
+from fast_gpu_voronoi.jfa import JFA, JFA_mod, JFA_star, Brute, JFA_test
 
-arr = [JFA, JFA_mod, JFA_star]
+import numpy as np
 
-I = Instance(alg=arr[2], x=1000, y=1000, \
-        pts=[[ 7,14], [33,34], [27,10],
-             [35,10], [23,42], [34,39]])
-print(I.run())
+arr = [JFA, JFA_mod, JFA_star, Brute, JFA_test]
+
+np.random.seed(123)
+pts = np.random.randint(0, 1000, ((1<<10), 2))
+I = TestInstance(alg=arr[4], x=1000, y=1000, \
+        pts=pts)
+print(I.run(method="square", step_as_powers=True, step_size=2, noise=True))
 
 def test_shape():
     print(I.M.shape)

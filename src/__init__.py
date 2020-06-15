@@ -45,3 +45,11 @@ class Instance:
         self.M_1d = tmp.M
         self.M    = np.reshape(self.M_1d, (self.x, self.y, 1))
         return ti
+
+class TestInstance(Instance):
+    def run(self, **kwargs):
+        tmp = self.alg(self.x, self.y, self.pts, self.ids, **kwargs)
+        ti = tmp.run()
+        self.M_1d = tmp.M
+        self.M    = np.reshape(self.M_1d, (self.x, self.y, 1))
+        return ti

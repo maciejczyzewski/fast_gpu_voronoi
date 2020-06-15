@@ -6,6 +6,13 @@ float metric(int x1, int y1, int x2, int y2) {
     return x*x + y*y;
 }
 
+int xor_shift(int x) {
+    x^= x << 13;
+    x^= x >> 17;
+    x^= x << 15;
+    return x;
+}
+
 __kernel void JFA(
     __global const uint  *M_g,
     __global const uint *P1_g,
@@ -13,6 +20,9 @@ __kernel void JFA(
     __global uint  *M_o,
     __global uint *P1_o,
     __global uint *P2_o,
+    __global const float *cos_val,
+    __global const float *sin_val,
+    int offset,
     int X_size,
     int Y_size,
     int step)
@@ -22,6 +32,8 @@ __kernel void JFA(
     int x = (gid-y)/Y_size;
 #define POS(X, Y) ((X)*Y_size + (Y))
 
+    int trig_id = xor_shift(gid+offset);
+
     int best_0  = M_g[POS(x,y)];
     int best_1a = P1_g[POS(x, y)];
     int best_1b = P2_g[POS(x, y)];
@@ -29,9 +41,10 @@ __kernel void JFA(
     if (best_0 == 0)
         bestS = 4294967296;
 
-    for(int i = 0; i < 12; i++) {
-        int A = (step * cos((float) ((6.28/12) * i) ));
-        int B = (step * sin((float) ((6.28/12) * i) ));
+    for(int i = 0; i < 9; i++) {
+        int A = (step * cos_val[(uchar)trig_id]);
+        int B = (step * sin_val[(uchar)trig_id]);
+        trig_id=xor_shift(trig_id);
         int nx = x+A;
         int ny = y+B;
         if(nx < 0 || X_size <= nx || ny < 0 || Y_size <= ny) continue;

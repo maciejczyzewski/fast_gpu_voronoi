@@ -6,6 +6,13 @@ float metric(int x1, int y1, int x2, int y2) {
     return x*x + y*y;
 }
 
+int xor_shift(int x) {
+    x^= x << 13;
+    x^= x >> 17;
+    x^= x << 15;
+    return x;
+}
+
 __kernel void JFA(
     __global const uint  *M_g,
     __global const uint *P1_g,
@@ -13,6 +20,8 @@ __kernel void JFA(
     __global uint  *M_o,
     __global uint *P1_o,
     __global uint *P2_o,
+    __global const float *cos_val,
+    __global const float *sin_val,
     int X_size,
     int Y_size,
     int step)
@@ -30,8 +39,8 @@ __kernel void JFA(
         bestS = 4294967296;
 
     for(int i = 0; i < 12; i++) {
-        int A = (step * cos((float) ((6.28/12) * i) ));
-        int B = (step * sin((float) ((6.28/12) * i) ));
+        int A = (step * cos_val[i]);
+        int B = (step * sin_val[i]);
         int nx = x+A;
         int ny = y+B;
         if(nx < 0 || X_size <= nx || ny < 0 || Y_size <= ny) continue;
