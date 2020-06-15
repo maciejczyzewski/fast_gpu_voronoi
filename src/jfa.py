@@ -7,6 +7,12 @@ from .utils import do_boxes, do_split
 import pyopencl as cl
 import numpy as np
 
+try:
+    from time import time_ns as our_time
+except:
+    print("[warning]: tested on python 3.7+")
+    from time import time as our_time
+
 # FIXME: szybsza metryka + rozne do testu
 # FIXME: optymalizacje GPU (triki z __local)
 # FIXME: przepisac na Cython?
@@ -69,12 +75,12 @@ class algorithm:
 
     def run(self):
         """Algorytm Voronoi-a."""
-        T1 = time.time_ns()
+        T1 = our_time()
         ################################################
         save(self.M, self.x_size, self.y_size, prefix="input")
         ################################################
         self.core()
-        T2 = time.time_ns()
+        T2 = our_time()
         return (T2 - T1) / 10**9
 
     def core(self):

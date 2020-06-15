@@ -1,3 +1,5 @@
+[**Demo (Google Colab)**](https://colab.research.google.com/drive/1feoho8M_1a4tOpYFDPkqDVJeWHwdhJox?usp=sharing)
+
 <div align="center">
   <img src="docs/figure_jka_star_intro.png" alt="JFA*" width="500px" /><br />
 </div>
