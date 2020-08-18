@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "fast_gpu_voronoi"
+version = "0.1.0"
+description = ""
+authors = ["Maciej A. Czyzewski <maciejanthonyczyzewski@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+numpy = "^1.19.1"
+matplotlib = "^3.3.1"
+scipy = "^1.5.2"
+numba = "^0.51.0"
+Pillow-SIMD = "^7.0.0"
+tqdm = "^4.48.2"
+r2pipe = "^1.4.2"
+pyopencl = "^2020.2"
+
+[tool.poetry.dev-dependencies]
+# poetry run pip3 uninstall pillow
+pytest = "^5.2"
+IPython = "^7.17.0"
+
+[tool.poetry.scripts]
+develop = 'fast_gpu_voronoi.develop:run'
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
