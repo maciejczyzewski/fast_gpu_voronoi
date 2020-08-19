@@ -1,5 +1,4 @@
 # PYOPENCL_CTX='0:1' poetry run python3 sandbox/search_space.py
-
 import faulthandler
 faulthandler.enable()
 
@@ -280,13 +279,13 @@ if __name__ == "__main__":
     #             (128, 128), (256, 256), (512, 512)]
     shape_arr = [(128, 128), (512, 512)]
     case_arr = [
-        #{gen_uniform: [use_num, 1]},
-        #{gen_uniform: [use_num, 2]},
+        {gen_uniform: [use_num, 1]},
+        {gen_uniform: [use_num, 2]},
         {gen_uniform: [use_num, 3]},
-        #{gen_uniform: [use_density, 0.0001]},
-        #{gen_uniform: [use_density, 0.001]},
-        {gen_uniform: [use_density, 0.01]},
-        {gen_uniform: [use_density, 0.1]},
+        {gen_uniform: [use_density, 0.0001]},
+        {gen_uniform: [use_density, 0.001]},
+        #{gen_uniform: [use_density, 0.01]},
+        #{gen_uniform: [use_density, 0.1]},
     ]
 
     def test_model(model, shape_arr, case_arr):
@@ -296,7 +295,7 @@ if __name__ == "__main__":
                 func, params = list(case.items())[0]
                 func_anchor, arg = params
                 num = max(1, func_anchor(shape, arg))
-                points, seeds = gen_uniform(shape=shape, num=num)
+                points, seeds = func(shape=shape, num=num)
                 x = Instance(points=points, seeds=seeds, shape=shape)
                 valid(x, model)
                 del x, points, seeds
