@@ -172,7 +172,7 @@ def copy_to_host(ptr, out, shape=None):
 
 # FIXME: add modifiers like `noise kernel`
 
-def step_function_default(shape):
+def step_function_default(shape, num=None):
     steps = []
     for factor in range(1, +oo, 1):
         f = math.ceil(max(shape) / (2**(factor)))
@@ -202,7 +202,7 @@ class Vorotron():
         if not self.config["brutforce"]:
             code = open("algo_template.cl", 'r').read()
             for key in ["anchor_type"]:
-                code = self.config[key](code)
+                code = self.config[key](code, self.config)
             self.kernel = load_prg_from_str(code)
 
     def do(self, x):
@@ -273,7 +273,7 @@ class Vorotron():
             T2 = timer()
             T_SUM = T2-T1
         else:
-            steps = self.config["step_function"](x["shape"])
+            steps = self.config["step_function"](x["shape"], x["points"].shape[0])
 
             for step in steps:
                 T1 = timer()
@@ -305,7 +305,7 @@ def use_density(shape, x): return int(shape[0] * shape[1] * x)
 def fn_loss(m1, m2):
     return 1 - np.count_nonzero((m1-m2) == 0)/(m1.shape[0]*m1.shape[1])
 
-def valid(model1, model2, x, n=5):
+def valid(model1, model2, x, n=4):
     loss_arr, time_1_arr, time_2_arr = [], [], []
 
     # FIXME: jesli nie ma duzych roznic przerwij
@@ -328,7 +328,7 @@ def valid(model1, model2, x, n=5):
         time_2_arr.append(t2)
 
     # FIXME: tylko debug
-    # save(m2)
+    save(m2)
 
     def avgarr(arr):
         shift = max(int(len(arr)*(0.1)), 1)
@@ -434,38 +434,104 @@ def do_test_error():
 
 ################################################################################
 
-def step_function_fake(shape):
-    return [2, 2, 4, 2, 1]
+def step_function_star(shape, num):
+    def LogStar(n):
+        if n <= 1:
+            return 0
+        if 1 < n and n <= 8:
+            return 1
+        if 8 < n and n <= 64:
+            return 2
+        if 64 < n and n <= 1024:
+            return 3
+        if 1024 < n and n <= 65536:
+            return 4
+        if 65536 < n:
+            return 5
+    n = LogStar(num)
+    steps, i = [], 0 # FIXME: enum
+    for factor in range(1, +oo, 1):
+        i += 1
+        f = math.ceil(max(shape) / (3**(factor)))
+        steps.append(f)
+        if f <= 1 or i == n + 1:
+            break
+    return steps
 
-# FIXME: modifiers here? to code?
+def step_function_factor3(shape, num=None):
+    steps = []
+    for factor in range(1, +oo, 1):
+        f = math.ceil(max(shape) / (3**(factor)))
+        steps.append(f)
+        if f <= 1:
+            break
+    return steps
 
-def mod_anchor_type__square(code):
-    return code.replace("#{ANCHOR_TYPE}", """
-    for(int i = 0; i < 3; i++)
-        for(int j = 0; j < 3; j++) {
-            int nx = x + pos[i];
-            int ny = y + pos[j];
-    """)
+# FIXME: modifiers here? to code? recurse?
+
+def mod_anchor_type__square(code, config=None):
+    if config["anchor_double"]:
+        code = code.replace("#{ANCHOR_TYPE}", """
+        int pos[] = {-step, -step/2, 0, step/2, step};
+        for(int i = 0; i < 5; i++)
+            for(int j = 0; j < 5; j++) {
+                int nx = x + pos[i];
+                int ny = y + pos[j];
+        """)
+    else:
+        code = code.replace("#{ANCHOR_TYPE}", """
+        int pos[] = {-step, 0, step};
+        for(int i = 0; i < 3; i++)
+            for(int j = 0; j < 3; j++) {
+                int nx = x + pos[i];
+                int ny = y + pos[j];
+        """)
+    return code
 
 # FIXME: 12 jako parametr
-def mod_anchor_type__circle(code):
-    return code.replace("#{ANCHOR_TYPE}", """
-    for(int i = 0; i < 12; i++) {
-        int A = (step * cos((float) ((6.28/12) * i) ));
-        int B = (step * sin((float) ((6.28/12) * i) ));
-        int nx = x+A;
-        int ny = y+B;
-    """)
+def mod_anchor_type__circle(code, config=None):
+    anchor_num = config["anchor_num"]
+    if config["anchor_double"]:
+        code = code.replace("#{ANCHOR_TYPE}", """
+        for(int j = 0; j < 2; j++)
+        for(int i = 0; i < #{ANCHOR_NUM}; i++) {
+            int A = (step * cos((float) ((6.28/#{ANCHOR_NUM}) * i) ));
+            int B = (step * sin((float) ((6.28/#{ANCHOR_NUM}) * i) ));
+            if (j == 0) {
+               A /= 2;
+               B /= 2;
+            }
+            int nx = x+A;
+            int ny = y+B;
+        """.replace("#{ANCHOR_NUM}", str(anchor_num//2)))
+    else:
+        code = code.replace("#{ANCHOR_TYPE}", """
+        for(int i = 0; i < #{ANCHOR_NUM}; i++) {
+            int A = (step * cos((float) ((6.28/#{ANCHOR_NUM}) * i) ));
+            int B = (step * sin((float) ((6.28/#{ANCHOR_NUM}) * i) ));
+            int nx = x+A;
+            int ny = y+B;
+        """.replace("#{ANCHOR_NUM}", str(anchor_num)))
+    return code
 
 SPACE = [
     #Real(0, 1, name='a'),
     #Real(0.25, 1, name='b'),
     #Real(0, 1, name='c'),
 
+    Integer(6, 12+6, name='anchor_num'),
     Categorical([False, True], name='noise'),
-    Categorical([step_function_default, step_function_fake], name='step_function'),
-    Categorical([mod_anchor_type__square, mod_anchor_type__circle], name='anchor_type'),
+    Categorical([False, True], name='anchor_double'),
+    Categorical([step_function_default,
+                 step_function_star,
+                 step_function_factor3],
+                name='step_function'),
+    Categorical([mod_anchor_type__square,
+                 mod_anchor_type__circle],
+                name='anchor_type'),
 ]
+
+# FIXME: WYKRESY BO NIC NIE WIDAC KOTELY!!!!!!!!!!!!!!!!!!!!
 
 DOMAIN = {
     "shapes":
