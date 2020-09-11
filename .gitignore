@@ -1,6 +1,6 @@
 .DS_Store
 *.pickle
-__*.png
+*.png
 __pycache__
 
 dist/
