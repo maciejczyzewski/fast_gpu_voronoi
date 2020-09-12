@@ -1,3 +1,5 @@
+# PYOPENCL_CTX='0:1'
+
 import os
 import gc
 import sys
@@ -64,10 +66,13 @@ SESSION = {
 
 # FIXME: niech sam znajduje najlepsze GPU
 SESSION["ctx"] = cl.create_some_context()
-SESSION["queue"] = cl.CommandQueue(SESSION["ctx"])
+SESSION["queue"] = cl.CommandQueue(SESSION["ctx"],
+    properties=cl.command_queue_properties.PROFILING_ENABLE) # FIXME?
 
 call("rm -f __*.png")
 call("mkdir -p results/")
+call("mkdir -p results/log/")
+call("mkdir -p results/code/")
 
 ################################################################################
 
@@ -215,7 +220,7 @@ class Vorotron():
 
         mat2d_flatten = x["__mat2d"].flatten().astype(np.uint32)
 
-        T1_all, T_SUM = timer(), 0
+        T_ALL_1, T_CPU, T_GPU = timer(), 0, 0
         
         # === INPUT ===
         if self.config["brutforce"]:
@@ -229,7 +234,6 @@ class Vorotron():
 
         # === OUTPUT ===
         mat2d_out = cl.Buffer(SESSION["ctx"], mf.READ_WRITE, mat2d_flatten.nbytes)
-
 
         # === NOISE ===
         if self.config["noise"]:
@@ -251,8 +255,9 @@ class Vorotron():
                                  np.int32(x["points"].shape[0]),
                                  )
             event.wait()
+            T_GPU += event.profile.end-event.profile.start
             T2 = timer()
-            T_SUM += T2-T1
+            T_CPU += T2-T1
 
             # DEBUG -----------------
             # x["__mat2d"] = copy_to_host(mat2d_flatten, mat2d_in, x["shape"])
@@ -274,8 +279,9 @@ class Vorotron():
                            np.int32(x["points"].shape[0]),
                            )
             event.wait()
+            T_GPU += event.profile.end-event.profile.start
             T2 = timer()
-            T_SUM = T2-T1
+            T_CPU = T2-T1
         else:
             steps = self.config["step_function"](x["shape"],
                                                  x["points"].shape[0],
@@ -295,15 +301,16 @@ class Vorotron():
                                np.int32(step)
                                )
                 event.wait()
+                T_GPU += event.profile.end-event.profile.start
                 T2 = timer()
-                T_SUM += T2-T1
+                T_CPU += T2-T1
                 mat2d_in, mat2d_out = mat2d_out, mat2d_in
             mat2d_in, mat2d_out = mat2d_out, mat2d_in
 
-        T2_all = timer()
+        T_ALL_2 = timer()
         x["__mat2d"] = copy_to_host(mat2d_flatten, mat2d_out, x["shape"])
         # return x, T_SUM, T2_all-T1_all
-        return x, T2_all-T1_all, T_SUM
+        return x, T_GPU, T_ALL_2-T_ALL_1, T_CPU
 
 ################################################################################
 
@@ -313,7 +320,7 @@ def use_density(shape, x): return int(shape[0] * shape[1] * x)
 def fn_loss(m1, m2):
     return 1 - np.count_nonzero((m1-m2) == 0)/(m1.shape[0]*m1.shape[1])
 
-def valid(model1, model2, x, n=4):
+def valid(model1, model2, x, n=10):
     loss_arr, time_1_arr, time_2_arr = [], [], []
 
     # FIXME: jesli nie ma duzych roznic przerwij
@@ -321,12 +328,12 @@ def valid(model1, model2, x, n=4):
         # brutforce
         if "__mat2d" in x:
             del x["__mat2d"]
-        m1, t1, t1_all = model1.do(x)
+        m1, t1, _, _ = model1.do(x)
         m1 = m1["__mat2d"][:, :, 0]
         # algorithm
         if "__mat2d" in x:
             del x["__mat2d"]
-        m2, t2, t2_all = model2.do(x)
+        m2, t2, _, _ = model2.do(x)
         m2 = m2["__mat2d"][:, :, 0]
         # error
         loss = fn_loss(m1, m2)
@@ -355,23 +362,87 @@ def valid(model1, model2, x, n=4):
     gc.collect()
     return loss_diff, time_diff
 
-def optimize(space, domain, n_calls=10):
+def human_algo_name(config):
+    anchor_type = config["anchor_type"].__name__.split("__")[1].title()
+    if config["anchor_double"]:
+        anchor_double = "Dual"
+    else:
+        anchor_double = ""
+    if anchor_type == "Circle":
+        anchor_num = config["anchor_num"]
+    else:
+        anchor_num = ""
+    if config["noise"]:
+        noise = "+Noise"
+    else:
+        noise = ""
+    step_function = config["step_function"].__name__.replace("step_function_", "").title()
+    return f"{anchor_type}{anchor_num}{anchor_double}|{step_function}{noise}"
+
+
+# FIXME: progress bar?
+def optimize(model_ref, space, domain, n_calls=10):
+    ALGOMAP = {}
+
     @use_named_args(space)
-    def score(**params):
+    def score(**config):
+        # FIXME: if same HUMAN NAME----> continue
+        
         print("======= EXPERIMENT =======")
         # FIXME: dla roznych domen rozne wyniki?
-        final_score = do_compirason(params, domain)
+
+        config["brutforce"] = False
+        
+        name = human_algo_name(config)
+        if name in ALGOMAP:
+            return ALGOMAP[name]
+
+        model = Vorotron(config)
+
+        score, log = do_compirason(model, model_ref, domain)
+        # log["name"] = str(score) # FIXME: human-name        
+        log["name"] = f"({int(score)})" + name
+        # FIXME: human-name        
+
+        # FIXME: plot need to import DOMAIN-------->?
+
+        # FIXME: -----> log[name] --> [generate here catchy name]
+        pprint(log)
+        print(f"[[[[[[[[[[[ \033[96m {log['name']} \033[0m ]]]]]]]]]]]")
+        # FIXME: save to log/ then plot.py
+        # FIXME: 3d ---> wykres?
+        # FIXME: sorted [score] along all axis?
+        log_cl = json.dumps(log)
+        text_file = open(f"results/log/{score}.json", "w")
+        text_file.write(log_cl)
+        text_file.close()
+
+        config_cl = pformat(config, indent=4)
+        result_cl = "/*\n" + config_cl + "\n*/\n\n" + model.code
+        text_file = open(f"results/code/{score}.cl", "w")
+        text_file.write(result_cl)
+        text_file.close()
+
         print("==========================")
-        return -final_score
+        ALGOMAP[name] = -score
+        return -score
 
-    return gp_minimize(func=score, dimensions=space, n_calls=n_calls)
+    return gp_minimize(func=score, dimensions=space,
+                       n_calls=n_calls, random_state=0)
 
-def do_compirason(config=None, domain=None):
-    config["brutforce"] = False
-    model = Vorotron(config)
-    model_brutforce = Vorotron()
+def fn_metric(a, b): # b/(1+a)
+    # FIXME: max aby w pewnych domenach mogly funkcjonowac
+    return max(0, (b * (100-a**1.5)))
 
+def do_compirason(model, model_ref, domain=None): 
     loss_arr = []
+
+    #FIMXE init with keys from domain/shapes
+    log = {
+        'loss': [],
+        'time': [],
+        'score': []
+    }
 
     for shape in domain["shapes"]:
         for case in domain["cases"]:
@@ -382,24 +453,23 @@ def do_compirason(config=None, domain=None):
 
             sample = create_instance(func, shape=shape, num=num)
 
-            a, b = valid(model_brutforce, model, sample)
+            a, b = valid(model_ref, model, sample)
             # FIXME: wzor jakis na {a,b}?
-            loss_arr.append(b/(1+a))
-            print(f"shape={shape} | a={a} b={b}")
+            # FIXME: DO FUNKCJI JAKIES
+            score = fn_metric(a, b)
+            loss_arr.append(score)
+            print(f"shape={shape} | a={a} b={b} -> score={score}")
+            
+            log["loss"].append(a)
+            log["time"].append(b)
+            log["score"].append(score)
 
+    # FIXME: BETTER SCORE FUNCTION? multiple domains?
+    # ------------------> PYTORCH ]]]]]]]]]]]]]]]]]]]
     score = sum(loss_arr)/len(loss_arr)
-    print(f"----> SCORE={score}")
+    print(f"----> SCORE=\033[92m {score} \033[0m")
 
-    # SAVE =================
-    config_cl = pformat(config, indent=4)
-    result_cl = "/*\n" + config_cl + "\n*/\n\n" + model.code
-    
-    text_file = open(f"results/{score}.cl", "w")
-    text_file.write(result_cl)
-    text_file.close()
-
-    # FIXME: sami musimy sobie zapisywac jakie parametry jaki daly wynik
-    return score
+    return score, log
 
 ################################################################################
 
@@ -470,7 +540,7 @@ def do_test_error():
         'step_function': step_function_star,
     }
     model = Vorotron(config_0190)
-    model_brutforce = Vorotron()
+    model_ref = MODEL_BRUTFORCE
 
     for shape in TEST_DOMAIN["shapes"]:
         for case in TEST_DOMAIN["cases"]:
@@ -481,7 +551,7 @@ def do_test_error():
         
             sample = create_instance(func, shape=shape, num=num)
 
-            a, b = valid(model_brutforce, model, sample)
+            a, b = valid(model_ref, model, sample)
             print(f"shape={shape} | a={a} b={b}")
 
 ################################################################################
@@ -539,6 +609,7 @@ def step_function_factor3(shape, num=None, config=None):
 
 # FIXME: modifiers here? to code? recurse?
 
+# FIXME: how to define here multiple anchors?
 def mod_anchor_type__square(code, config=None):
     if config["anchor_double"]:
         code = code.replace("#{ANCHOR_TYPE}", """
@@ -558,7 +629,6 @@ def mod_anchor_type__square(code, config=None):
         """)
     return code
 
-# FIXME: 12 jako parametr
 def mod_anchor_type__circle(code, config=None):
     anchor_num = config["anchor_num"]
     if config["anchor_double"]:
@@ -583,6 +653,26 @@ def mod_anchor_type__circle(code, config=None):
             int ny = y+B;
         """.replace("#{ANCHOR_NUM}", str(anchor_num)))
     return code
+
+MODEL_BRUTFORCE = Vorotron({
+    'brutforce': True
+})
+MODEL_JFA = Vorotron({
+    'anchor_double': False,
+    'anchor_num': None,
+    'anchor_type': mod_anchor_type__square,
+    'brutforce': False,
+    'noise': False,
+    'step_function': step_function_default,
+})
+MODEL_JFA_STAR = Vorotron({
+    'anchor_double': False,
+    'anchor_num': 12,
+    'anchor_type': mod_anchor_type__circle,
+    'brutforce': False,
+    'noise': True,
+    'step_function': step_function_star
+})
 
 SPACE = [
     #Real(0, 1, name='a'),
@@ -626,6 +716,21 @@ DOMAIN = {
         ]
 }
 
+# FIXME: znalesc na malych caly zakres parametrow?????????????????
+DOMAIN_FAST = {
+    "shapes":
+        [(128, 128)], # + (512, 512)
+    "cases":
+        [
+            {gen_uniform: [use_num, 1]},
+            {gen_uniform: [use_density, 0.001]},
+            {gen_uniform: [use_density, 0.01]},
+            {gen_uniform: [use_density, 0.03]},
+            {gen_uniform: [use_density, 0.05]},
+            {gen_uniform: [use_density, 0.1]},
+        ]
+}
+
 ################################################################################
 
 if __name__ == "__main__":
@@ -635,10 +740,12 @@ if __name__ == "__main__":
     #do_test_error()
     #sys.exit()
 
+    # FIXME: kolejna generacja zastepuje `MODEL_BRUTFORCE`
     opt_result = optimize(
+        MODEL_BRUTFORCE,
         SPACE,
-        DOMAIN,
-        n_calls=10 * 30 # 10*60
+        DOMAIN_FAST, # DOMAIN
+        n_calls=100 # 10*60
     )
 
     _ = plot_objective(opt_result, n_points=10)

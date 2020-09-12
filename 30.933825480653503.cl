@@ -1,10 +1,10 @@
 /*
-{   'anchor_double': False,
-    'anchor_num': 7,
-    'anchor_type': <function mod_anchor_type__circle at 0x121da7710>,
+{   'anchor_double': True,
+    'anchor_num': 12,
+    'anchor_type': <function mod_anchor_type__circle at 0x1238b9950>,
     'brutforce': False,
-    'noise': False,
-    'step_function': <function step_function_star at 0x121da74d0>}
+    'noise': True,
+    'step_function': <function step_function_star at 0x1238b9710>}
 */
 
 #pragma OPENCL EXTENSION cl_ext_device_fission : enable
@@ -35,9 +35,14 @@ __kernel void fn(
         best_score = 16776832;
 
 	
-        for(int i = 0; i < 7; i++) {
-            int A = (step * cos((float) ((6.28/7) * i) ));
-            int B = (step * sin((float) ((6.28/7) * i) ));
+        for(int j = 0; j < 2; j++)
+        for(int i = 0; i < 6; i++) {
+            int A = (step * cos((float) ((6.28/6) * i) ));
+            int B = (step * sin((float) ((6.28/6) * i) ));
+            if (j == 0) {
+               A /= 2;
+               B /= 2;
+            }
             int nx = x+A;
             int ny = y+B;
         
