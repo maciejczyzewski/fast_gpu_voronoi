@@ -2,6 +2,7 @@
 *.pickle
 *.png
 __pycache__
+results*/
 
 dist/
 build/

@@ -1,3 +1,12 @@
+/*
+{   'anchor_double': True,
+    'anchor_num': 13,
+    'anchor_type': <function mod_anchor_type__circle at 0x121da7710>,
+    'brutforce': False,
+    'noise': True,
+    'step_function': <function step_function_star at 0x121da74d0>}
+*/
+
 #pragma OPENCL EXTENSION cl_ext_device_fission : enable
 
 int metric(int x1, int y1, int x2, int y2) {
@@ -25,7 +34,18 @@ __kernel void fn(
     if (best_seed == 0)
         best_score = 16776832;
 
-	#{ANCHOR_TYPE}
+	
+        for(int j = 0; j < 2; j++)
+        for(int i = 0; i < 6; i++) {
+            int A = (step * cos((float) ((6.28/6) * i) ));
+            int B = (step * sin((float) ((6.28/6) * i) ));
+            if (j == 0) {
+               A /= 2;
+               B /= 2;
+            }
+            int nx = x+A;
+            int ny = y+B;
+        
             if(nx < 0 || y_size <= nx || ny < 0 || y_size <= ny) continue;
             int anchor_seed = mat2d_in[POS(nx, ny, 0)];
             if (anchor_seed == 0) continue;

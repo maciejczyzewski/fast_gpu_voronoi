@@ -2,6 +2,7 @@ import os
 import gc
 import sys
 import math
+import json
 import subprocess
 import numpy as np
 import numba as nb
@@ -10,7 +11,7 @@ import matplotlib.pyplot as plt
 
 from PIL import Image
 from tqdm import tqdm
-from pprint import pprint
+from pprint import pprint, pformat
 from timeit import default_timer as timer
 
 from skopt import gp_minimize, forest_minimize
@@ -66,6 +67,7 @@ SESSION["ctx"] = cl.create_some_context()
 SESSION["queue"] = cl.CommandQueue(SESSION["ctx"])
 
 call("rm -f __*.png")
+call("mkdir -p results/")
 
 ################################################################################
 
@@ -134,13 +136,14 @@ def create_instance(func, shape=None, num=None):
 
 ################################################################################
 
-def save(M, prefix=""):
+def save(M, prefix=None):
     print("======== \033[92mSAVE {}\033[m ========".format(DEBUG["iter"]))
 
     DEBUG["iter"] += 1
-    if prefix != "":
-        DEBUG["name"] += "_" + prefix
-    name = "__{}_{}.png".format(DEBUG["iter"], DEBUG["name"])
+    name = DEBUG["name"]
+    if prefix != "" and prefix is not None:
+        name += "_" + prefix
+    name = "__{}_{}.png".format(DEBUG["iter"], name)
 
     _M_color = mat2d_to_rgb(M)
     im = Image.fromarray(np.uint8(_M_color), "RGB")
@@ -172,7 +175,7 @@ def copy_to_host(ptr, out, shape=None):
 
 # FIXME: add modifiers like `noise kernel`
 
-def step_function_default(shape, num=None):
+def step_function_default(shape, num=None, config=None):
     steps = []
     for factor in range(1, +oo, 1):
         f = math.ceil(max(shape) / (2**(factor)))
@@ -204,6 +207,7 @@ class Vorotron():
             for key in ["anchor_type"]:
                 code = self.config[key](code, self.config)
             self.kernel = load_prg_from_str(code)
+            self.code = code
 
     def do(self, x):
         if "__mat2d" not in x:
@@ -273,7 +277,10 @@ class Vorotron():
             T2 = timer()
             T_SUM = T2-T1
         else:
-            steps = self.config["step_function"](x["shape"], x["points"].shape[0])
+            steps = self.config["step_function"](x["shape"],
+                                                 x["points"].shape[0],
+                                                 config=self.config)
+            print(steps)
 
             for step in steps:
                 T1 = timer()
@@ -295,7 +302,8 @@ class Vorotron():
 
         T2_all = timer()
         x["__mat2d"] = copy_to_host(mat2d_flatten, mat2d_out, x["shape"])
-        return x, T_SUM, T2_all-T1_all
+        # return x, T_SUM, T2_all-T1_all
+        return x, T2_all-T1_all, T_SUM
 
 ################################################################################
 
@@ -328,7 +336,8 @@ def valid(model1, model2, x, n=4):
         time_2_arr.append(t2)
 
     # FIXME: tylko debug
-    save(m2)
+    # save(m1, prefix="gt")
+    # save(m2, prefix="jfa")
 
     def avgarr(arr):
         shift = max(int(len(arr)*(0.1)), 1)
@@ -381,6 +390,14 @@ def do_compirason(config=None, domain=None):
     score = sum(loss_arr)/len(loss_arr)
     print(f"----> SCORE={score}")
 
+    # SAVE =================
+    config_cl = pformat(config, indent=4)
+    result_cl = "/*\n" + config_cl + "\n*/\n\n" + model.code
+    
+    text_file = open(f"results/{score}.cl", "w")
+    text_file.write(result_cl)
+    text_file.close()
+
     # FIXME: sami musimy sobie zapisywac jakie parametry jaki daly wynik
     return score
 
@@ -393,13 +410,16 @@ def do_test_gen():
         save(M[:, :, 0])
 
 def do_test_simple():
-    config = {
-        "brutforce": False,
-        "step_function": step_function_default,
-        "noise": True, 
+    config_star =  {
+        'anchor_double': False,
+        'anchor_num': 12,
+        'anchor_type': mod_anchor_type__circle,
+        'brutforce': False,
+        'noise': True,
+        'step_function': step_function_star
     }
     sample = create_instance(gen_uniform, shape=(32, 32), num=8)
-    algo = Vorotron(config)
+    algo = Vorotron(config_star)
     X, T1, T2 = algo.do(sample)
     save(X["__mat2d"][:, :, 0])
 
@@ -417,7 +437,39 @@ TEST_DOMAIN = {
 
 def do_test_error():
     # FIXME: plot?
-    model = Vorotron({"brutforce": False})
+    config_0015 = {
+        'anchor_double': False,
+        'anchor_num': 7,
+        'anchor_type': mod_anchor_type__circle,
+        'brutforce': False,
+        'noise': False,
+        'step_function': step_function_star
+    }
+    config_0190 = {
+        'anchor_double': True,
+        'anchor_num': 13,
+        'anchor_type': mod_anchor_type__circle,
+        'brutforce': False,
+        'noise': True,
+        'step_function': step_function_star
+    }
+    config_0195 = {
+        'anchor_double': False,
+        'anchor_num': 18,
+        'anchor_type': mod_anchor_type__square,
+        'brutforce': False,
+        'noise': True,
+        'step_function': step_function_factor3
+    }
+    config_star = {
+        'anchor_double': False,
+        'anchor_num': 12,
+        'anchor_type': mod_anchor_type__circle,
+        'brutforce': False,
+        'noise': True,
+        'step_function': step_function_star,
+    }
+    model = Vorotron(config_0190)
     model_brutforce = Vorotron()
 
     for shape in TEST_DOMAIN["shapes"]:
@@ -434,7 +486,7 @@ def do_test_error():
 
 ################################################################################
 
-def step_function_star(shape, num):
+def step_function_star(shape, num, config=None):
     def LogStar(n):
         if n <= 1:
             return 0
@@ -456,9 +508,27 @@ def step_function_star(shape, num):
         steps.append(f)
         if f <= 1 or i == n + 1:
             break
+    return steps + [1] # + [3, 2, 1]
+
+# https://www.youtube.com/watch?v=SnIAxVx7ZUs
+def step_function_special(shape, num, config=None):
+    a, b, c = config["a"], config["b"], config["c"]
+    area = shape[0] * shape[1]
+    q = area/(num+1)
+    steps = []
+    print(f"===========> {shape} {num} {area} q={q}")
+    for factor in range(1, int(2*math.log2(max(shape))), 1):
+        f = math.ceil(max(shape) / (3**(factor)))
+        y = a*(1/q)*factor**3 - b*(1/q)*4*f**2 + c*q
+        v = (y)**(1/3)
+        print(factor, f, v)
+        if y < 0:
+            break
+        steps.append(int(v))
+    print("----> CUR=", steps)
     return steps
 
-def step_function_factor3(shape, num=None):
+def step_function_factor3(shape, num=None, config=None):
     steps = []
     for factor in range(1, +oo, 1):
         f = math.ceil(max(shape) / (3**(factor)))
@@ -522,10 +592,15 @@ SPACE = [
     Integer(6, 12+6, name='anchor_num'),
     Categorical([False, True], name='noise'),
     Categorical([False, True], name='anchor_double'),
+
+    #Categorical([step_function_special],
+    #            name='step_function'),
+
     Categorical([step_function_default,
                  step_function_star,
                  step_function_factor3],
                 name='step_function'),
+    
     Categorical([mod_anchor_type__square,
                  mod_anchor_type__circle],
                 name='anchor_type'),
@@ -535,15 +610,19 @@ SPACE = [
 
 DOMAIN = {
     "shapes":
-        [(128, 128), (512, 512)],
+        [(64, 64), (128, 128), (256, 256), (512, 512), (768, 768)],
     "cases":
         [
             {gen_uniform: [use_num, 1]},
             {gen_uniform: [use_num, 2]},
+            {gen_uniform: [use_density, 0.0001]},
             {gen_uniform: [use_density, 0.001]},
             {gen_uniform: [use_density, 0.01]},
+            {gen_uniform: [use_density, 0.02]},
+            {gen_uniform: [use_density, 0.03]},
+            {gen_uniform: [use_density, 0.04]},
             {gen_uniform: [use_density, 0.05]},
-            {gen_uniform: [use_density, 0.1]},
+            #{gen_uniform: [use_density, 0.1]},
         ]
 }
 
@@ -551,14 +630,15 @@ DOMAIN = {
 
 if __name__ == "__main__":
     # do_test_gen()
-    # do_test_simple()
-    # sys.exit()
-    # do_test_search()
-    
+    #do_test_simple()
+    #sys.exit()
+    #do_test_error()
+    #sys.exit()
+
     opt_result = optimize(
         SPACE,
         DOMAIN,
-        n_calls=10
+        n_calls=10 * 30 # 10*60
     )
 
     _ = plot_objective(opt_result, n_points=10)
