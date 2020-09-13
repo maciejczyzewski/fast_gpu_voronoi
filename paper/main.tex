@@ -1,0 +1,75 @@
+\documentclass{article}
+
+% FIXME: https://github.com/google-research/arxiv-latex-cleaner
+
+\usepackage{arxiv}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{lipsum}		% Can be removed after putting your text content
+\usepackage{graphicx}
+\usepackage{float}
+
+\title{A template for the \emph{arxiv} style}
+
+%\date{September 9, 1985}	% Here you can change the date presented in the paper title
+%\date{} 					% Or removing it
+
+\author{
+  Maciej A.~Czyzewski\\
+  Institute of Computing Science\\
+  Poznan University of Technology\\
+  Piotrowo 2, 60-965 Poznan, Poland\\
+  \texttt{maciejanthonyczyzewski@gmail.com} \\
+  \And
+  Kamil~Piechowiak\\
+  Institute of Computing Science\\
+  Poznan University of Technology\\
+  Piotrowo 2, 60-965 Poznan, Poland\\
+  \texttt{kamil.cams@gmail.com} \\
+}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\maketitle
+
+\begin{abstract}
+	\lipsum[1]
+\end{abstract}
+
+\keywords{First keyword \and Second keyword \and More}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+omghahahah
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{../figures/figure-1-time}
+	\caption{\emph{batchboost} presented in three phases: (a) pairing by sorting
+	  error (b) mixing with \emph{mixup} (c) feeding: a mixed feed-batch and new
+	  samples in half-batch by 1:1 ratio.}
+	\label{fig:abstract}
+\end{figure}
+
+\begin{table}
+	\centering
+	\input{../figures/table.tex}
+	\newline
+	\caption{domain: 32x32, 64x64, 128x128, 256x256}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliographystyle{unsrt}
+\bibliography{references} 
+
+\end{document}

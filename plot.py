@@ -8,6 +8,8 @@ import re
 from glob import glob
 from pprint import pprint
 
+oo = 11111111
+
 ###############################
 # [IDEAS]
 # FIXME: 3d
@@ -76,15 +78,15 @@ def apply_SOTA(x_name=None, y_name=None, sort=False):
     plt.plot(x, y, label=log["name"], color="black", linestyle='solid')
     ax.fill_between(x, y, 0, facecolor='black', alpha=0.2)
 
-    # for [BRUTFORCE]
+    # for [BRUTEFORCE]
     if y_name == "score":
-        plt.plot(x, [100]*len(x), label="brutforce", color="red", linestyle='solid')
+        plt.plot(x, [100]*len(x), label="bruteforce", color="red", linestyle='solid')
         ax.fill_between(x, [100]*len(x), 0, facecolor='red', alpha=0.2)
     if y_name == "loss":
-        plt.plot(x, [0]*len(x), label="brutforce", color="red", linestyle='solid')
+        plt.plot(x, [0]*len(x), label="bruteforce", color="red", linestyle='solid')
         ax.fill_between(x, [0]*len(x), 0, facecolor='red', alpha=0.2)
     if y_name == "time":
-        plt.plot(x, [1]*len(x), label="brutforce", color="red", linestyle='solid')
+        plt.plot(x, [1]*len(x), label="bruteforce", color="red", linestyle='solid')
         ax.fill_between(x, [1]*len(x), 0, facecolor='red', alpha=0.2)
     ax.grid(linestyle="--", linewidth=0.5, color='.25', zorder=-10, alpha=0.1)
 
@@ -160,7 +162,7 @@ def apply_domain__groups(x=None):
     for d in domain:
         q = round(d['num']/(d['shape'][0]*d['shape'][1]), 4)
         domain_str.append(f"$\\Omega$={d['num']}\n$\\rho$={q}")
-    plt.xticks(x, domain_str, rotation='horizontal', fontsize=2)
+    plt.xticks(x, domain_str, rotation='vertical', fontsize=2)
     #ax2.set_xticks(x)
     #ax2.set_xticklabels(domain_str, rotation='horizontal', fontsize=2)
 
@@ -289,6 +291,91 @@ with figure("power", prefix=4):
     plt.xlabel("case (unordered)")
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
+################################################################################
+# TABLE
+################################################################################
+
+# FIXME: tabela nie po A x B tylko po GESTOSCIACH!!!!!!!!!!!!!!!!!!!!!!!
+#        ajajaja bedzie trzeba je skulstrowac
+
+from tabulate import tabulate
+
+# FIXME: domain
+path = "results/domain.json"
+with open(path, "r") as jsonfile:
+    json_txt = jsonfile.read()
+    domain = json.loads(json_txt)
+
+print(domain)
+
+density_map = {}
+ROWS = []
+for i, (_, path) in enumerate(globlog()):
+    x, y, log = read_file(path, x_name=None, y_name="score")
+    # [DEBUG]: for Kamil
+    # for j, e in enumerate(y):
+    #    print("---->", domain[j], e)
+    score, name = log["name"].split()
+    score = int(score[1:-1])
+    # print(f"==============> {score} {name}")
+    local_avg = {}
+    last_shape, cur_i = "?x?", 0
+    for j, e in enumerate(y):
+        # FIXME: tak samo ale dla AxB
+        shape = f"{domain[j]['shape'][0]}x{domain[j]['shape'][1]}"
+        if last_shape != shape:
+            last_shape, cur_i = shape, 0
+        # print("---->", shape, cur_i, e)
+        if cur_i not in local_avg:
+            local_avg[cur_i] = []
+        local_avg[cur_i].append(e)
+        ############
+        # SMALL CHEAT
+        if cur_i not in density_map:
+            density_map[cur_i] = []
+        density_map[cur_i].append(domain[j]['num']/(domain[j]['shape'][0]*domain[j]['shape'][1]))
+        ############
+        cur_i += 1
+    # pprint(local_avg)
+    local_row = []
+    for i in range(0, +oo):
+        if i not in local_avg:
+            break
+        avg = round(sum(local_avg[i])/len(local_avg[i]), 1)
+        if avg >= 100:
+            avg = "\\textbf{" + str(avg) + "}"
+        # print("--------->", i, avg)
+        local_row.append(avg)
+    # FIXME: if > 100 BOLDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD???
+    # ----------------------> COLOR BEST IN COLUMN
+    ROWS.append([name] + local_row + [score])
+    print("\n\n")
+
+header_row = []
+for i in range(0, +oo):
+    if i not in density_map:
+        break
+    print(density_map[i])
+    avg = round(sum(density_map[i])/len(density_map[i]), 4)
+    header_row.append(f"$\\rho$={avg}")
+
+header_row = ["Algorithm"] + header_row + ["Avg. score"]
+pprint(header_row)
+# pprint(ROWS)
+
+print("=============================================")
+
+table = ROWS
+headers = header_row
+tab = tabulate(table, headers=headers,
+               tablefmt="latex_raw")
+
+path_table = "figures/table.tex"
+text_file = open(path_table, "w")
+text_file.write(str(tab))
+text_file.close()
+
+print(tab)
 
 # FIXME: 3d wykres?
 # FIXME: tabelka?

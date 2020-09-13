@@ -197,7 +197,7 @@ class Vorotron():
     name = "VOROTRON"
     
     config = {
-        "brutforce": True,
+        "bruteforce": True,
         "step_function": step_function_default,
         "anchor_type": placebo,
         "noise": False,
@@ -206,12 +206,12 @@ class Vorotron():
     def __init__(self, config=None):
         if config:
             self.config = dict(list(self.config.items()) + list(config.items())) 
-        self.kernel_brutforce = load_prg("algo_brutforce.cl")
+        self.kernel_bruteforce = load_prg("algo_bruteforce.cl")
         self.kernel_noise = load_prg("algo_noise.cl")
         pprint(self.config)
 
         # FIXME: apply
-        if not self.config["brutforce"]:
+        if not self.config["bruteforce"]:
             code = open("algo_template.cl", 'r').read()
             for key in ["anchor_type"]:
                 code = self.config[key](code, self.config)
@@ -227,7 +227,7 @@ class Vorotron():
         T_ALL_1, T_CPU, T_GPU = timer(), 0, 0
         
         # === INPUT ===
-        if self.config["brutforce"]:
+        if self.config["bruteforce"]:
             points_in = cl.Buffer(SESSION["ctx"], mf.COPY_HOST_PTR |
                                   mf.READ_ONLY, hostbuf=x["points"])
             seeds_in = cl.Buffer(SESSION["ctx"], mf.COPY_HOST_PTR |
@@ -269,9 +269,9 @@ class Vorotron():
             # -----------------------
 
         # === RUN ===
-        if self.config["brutforce"]:
+        if self.config["bruteforce"]:
             T1 = timer()
-            event = self.kernel_brutforce.fn(
+            event = self.kernel_bruteforce.fn(
                            SESSION["queue"],
                            (x["shape"][0], x["shape"][1], 1),
                            None, # default?
@@ -330,7 +330,7 @@ def valid(model1, model2, x, n=5):
 
     # FIXME: jesli nie ma duzych roznic przerwij
     for _ in range(n):
-        # brutforce
+        # bruteforce
         if "__mat2d" in x:
             del x["__mat2d"]
         m1, t1, _, _ = model1.do(x)
@@ -395,7 +395,7 @@ def optimize(model_ref, space, domain, n_calls=10):
         print("======= EXPERIMENT =======")
         # FIXME: dla roznych domen rozne wyniki?
 
-        config["brutforce"] = False
+        config["bruteforce"] = False
         
         name = human_algo_name(config)
         if name in ALGOMAP:
@@ -447,7 +447,7 @@ def optimize(model_ref, space, domain, n_calls=10):
         print("======= EXPERIMENT =======")
         # FIXME: dla roznych domen rozne wyniki?
 
-        config["brutforce"] = False
+        config["bruteforce"] = False
         return score_from_config(config)
 
     def save_domain(domain):
@@ -474,7 +474,7 @@ def optimize(model_ref, space, domain, n_calls=10):
         'anchor_double': False,
         'anchor_num': None,
         'anchor_type': mod_anchor_type__square,
-        'brutforce': False,
+        'bruteforce': False,
         'noise': False,
         'step_function': step_function_default,
     })
@@ -539,7 +539,7 @@ def do_test_simple():
         'anchor_double': False,
         'anchor_num': 12,
         'anchor_type': mod_anchor_type__circle,
-        'brutforce': False,
+        'bruteforce': False,
         'noise': True,
         'step_function': step_function_star
     }
@@ -566,7 +566,7 @@ def do_test_error():
         'anchor_double': False,
         'anchor_num': 7,
         'anchor_type': mod_anchor_type__circle,
-        'brutforce': False,
+        'bruteforce': False,
         'noise': False,
         'step_function': step_function_star
     }
@@ -574,7 +574,7 @@ def do_test_error():
         'anchor_double': True,
         'anchor_num': 13,
         'anchor_type': mod_anchor_type__circle,
-        'brutforce': False,
+        'bruteforce': False,
         'noise': True,
         'step_function': step_function_star
     }
@@ -582,7 +582,7 @@ def do_test_error():
         'anchor_double': False,
         'anchor_num': 18,
         'anchor_type': mod_anchor_type__square,
-        'brutforce': False,
+        'bruteforce': False,
         'noise': True,
         'step_function': step_function_factor3
     }
@@ -590,12 +590,12 @@ def do_test_error():
         'anchor_double': False,
         'anchor_num': 12,
         'anchor_type': mod_anchor_type__circle,
-        'brutforce': False,
+        'bruteforce': False,
         'noise': True,
         'step_function': step_function_star,
     }
     model = Vorotron(config_0190)
-    model_ref = MODEL_BRUTFORCE
+    model_ref = MODEL_BRUTEFORCE
 
     for shape in TEST_DOMAIN["shapes"]:
         for case in TEST_DOMAIN["cases"]:
@@ -709,14 +709,14 @@ def mod_anchor_type__circle(code, config=None):
         """.replace("#{ANCHOR_NUM}", str(anchor_num)))
     return code
 
-MODEL_BRUTFORCE = Vorotron({
+MODEL_BRUTEFORCE = Vorotron({
     'brutforce': True
 })
 MODEL_JFA = Vorotron({
     'anchor_double': False,
     'anchor_num': None,
     'anchor_type': mod_anchor_type__square,
-    'brutforce': False,
+    'bruteforce': False,
     'noise': False,
     'step_function': step_function_default,
 })
@@ -724,7 +724,7 @@ MODEL_JFA_STAR = Vorotron({
     'anchor_double': False,
     'anchor_num': 12,
     'anchor_type': mod_anchor_type__circle,
-    'brutforce': False,
+    'bruteforce': False,
     'noise': True,
     'step_function': step_function_star
 })
@@ -775,7 +775,7 @@ DOMAIN = {
 
 DOMAIN_FAST = {
     "shapes":
-        [(32, 32), (64, 64), (128, 128)], # (128, 128) + (512, 512)
+        [(32, 32), (64, 64), (128, 128), (256, 256)], # (128, 128) + (512, 512)
     "cases":
         [
             {gen_uniform: [use_num, 1]},
@@ -796,9 +796,9 @@ if __name__ == "__main__":
     #do_test_error()
     #sys.exit()
 
-    # FIXME: kolejna generacja zastepuje `MODEL_BRUTFORCE`
+    # FIXME: kolejna generacja zastepuje `MODEL_BRUTEFORCE`
     opt_result = optimize(
-        MODEL_BRUTFORCE,
+        MODEL_BRUTEFORCE,
         SPACE,
         DOMAIN_FAST, # DOMAIN vs DOMAIN_FAST
         n_calls=100 # (20*60) 100 vs 10*60
