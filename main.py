@@ -455,10 +455,10 @@ def optimize(model_ref, space, domain, n_calls=10):
     })
 
     # [[ gp_minimize ]]
-    return gp_minimize(func=score, dimensions=space,
-                       n_calls=n_calls, random_state=0)
-    #return forest_minimize(func=score, dimensions=space,
+    #return gp_minimize(func=score, dimensions=space,
     #                   n_calls=n_calls, random_state=0)
+    return forest_minimize(func=score, dimensions=space,
+                       n_calls=n_calls, random_state=0)
 
 def fn_metric(a, b): # b/(1+a)
     # FIXME: max aby w pewnych domenach mogly funkcjonowac
