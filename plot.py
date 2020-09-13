@@ -5,10 +5,7 @@ import json, csv
 import re
 
 from glob import glob
-
-######################################################################
-# FIXME: JFA, BRUTFORCE na wykresach
-######################################################################
+from pprint import pprint
 
 ###############################
 # [IDEAS]
@@ -46,6 +43,7 @@ class figure:
 
 # (1) better style
 plt.style.use(["science", "ieee"])
+plt.rcParams.update({"text.usetex": True})
 
 fig, ax = plt.subplots()
 ax.autoscale(tight=True)
@@ -99,6 +97,20 @@ def globlog():
 
 # FIXME: funny name?
 
+def apply_domain(x=None):
+    # FIXME: dodac umiejetnosc pomijania niektorych? jak jest gesto?
+    path = "results/domain.json"
+    with open(path, "r") as jsonfile:
+        json_txt = jsonfile.read()
+        domain = json.loads(json_txt)
+    pprint(domain)
+    domain_str = []
+    for d in domain:
+        q = round(d['num']/(d['shape'][0]*d['shape'][1]), 4)
+        domain_str.append(f"{d['shape'][0]}x{d['shape'][1]}\nseeds={d['num']}\n$\\rho$={q}")
+        # domain_str.append(f"{d['shape'][0]}x{d['shape'][1]}\n{d['num']}")
+    plt.xticks(x, domain_str, rotation='horizontal', fontsize=2)
+
 COLORS = ['g', 'b', 'm', 'orange']
 
 with figure("time", prefix=1):
@@ -111,6 +123,7 @@ with figure("time", prefix=1):
             plt.plot(x, y, label=log["name"], color="gray", alpha=0.1, linestyle='solid')
 
     apply_SOTA(x_name=None, y_name="time", sort=False)
+    apply_domain(x)
 
     plt.ylabel("time")
     plt.xlabel("case")
@@ -125,6 +138,7 @@ with figure("loss", prefix=2):
             plt.plot(x, y, label=log["name"], color="gray", alpha=0.1, linestyle='solid')
 
     apply_SOTA(x_name=None, y_name="loss", sort=False)
+    apply_domain(x)
 
     plt.ylabel("loss")
     plt.xlabel("case")
@@ -139,6 +153,7 @@ with figure("score", prefix=3):
             plt.plot(x, y, label=log["name"], color="gray", alpha=0.1, linestyle='solid')
 
     apply_SOTA(x_name=None, y_name="score", sort=False)
+    apply_domain(x)
 
     plt.ylabel("score")
     plt.xlabel("case")
@@ -155,6 +170,7 @@ with figure("power", prefix=4):
             plt.plot(x, y, label=log["name"], color="gray", alpha=0.1, linestyle='solid')
 
     apply_SOTA(x_name=None, y_name="score", sort=True)    
+    apply_domain(x)
 
     plt.ylabel("score")
     plt.xlabel("case (unordered)")

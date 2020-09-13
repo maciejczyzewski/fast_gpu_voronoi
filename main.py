@@ -16,7 +16,7 @@ from tqdm import tqdm
 from pprint import pprint, pformat
 from timeit import default_timer as timer
 
-from skopt import gp_minimize, forest_minimize
+from skopt import gp_minimize, forest_minimize, dummy_minimize
 from skopt.utils import use_named_args
 from skopt.plots import plot_objective, plot_evaluations, plot_convergence, plot_regret
 from skopt.space import Categorical, Integer, Real
@@ -68,6 +68,10 @@ SESSION = {
 SESSION["ctx"] = cl.create_some_context()
 SESSION["queue"] = cl.CommandQueue(SESSION["ctx"],
     properties=cl.command_queue_properties.PROFILING_ENABLE) # FIXME?
+
+if os.path.isdir("results/"):
+    print("Wait! Path `results/` already exists ;-)")
+    sys.exit()
 
 call("rm -f __*.png")
 call("mkdir -p results/")
@@ -320,7 +324,8 @@ def use_density(shape, x): return int(shape[0] * shape[1] * x)
 def fn_loss(m1, m2):
     return 1 - np.count_nonzero((m1-m2) == 0)/(m1.shape[0]*m1.shape[1])
 
-def valid(model1, model2, x, n=10):
+# FIXME: n=10 IS STABLE!!!!!!!!!!!!!!!!!!!!!! but okay
+def valid(model1, model2, x, n=5):
     loss_arr, time_1_arr, time_2_arr = [], [], []
 
     # FIXME: jesli nie ma duzych roznic przerwij
@@ -445,6 +450,26 @@ def optimize(model_ref, space, domain, n_calls=10):
         config["brutforce"] = False
         return score_from_config(config)
 
+    def save_domain(domain):
+        domain_vec = []
+        for shape in domain["shapes"]:
+            for case in domain["cases"]:
+                print("\n")
+                func, params = list(case.items())[0]
+                func_anchor, arg = params
+                num = max(1, func_anchor(shape, arg))
+                domain_vec.append({"shape": shape, "num": num})
+
+        pprint(domain_vec)
+
+        path_domain = "results/domain.json"
+        domain_cl = json.dumps(domain_vec)
+        text_file = open(path_domain, "w")
+        text_file.write(domain_cl)
+        text_file.close()
+
+    save_domain(domain)
+
     score_from_config({
         'anchor_double': False,
         'anchor_num': None,
@@ -454,11 +479,11 @@ def optimize(model_ref, space, domain, n_calls=10):
         'step_function': step_function_default,
     })
 
-    # [[ gp_minimize ]]
+    # [[ gp_minimize vs forest_minimize | dummy_minimize ]]
     #return gp_minimize(func=score, dimensions=space,
     #                   n_calls=n_calls, random_state=0)
     return forest_minimize(func=score, dimensions=space,
-                       n_calls=n_calls, random_state=0)
+                           n_calls=n_calls, random_state=0)
 
 def fn_metric(a, b): # b/(1+a)
     # FIXME: max aby w pewnych domenach mogly funkcjonowac
@@ -747,9 +772,10 @@ DOMAIN = {
 }
 
 # FIXME: znalesc na malych caly zakres parametrow?????????????????
+
 DOMAIN_FAST = {
     "shapes":
-        [(128, 128)], # + (512, 512)
+        [(64, 64), (128, 128)], # (128, 128) + (512, 512)
     "cases":
         [
             {gen_uniform: [use_num, 1]},
@@ -757,7 +783,7 @@ DOMAIN_FAST = {
             {gen_uniform: [use_density, 0.01]},
             {gen_uniform: [use_density, 0.03]},
             {gen_uniform: [use_density, 0.05]},
-            {gen_uniform: [use_density, 0.1]},
+            #{gen_uniform: [use_density, 0.1]},
         ]
 }
 
@@ -774,8 +800,8 @@ if __name__ == "__main__":
     opt_result = optimize(
         MODEL_BRUTFORCE,
         SPACE,
-        DOMAIN_FAST, # DOMAIN
-        n_calls=100 # 10*60
+        DOMAIN_FAST, # DOMAIN vs DOMAIN_FAST
+        n_calls=100 # (20*60) 100 vs 10*60
     )
 
     _ = plot_objective(opt_result, n_points=10)
