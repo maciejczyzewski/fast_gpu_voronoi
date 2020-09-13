@@ -400,7 +400,6 @@ def optimize(model_ref, space, domain, n_calls=10):
 
         score, log = do_compirason(model, model_ref, domain)
         # log["name"] = str(score) # FIXME: human-name        
-        log["name"] = f"({int(score)})" + name
         # FIXME: human-name        
 
         path_log = f"results/log/{score}.json"
@@ -410,6 +409,9 @@ def optimize(model_ref, space, domain, n_calls=10):
             print("=============================> SPECIAL (JFA)")
             path_log = f"results/jfa.json"
             path_code = f"results/jfa.cl"
+            name = "JFA (original)"
+
+        log["name"] = f"({int(score)}) " + name
 
         # FIXME: plot need to import DOMAIN-------->?
 
@@ -452,8 +454,11 @@ def optimize(model_ref, space, domain, n_calls=10):
         'step_function': step_function_default,
     })
 
+    # [[ gp_minimize ]]
     return gp_minimize(func=score, dimensions=space,
                        n_calls=n_calls, random_state=0)
+    #return forest_minimize(func=score, dimensions=space,
+    #                   n_calls=n_calls, random_state=0)
 
 def fn_metric(a, b): # b/(1+a)
     # FIXME: max aby w pewnych domenach mogly funkcjonowac
@@ -744,7 +749,7 @@ DOMAIN = {
 # FIXME: znalesc na malych caly zakres parametrow?????????????????
 DOMAIN_FAST = {
     "shapes":
-        [(128, 128), (512, 512)], # + (512, 512)
+        [(128, 128)], # + (512, 512)
     "cases":
         [
             {gen_uniform: [use_num, 1]},

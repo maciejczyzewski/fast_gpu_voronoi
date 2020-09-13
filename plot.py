@@ -74,8 +74,8 @@ def apply_SOTA(x_name=None, y_name=None, sort=False):
     x, y, log = read_file(path, x_name=x_name, y_name=y_name)
     if sort:
         y = sorted(y)
-    plt.plot(x, y, label="JFA (original)", color="blue", linestyle='solid')
-    ax.fill_between(x, y, 0, facecolor='blue', alpha=0.2)
+    plt.plot(x, y, label=log["name"], color="black", linestyle='solid')
+    ax.fill_between(x, y, 0, facecolor='black', alpha=0.2)
 
     # for [BRUTFORCE]
     if y_name == "score":
@@ -99,10 +99,16 @@ def globlog():
 
 # FIXME: funny name?
 
+COLORS = ['g', 'b', 'm', 'orange']
+
 with figure("time", prefix=1):
-    for _, path in globlog():
+    # FIXME: gray -----> alpha change on i?
+    for i, (_, path) in enumerate(globlog()):
         x, y, log = read_file(path, x_name=None, y_name="time")
-        plt.plot(x, y, label=log["name"])
+        if i <= 3:
+            plt.plot(x, y, label=log["name"], color=COLORS[i], linestyle='--')
+        else:
+            plt.plot(x, y, label=log["name"], color="gray", alpha=0.1, linestyle='solid')
 
     apply_SOTA(x_name=None, y_name="time", sort=False)
 
@@ -111,9 +117,12 @@ with figure("time", prefix=1):
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
 with figure("loss", prefix=2):
-    for _, path in globlog():
+    for i, (_, path) in enumerate(globlog()):
         x, y, log = read_file(path, x_name=None, y_name="loss")
-        plt.plot(x, y, label=log["name"])
+        if i <= 3:
+            plt.plot(x, y, label=log["name"], color=COLORS[i], linestyle='--')
+        else:
+            plt.plot(x, y, label=log["name"], color="gray", alpha=0.1, linestyle='solid')
 
     apply_SOTA(x_name=None, y_name="loss", sort=False)
 
@@ -122,9 +131,12 @@ with figure("loss", prefix=2):
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
 with figure("score", prefix=3):
-    for _, path in globlog():
+    for i, (_, path) in enumerate(globlog()):
         x, y, log = read_file(path, x_name=None, y_name="score")
-        plt.plot(x, y, label=log["name"])
+        if i <= 3:
+            plt.plot(x, y, label=log["name"], color=COLORS[i], linestyle='--')
+        else:
+            plt.plot(x, y, label=log["name"], color="gray", alpha=0.1, linestyle='solid')
 
     apply_SOTA(x_name=None, y_name="score", sort=False)
 
@@ -134,10 +146,13 @@ with figure("score", prefix=3):
 
 with figure("power", prefix=4):
     # FIXME: color just top 3 --> brutforce/jfa/special!
-    for _, path in globlog():
+    for i, (_, path) in enumerate(globlog()):
         x, y, log = read_file(path, x_name=None, y_name="score")
         y = sorted(y)
-        plt.plot(x, y, label=log["name"])
+        if i <= 3:
+            plt.plot(x, y, label=log["name"], color=COLORS[i], linestyle='--')
+        else:
+            plt.plot(x, y, label=log["name"], color="gray", alpha=0.1, linestyle='solid')
 
     apply_SOTA(x_name=None, y_name="score", sort=True)    
 
