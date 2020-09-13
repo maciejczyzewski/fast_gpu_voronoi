@@ -384,9 +384,8 @@ def human_algo_name(config):
 def optimize(model_ref, space, domain, n_calls=10):
     ALGOMAP = {}
 
-    @use_named_args(space)
-    def score(**config):
-        # FIXME: if same HUMAN NAME----> continue
+    def score_from_config(config):
+       # FIXME: if same HUMAN NAME----> continue
         
         print("======= EXPERIMENT =======")
         # FIXME: dla roznych domen rozne wyniki?
@@ -404,6 +403,14 @@ def optimize(model_ref, space, domain, n_calls=10):
         log["name"] = f"({int(score)})" + name
         # FIXME: human-name        
 
+        path_log = f"results/log/{score}.json"
+        path_code = f"results/code/{score}.cl"
+
+        if name == "Square|Default":
+            print("=============================> SPECIAL (JFA)")
+            path_log = f"results/jfa.json"
+            path_code = f"results/jfa.cl"
+
         # FIXME: plot need to import DOMAIN-------->?
 
         # FIXME: -----> log[name] --> [generate here catchy name]
@@ -413,19 +420,37 @@ def optimize(model_ref, space, domain, n_calls=10):
         # FIXME: 3d ---> wykres?
         # FIXME: sorted [score] along all axis?
         log_cl = json.dumps(log)
-        text_file = open(f"results/log/{score}.json", "w")
+        text_file = open(path_log, "w")
         text_file.write(log_cl)
         text_file.close()
 
         config_cl = pformat(config, indent=4)
         result_cl = "/*\n" + config_cl + "\n*/\n\n" + model.code
-        text_file = open(f"results/code/{score}.cl", "w")
+        text_file = open(path_code, "w")
         text_file.write(result_cl)
         text_file.close()
 
         print("==========================")
         ALGOMAP[name] = -score
         return -score
+
+    @use_named_args(space)
+    def score(**config):
+        
+        print("======= EXPERIMENT =======")
+        # FIXME: dla roznych domen rozne wyniki?
+
+        config["brutforce"] = False
+        return score_from_config(config)
+
+    score_from_config({
+        'anchor_double': False,
+        'anchor_num': None,
+        'anchor_type': mod_anchor_type__square,
+        'brutforce': False,
+        'noise': False,
+        'step_function': step_function_default,
+    })
 
     return gp_minimize(func=score, dimensions=space,
                        n_calls=n_calls, random_state=0)
@@ -719,7 +744,7 @@ DOMAIN = {
 # FIXME: znalesc na malych caly zakres parametrow?????????????????
 DOMAIN_FAST = {
     "shapes":
-        [(128, 128)], # + (512, 512)
+        [(128, 128), (512, 512)], # + (512, 512)
     "cases":
         [
             {gen_uniform: [use_num, 1]},

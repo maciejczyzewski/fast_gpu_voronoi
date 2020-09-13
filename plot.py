@@ -6,6 +6,10 @@ import re
 
 from glob import glob
 
+######################################################################
+# FIXME: JFA, BRUTFORCE na wykresach
+######################################################################
+
 ###############################
 # [IDEAS]
 # FIXME: 3d
@@ -64,10 +68,25 @@ def fill_between(X, Y, color="blue", alpha=0.05, factor=1):
     sigma = factor * np.array(Y).std(axis=0)  # ls = '--'
     ax.fill_between(X, Y + sigma, Y - sigma, facecolor=color, alpha=alpha)
 
+def apply_SOTA(x_name=None, y_name=None, sort=False):
+    # for [JFA]
+    path = "results/jfa.json"
+    x, y, log = read_file(path, x_name=x_name, y_name=y_name)
+    if sort:
+        y = sorted(y)
+    plt.plot(x, y, label="JFA (original)", color="blue", linestyle='solid')
+    ax.fill_between(x, y, 0, facecolor='blue', alpha=0.2)
 
-### FIGURE (1): underfitting ###
-
-# FIXME: funny name?
+    # for [BRUTFORCE]
+    if y_name == "score":
+        plt.plot(x, [100]*len(x), label="brutforce", color="red", linestyle='solid')
+        ax.fill_between(x, [100]*len(x), 0, facecolor='red', alpha=0.2)
+    if y_name == "loss":
+        plt.plot(x, [0]*len(x), label="brutforce", color="red", linestyle='solid')
+        ax.fill_between(x, [0]*len(x), 0, facecolor='red', alpha=0.2)
+    if y_name == "time":
+        plt.plot(x, [1]*len(x), label="brutforce", color="red", linestyle='solid')
+        ax.fill_between(x, [1]*len(x), 0, facecolor='red', alpha=0.2)
 
 def globlog():
     vec = []
@@ -76,10 +95,16 @@ def globlog():
         vec.append([x, path])
     return sorted(vec)[::-1]
 
+### FIGURE (1): underfitting ###
+
+# FIXME: funny name?
+
 with figure("time", prefix=1):
     for _, path in globlog():
         x, y, log = read_file(path, x_name=None, y_name="time")
         plt.plot(x, y, label=log["name"])
+
+    apply_SOTA(x_name=None, y_name="time", sort=False)
 
     plt.ylabel("time")
     plt.xlabel("case")
@@ -90,6 +115,8 @@ with figure("loss", prefix=2):
         x, y, log = read_file(path, x_name=None, y_name="loss")
         plt.plot(x, y, label=log["name"])
 
+    apply_SOTA(x_name=None, y_name="loss", sort=False)
+
     plt.ylabel("loss")
     plt.xlabel("case")
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
@@ -99,18 +126,23 @@ with figure("score", prefix=3):
         x, y, log = read_file(path, x_name=None, y_name="score")
         plt.plot(x, y, label=log["name"])
 
+    apply_SOTA(x_name=None, y_name="score", sort=False)
+
     plt.ylabel("score")
     plt.xlabel("case")
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
 with figure("power", prefix=4):
+    # FIXME: color just top 3 --> brutforce/jfa/special!
     for _, path in globlog():
         x, y, log = read_file(path, x_name=None, y_name="score")
         y = sorted(y)
         plt.plot(x, y, label=log["name"])
 
+    apply_SOTA(x_name=None, y_name="score", sort=True)    
+
     plt.ylabel("score")
-    plt.xlabel("case")
+    plt.xlabel("case (unordered)")
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
 """
