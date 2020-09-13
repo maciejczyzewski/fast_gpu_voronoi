@@ -13,6 +13,7 @@ from pprint import pprint
 # FIXME: sorted by score
 # FIXME: time/loss (power line)
 # FIXME: [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[generacja tabelek]]]]]]]]
+# FIXME: case to ax[x]?????????????
 ###############################
 
 def slugify(text):
@@ -95,8 +96,8 @@ def globlog():
 # FIXME:
 # - u gory: segmenty z np. 64x64, 128x128
 # - na dole: jakie `seeds` jakie `rho`
-def apply_domain(x=None):
-    # FIXME: dodac umiejetnosc pomijania niektorych? jak jest gesto?
+
+def apply_domain__classic(x=None):
     path = "results/domain.json"
     with open(path, "r") as jsonfile:
         json_txt = jsonfile.read()
@@ -105,9 +106,59 @@ def apply_domain(x=None):
     domain_str = []
     for d in domain:
         q = round(d['num']/(d['shape'][0]*d['shape'][1]), 4)
-        domain_str.append(f"{d['shape'][0]}x{d['shape'][1]}\nseeds={d['num']}\n$\\rho$={q}")
-        # domain_str.append(f"{d['shape'][0]}x{d['shape'][1]}\n{d['num']}")
+        domain_str.append(f"{d['shape'][0]}x{d['shape'][1]}\n$\\Omega$={d['num']}\n$\\rho$={q}")
     plt.xticks(x, domain_str, rotation='horizontal', fontsize=2)
+
+def apply_domain__groups(x=None):
+    path = "results/domain.json"
+    with open(path, "r") as jsonfile:
+        json_txt = jsonfile.read()
+        domain = json.loads(json_txt)
+    pprint(domain)
+    domain_str = []
+    for d in domain:
+        q = round(d['num']/(d['shape'][0]*d['shape'][1]), 4)
+        domain_str.append(f"$\\Omega$={d['num']}\n$\\rho$={q}")
+    plt.xticks(x, domain_str, rotation='horizontal', fontsize=2)
+
+    """
+    nx = len(x)
+    groups = [('GroupA', (x[0], x[nx//3])),
+              ('GroupB', (x[-2*nx//3], x[2*nx//3])),
+              ('GroupC', (x[-nx//3], x[-1]))]
+    """
+    nx = len(x)
+    print(x[0], x[nx//3])
+    print(x[-2*nx//3], x[2*nx//3])
+    groups = []
+    cur_start, cur_span, cur_shape, first = -1, 0, "?x?", True
+    for i, d in enumerate(domain):
+        shape = f"{d['shape'][0]}x{d['shape'][1]}"
+        if cur_span != 0 and shape != cur_shape:
+            # save
+            print(f"-------> {i}, {cur_start} {cur_span} {shape}")
+            if first is not True:
+                groups.append((cur_shape, (x[cur_start], x[cur_start+cur_span])))
+            cur_start, cur_span, cur_shape = i, 0, shape
+            if first is True:
+                cur_start -= 1
+                cur_span += 1
+            first = False
+        else:
+            cur_span += 1
+
+    print(f"=? {cur_start} {cur_start+cur_span} | span={cur_span}")
+    groups.append((cur_shape, (x[cur_start], x[cur_start+cur_span])))
+    pprint(groups)
+
+    # Annotate the groups
+    for name, xspan in groups:
+        annotate_group(name, xspan)
+
+def apply_domain(x=None):
+    # FIXME: dodac umiejetnosc pomijania niektorych? jak jest gesto?
+    # apply_domain__classic(x)
+    apply_domain__groups(x)
     # plt.xticks(x, domain_str, rotation='horizontal', fontsize=2)
     # import matplotlib.ticker as mticker
     # myLocator = mticker.MultipleLocator(2)
@@ -115,6 +166,27 @@ def apply_domain(x=None):
     #ax.tick_params(axis="x", bottom=True, top=True, labelbottom=True, labeltop=True)
     #plt.setp([tick.label1 for tick in ax.xaxis.get_major_ticks()], rotation='horizontal', fontsize=2)
     #plt.setp([tick.label1 for tick in ax.xaxis.get_major_ticks()], rotation='horizontal', fontsize=2)
+
+def annotate_group(name, xspan, ax=None):
+    """Annotates a span of the x-axis"""
+    def annotate(ax, name, left, right, y, pad):
+        arrow = ax.annotate(name,
+                xy=(left, y), xycoords='data',
+                xytext=(right, y-pad), textcoords='data',
+                annotation_clip=False, verticalalignment='top',
+                horizontalalignment='center', linespacing=2.0,
+                arrowprops=dict(arrowstyle='-', shrinkA=0, shrinkB=0,
+                        connectionstyle='angle,angleB=90,angleA=0,rad=5')
+                )
+        return arrow
+    if ax is None:
+        ax = plt.gca()
+    ymin = ax.get_ylim()[0]
+    ypad = 0.01 * np.ptp(ax.get_ylim())
+    xcenter = np.mean(xspan)
+    left_arrow = annotate(ax, name, xspan[0], xcenter, ymin, ypad)
+    right_arrow = annotate(ax, name, xspan[1], xcenter, ymin, ypad)
+    return left_arrow, right_arrow
 
 COLORS = ['g', 'b', 'm', 'orange']
 
