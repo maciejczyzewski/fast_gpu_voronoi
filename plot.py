@@ -97,7 +97,7 @@ def globlog():
 # - u gory: segmenty z np. 64x64, 128x128
 # - na dole: jakie `seeds` jakie `rho`
 
-def apply_domain__classic(x=None):
+def apply_domain__classic(x=None, with_shape=True):
     path = "results/domain.json"
     with open(path, "r") as jsonfile:
         json_txt = jsonfile.read()
@@ -106,7 +106,10 @@ def apply_domain__classic(x=None):
     domain_str = []
     for d in domain:
         q = round(d['num']/(d['shape'][0]*d['shape'][1]), 4)
-        domain_str.append(f"{d['shape'][0]}x{d['shape'][1]}\n$\\Omega$={d['num']}\n$\\rho$={q}")
+        if with_shape:
+            domain_str.append(f"{d['shape'][0]}x{d['shape'][1]}\n$\\Omega$={d['num']}\n$\\rho$={q}")
+        else:
+            domain_str.append(f"$\\Omega$={d['num']}\n$\\rho$={q}")
     plt.xticks(x, domain_str, rotation='horizontal', fontsize=2)
 
 def apply_domain__groups(x=None):
@@ -115,28 +118,12 @@ def apply_domain__groups(x=None):
         json_txt = jsonfile.read()
         domain = json.loads(json_txt)
     pprint(domain)
-    domain_str = []
-    for d in domain:
-        q = round(d['num']/(d['shape'][0]*d['shape'][1]), 4)
-        domain_str.append(f"$\\Omega$={d['num']}\n$\\rho$={q}")
-    plt.xticks(x, domain_str, rotation='horizontal', fontsize=2)
-
-    """
-    nx = len(x)
-    groups = [('GroupA', (x[0], x[nx//3])),
-              ('GroupB', (x[-2*nx//3], x[2*nx//3])),
-              ('GroupC', (x[-nx//3], x[-1]))]
-    """
-    nx = len(x)
-    print(x[0], x[nx//3])
-    print(x[-2*nx//3], x[2*nx//3])
+    
     groups = []
     cur_start, cur_span, cur_shape, first = -1, 0, "?x?", True
     for i, d in enumerate(domain):
         shape = f"{d['shape'][0]}x{d['shape'][1]}"
         if cur_span != 0 and shape != cur_shape:
-            # save
-            print(f"-------> {i}, {cur_start} {cur_span} {shape}")
             if first is not True:
                 groups.append((cur_shape, (x[cur_start], x[cur_start+cur_span])))
             cur_start, cur_span, cur_shape = i, 0, shape
@@ -146,14 +133,19 @@ def apply_domain__groups(x=None):
             first = False
         else:
             cur_span += 1
-
-    print(f"=? {cur_start} {cur_start+cur_span} | span={cur_span}")
     groups.append((cur_shape, (x[cur_start], x[cur_start+cur_span])))
+    
     pprint(groups)
 
-    # Annotate the groups
     for name, xspan in groups:
         annotate_group(name, xspan)
+
+    ax.tick_params(axis="x", bottom=True, top=True, labelbottom=False, labeltop=True)
+    domain_str = []
+    for d in domain:
+        q = round(d['num']/(d['shape'][0]*d['shape'][1]), 4)
+        domain_str.append(f"$\\Omega$={d['num']}\n$\\rho$={q}")
+    plt.xticks(x, domain_str, rotation='horizontal', fontsize=2)
 
 def apply_domain(x=None):
     # FIXME: dodac umiejetnosc pomijania niektorych? jak jest gesto?
