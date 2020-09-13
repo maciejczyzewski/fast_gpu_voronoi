@@ -291,4 +291,4 @@ with figure("power", prefix=4):
 
 
 # FIXME: 3d wykres?
-# FIXME: tabelka?
+
