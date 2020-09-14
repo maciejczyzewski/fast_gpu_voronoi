@@ -264,10 +264,12 @@ To takich ensemblacji najlepiej sprawdzi sie drzewo decyzyjne (moze byc boostowa
 \section{Variants} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\hl{ZROBIC LADNE RYSUNECZKI!}
+\hl{ZROBIC LADNE RYSUNECZKI w Google Slides - eksport to pdf!}
 wyjasnic slownictwo? np. co okreslamy przez anchor
 
 \subsection{Noise} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\includegraphics[width=0.5\linewidth]{../figures/idea_noise}
 
 \hl{w poczatkowej wersji dodanie szumu pozwolilo zmienic zlozonosc - dodatkowo
 mamy na to dowod kamila}
@@ -275,7 +277,9 @@ mamy na to dowod kamila}
 przed wykonaniem algorytmu punkty informacja o punktach jest losowo rozrzucana
 po macierzy - tworzac przypadkowe short-cuty
 
-\subsection{Local Noise} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Local Noise} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\includegraphics[width=0.5\linewidth]{../figures/idea_local_noise}
 
 \hl{czy jest mozliwe losowanie szumu w takich plamach? aby lokalne seedy
 losowaly lokalne seedy? - albo probuja modyfikowac wylosowany - hehe - czyli
@@ -284,24 +288,45 @@ prostujac jestem na pozycji (x,y) wylosowalem punkt (a,b) rzucam nim w okolice
 
 \subsection{Anchor Type} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\includegraphics[width=0.5\linewidth]{../figures/idea_anchor_type}
+
 orginalnalnie jest to kwadrat 3x3, my proponujemy okrag (rownomierny), lub
 \hl{losowane punkty na okregu (doimplementowac)}.
 
+\subsubsection{Anchor Num} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\includegraphics[width=0.5\linewidth]{../figures/idea_anchor_num}
+
+tylko dla okregow?
+ile ma byc punktow w anchorze (np. na okregu).
+\hl{czy da sie to sensownie zaimplementowac dla kwadratu? tak naprawde tylko
+3x3, 5x5 maja jakikolwiek sens}
+
 \subsection{Anchor Double} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\includegraphics[width=0.5\linewidth]{../figures/idea_anchor_double}
 
 oprocz pojedynczego anchora, mozliwe jest uzycie podwojnej warstwy anchorow
 (czyli np. male kolko i wieksze) - idea - male kolko jest dokladne - a wielkie
 jest skautujace (w sumie to podobny mechanizm jak w Lookahead - wolny/szybki)
 
-\hl{ratio pomiedzy zewnetrznymi a wewnetrznymi (doimplementowac)}
+\subsubsection{Anchor Distance Ratio}
 
-\subsection{Anchor Num} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\includegraphics[width=0.5\linewidth]{../figures/idea_anchor_distance_ratio}
 
-ile ma byc punktow w anchorze (np. na okregu).
-\hl{czy da sie to sensownie zaimplementowac dla kwadratu? tak naprawde tylko
-3x3, 5x5 maja jakikolwiek sens}
+\hl{ratio pomiedzy zewnetrznymi a wewnetrznymi (doimplementowac) - mozliwosc od
+0 do 1}
+
+\subsubsection{Anchor Number Ratio}
+
+\includegraphics[width=0.5\linewidth]{../figures/idea_anchor_number_ratio}
+
+\hl{ratio ale ilosciowe pomiedzy zewnetrznymi a wewnetrznymi (doimplementowac) -
+czyli np. 5 na zewnetrznym a na bliskim 10}
 
 \subsection{Step Function} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\includegraphics[width=0.5\linewidth]{../figures/idea_step_function}
 
 aktualnie 3 warianty, standart JFA, zmieniona podstawa na 3, oraz logstar krokow,
 powinna istniec tez wersja 4-ta, uzalezniona od num oraz shape - pozwalajaca na
@@ -310,7 +335,7 @@ robienie \hl{piloksztaltnych lub isogaussowaskich ciagow}.
 \hl{wielomian z 3 parametrami (uzalezniony od dwoch
 wejsci - shape, num)}
 
-\subsection{Correction???} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Correction???} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 mozna domimplementowac flage dla +1, +2 (jak u JFA), lub przechowywanie 2
 najlepszych i ich przekazywanie (pewnie duzo wolniejsze wiec sie nie oplaca)
