@@ -16,8 +16,12 @@ class LatexEventHandler(FileSystemEventHandler):
                 self.compile(event)
 
     def compile(self, event):
-        print("=== LATEX ===")
-        os.system(f"pdflatex {self.LATEX_FLAGS} {event.src_path}")
+        print("\033[92m=== LATEX ===\033[0m")
+        os.system(f"pdflatex-dev {self.LATEX_FLAGS} {event.src_path}")
+
+        print("\033[92m=== BIBTEX ===\033[0m")
+        os.system(f"bibtex {event.src_path.replace('.tex', '')}")
+
         os.system(f"md5 {event.src_path}")
 
 

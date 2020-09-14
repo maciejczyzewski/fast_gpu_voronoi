@@ -2,6 +2,9 @@
 
 % FIXME: https://github.com/google-research/arxiv-latex-cleaner
 
+% XXX: (mental anchor / looped / 1h) ->  UNDADASEA
+%      https://www.youtube.com/watch?v=vpeljtzB1a4
+
 \usepackage{arxiv}
 
 \usepackage[utf8]{inputenc} % allow utf-8 input
@@ -16,7 +19,31 @@
 \usepackage{graphicx}
 \usepackage{float}
 
-\title{A template for the \emph{arxiv} style}
+%%% BONUS %%%
+\usepackage[table]{xcolor}  % for colors (like `red`)
+\usepackage[normalem]{ulem} % for underline
+\usepackage{booktabs}       % for better table
+\usepackage{bm}             % for special table cell (`cellcolor`)
+\usepackage{hhline,soul}    % for `hl` command (highlight text)
+\usepackage{amsmath}        % for multi-line math
+%%%%%%%%%%%%%
+
+%%% BIBTEX %%%
+% https://sunsite.icm.edu.pl/pub/CTAN/info/biblatex-cheatsheet/biblatex-cheatsheet.pdf
+\usepackage[backend=bibtex, style=numeric, sorting=ynt]{biblatex}
+\addbibresource{main.bib} %                       `ynt` vs. `ydnt`
+\newcommand{\citep}[1]{\citeauthor*{#1} \cite{#1}} % for `fancy` cite style
+%%%%%%%%%%%%%%
+
+\newcommand{\ourjfa}{Lord Vorotron} % okJFAuto / JFAstar
+%\title{A survey of \emph{jump flooding algorithm} applied to Voronoi}
+% \emph{\ourjfa}: Evolving Fast GPU Algorithm for
+% Voronoi Diagram and Distance Transform in O(1) from JFA using AutoML
+\title{lord vorotron: finding the best JFA variant for the coming winter} % $\approx$
+
+\renewcommand{\headeright}{}
+\renewcommand{\undertitle}{Draft}
+\renewcommand{\shorttitle}{\ourjfa}
 
 %\date{September 9, 1985}	% Here you can change the date presented in the paper title
 %\date{} 					% Or removing it
@@ -41,35 +68,349 @@
 
 \maketitle
 
+\hl{\textbf{UWAGA!} Przenioslem fragmenty ze starego szkicu, teraz jednak czuje ze
+powinnien byc to takie ogolne podsumowanie wszystkich mozliwych wariantow JFA - i
+w jakich przypadkach sie sprawdzaja. A tak przyokazji nasza wersja z szumem+trikami
+ktora dobrze dziala, no i dodatek taki ze mozna teraz zrobic sobie ensembla (a
+nie jako glowny cel tej pracy). Dlatego wszystko co ponizej to praktycznie
+random/bardzo mocny szkic. Wykresy to wizualizacja smaku.}
+\newline
+
 \begin{abstract}
-	\lipsum[1]
+This paper studies a practical usage of machine learning (AutoML) to automate
+research towards discovering efficient Voronoi Diagram and Distance Transform
+algorithms.  As the baseline we used the Jump Flooding Algorithm (JFA) - by
+finding new mutations which works best for specific data, and then ensembling
+them into one, we create new state-of-the-art algorithm in this field named
+\textbf{\ourjfa} \hspace{0.01cm} with time complexity \textcolor{red}{$\approx$O(1)} and
+work complexity \textcolor{red}{$\approx$O(N)}.
+The algorithm is faster and produces more accurate approximations. It could be
+extended into 3D space in a slice-by-slice manner.  We started from the
+assumption that JFA has potential for improvement - some benefits can be
+observed for specific data by adding random noise and adjusting the step size in
+JFA.  This showed us that, AutoML could examine this space, and find the best
+possible algorithm in each case.  In the further part of the work, we discuss
+the results, compare the variants and ensemble for creating the final algorithm.
 \end{abstract}
 
-\keywords{First keyword \and Second keyword \and More}
+\keywords{aaaaaaaaaaaaaaaaaa \and bbbbbbbbbbbbbbb \and ccccccccccccccccccc}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-omghahahah
+This paper studies a practical usage of machine learning to automate research
+towards discovering efficient Distance Transform algorithms (utilizing technique known as AutoML).
+Thus, by finding mutations which works best for specific data, and then ensembling them into
+one, we create new state-of-the-art algorithm in this field named \uline{\ourjfa \hspace{0.01cm} with
+time complexity $\approx$O(1) and work complexity $\approx$O(N).}
+
+Notable contribution to the quick algorithm that makes Distance Transform (DT)
+using graphics hardware includes \citep{hoff1999fast} that creates a cone for
+each input (point/seed) and renders those cones to obtain the Voronoi diagram as the lower envelope of these cones.
+\cite{fischer2006fast} use planes tangent to a paraboloid and thus avoid the errors caused by the tessellation of the cones.
+Unfortunately, the drawback of this approach is the significant amount of computation and the implementation complexity.
+
+Jump flooding algorithm (JFA)\footnote{a novel pattern of
+communication} is an interesting way to utilize the graphics processing unit to
+efficiently compute Voronoi diagrams and distance transforms
+\cite{rong2006jump}. This method is faster and produces more accurate results
+\cite{rong2007variants}, and furthermore, it could be extended into 3D space in a slice-by-slice manner.
+This is more effective than the previous research carried out by
+\citep{sud2006interactive}, because the speed of JFA is almost independent to the number of seeds \cite{rong2007variants}.
+
+Based on this research and findings, several efficient GPU-based algorithms which are either
+work optimal or time optimal have been proposed including
+SKW \cite{schneider2009gpu}, PBA \cite{cao2010parallel}, FastGPU \cite{de2017fast}, Honda's algorithm \cite{honda2017simple} and
+WTO \cite{manduhu2019work}.
+
+The main question that needs to be addressed now is whether JFA has potential
+for improvement. We found some benefits for specific data by adding random noise
+and adjusting the phase size in JFA. Therefore, this shows that, AutoML could examine this
+unknown space, and find the best possible algorithm in each case.
+
+For convenience, this work focus on the Voronoi diagram only - because this problem can be translated to DT \cite{rong2006jump}.
+The algorithm would be an approximation of the output, thus we suggest using WTO
+\cite{manduhu2019work} for exact DT (EDT). The major contributions of this paper are thus:
+
+\begin{enumerate}
+\item Presenting new state-of-the-art version of JFA made as envolved ensemble of weak learners; and
+\item Proposing, for an input set of seeds in a 2D grid, the first
+parallel algorithm in GPU to compute in constant time (i.e.
+independent of the number of seeds) a highly accurate
+Voronoi diagram and distance transform.
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Related Work} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Several efficient GPU-based algorithms which are either
+work optimal or time optimal have been proposed including
+JFA \cite{rong2006jump}, SKW \cite{schneider2009gpu},
+PBA \cite{cao2010parallel}, FastGPU \cite{de2017fast}, Honda's algorithm \cite{honda2017simple} and
+WTO \cite{manduhu2019work}.
+
+\begin{table}[H] \centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Reference                & Algorithm    & Exactness   & Time         & Work         \\ \midrule
+\citep{de2017fast}       & FastGPU      & Exact       & $O(n^3/p)$   & -            \\
+\citep{cao2010parallel}  & PBA          & Exact       & $O(n)$       & $O(mN)$      \\
+\citep{honda2017simple}  & based on SKW & Exact       & $O(n)$       & $O(N)$       \\
+\citep{manduhu2019work}  & WTO          & \cellcolor{blue!25}\textbf{Exact}& \cellcolor{blue!25}$\bm{O(\log n)}$  & $O(N)$       \\
+\citep{schneider2009gpu} & SKW          & Approximate & $O(n)$       & $O(N)$       \\
+\citep{rong2006jump}     & JFA          & Approximate & $O(\log n)$  & $O(N\log n)$ \\ \bottomrule
+In this paper            & \ourjfa      & \cellcolor{blue!25}\textbf{Approximate} & \cellcolor{blue!25}$\sim$$\bm{O(1)}$ & $\sim$$O(N)$ \\ \bottomrule
+\end{tabular}
+\vspace{1em}
+\caption{Different GPU algorithms for computing EDT}
+\end{table}
+
+\subsection{Jump Flooding} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{redukcja i bridge pomiedzy intro (usunac subsection)}
+
+co to jest jump flooding? tak naprawde to nie jest algorytm do voronoi-a tylko
+pattern komunikacyjny w programowaniu rownoleglym - swojej pracy doktorskiej
+autor tej techniki podaje wiele zastosowan jednak w swoich badaniach ogranicza
+sie do Voronoi-a. glownym pytaniem roznych takich patternow jest ile potrzebnych
+jest rund/operacji komunikacji aby zagwarantowac aby dana informacja zostanie
+dostarczona. akurat w voronoi-u wiele komorek jest lokalna w skali calego
+przykladu - wiec JFA ktora gwarantuje dostarczenie informacji globalnie do
+kazdego punktu - wykonuje pewne niepotrzebne operacje.  szybkosc i zajetosc
+pamieciowa JFA jest satysfakcujaca, jednak proste modyfikacje pokazuja ze
+algorytm ten wykonuje sie szybciej w pewnych przypadkach (i to typowych).
+dlatego naturalnym pytanie powinno byc w jakich oraz jakie modyfikacje wplywaja
+na szybkosc dzialania.
+
+\subsection{AutoML} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{przeniesc do Proposed Method}
+
+w naszym wypadku zdefiniowalismy pewien zbior variantow pewnych czesci
+algorytmu (Search Space), modul testujacy dana mutacje/wariant - sklada kod kernela a pozniej go weryfikuje na naszej Domain Space.
+
+dla voronoi-a interesuja nas 2 parametry Error oraz Szybkosc, aby wyniki byly
+wiarygodne porownujemy je z bruteforcem (a wiec bedzie to iloraz).
+aby ocenic dana mutacje musimy przypisac jakis Score danej wersji, wiec uzylismy
+wzor ponizej
+
+\begin{align}
+S(x,y) = max\{0, x \cdot (100-y^{1.5})\}, \\
+0 \leq y \leq 100, 0 < x
+\end{align}
+
+ktory kaze za zbyt wysokie errory, dajac zerowy wynik - skladnik przy y rosnie
+szybciej niz x wiec gdy przekroczy 100 da nam ujemny wynik - czyli 0.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Proposed Method} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{przepisac ten szkic bo jezyk sie placzy}
+
+JFA opiera sie na tym ze infomacja jest przekazywana ??????.  Przekazanie odbywa
+sie w log(n) krokach. Wiec przeprowadzilismy krotki eksperyment applyujac losowy
+szum na wejsciowa masce. Okazalosie sie ze ilosc potrzebnych krokow spadla -
+powstaly losowe shortcuty.  Co oznacza ze powinny istniec inne "mutacje"
+algorytmow lepsze w pewnych okreslonych przypadkach.  Wiec szukanie najszybszego
+algorytmu bedzie nastepujace:
+
+\begin{itemize}
+\item Wymyslenie wszystkich mozliwych wariantow JFA
+\item Mutacje i zapisanie najlepszych wersji dla danej domeny
+\item Ensemblacja algorytmow tak aby wybierac najlepszy variant dla danej domeny
+\end{itemize}
+
+\subsection{Domain Space} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+jakie domeny i dlaczego (i jak dzialaly gen\_uniform, \hl{gen\_polar, gen\_grid})
+
+\begin{itemize}
+	\item \textbf{shapes}: \{(64, 64), (128, 128), (256, 256), (512, 512), (768,
+		768)\}
+	\item \textbf{cases}:
+        \begin{itemize}
+			\item gen\_uniform: seeds=1,
+			\item gen\_uniform: seeds=2,
+			\item gen\_uniform: density=0.0001,
+			\item gen\_uniform: density=0.001,
+			\item gen\_uniform: density=0.01,
+			\item gen\_uniform: density=0.02,
+			\item gen\_uniform: density=0.03,
+			\item gen\_uniform: density=0.04,
+			\item gen\_uniform: density=0.05,
+			\item gen\_uniform: density=0.1,
+		\end{itemize}
+\end{itemize}
+
+\subsection{Search Space} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{bridge z score function gdziekolwiek to bedzie}
+
+jakie modyfikacje, na to osobna sekcja? wiec co tu napisac
+
+\subsection{Ensemble} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+patrzac na rezultaty mozemy znalesc jaki algorytm najlepiej sprawdza sie w
+zadanej domenie. np. widac ze dla malej ilosci seedow (malo gestych przypadkow,
+ktore maja mala powierzchnie) oplaca sie uzyc bruteforce. Dla kolejnych
+wiekszych przypadkow innych wariantow JFA. Jak wybrac algorytm? Kazdy przypadek ma `shape` oraz `num` wiec mozna na CPU wysemplowac
+pare punktow albo odrazu obliczyc gestosc i wybrac odpowiedni algorytm.
+To takich ensemblacji najlepiej sprawdzi sie drzewo decyzyjne (moze byc boostowane).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Variants} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{ZROBIC LADNE RYSUNECZKI!}
+wyjasnic slownictwo? np. co okreslamy przez anchor
+
+\subsection{Noise} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{w poczatkowej wersji dodanie szumu pozwolilo zmienic zlozonosc - dodatkowo
+mamy na to dowod kamila}
+
+przed wykonaniem algorytmu punkty informacja o punktach jest losowo rozrzucana
+po macierzy - tworzac przypadkowe short-cuty
+
+\subsection{Local Noise} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{czy jest mozliwe losowanie szumu w takich plamach? aby lokalne seedy
+losowaly lokalne seedy? - albo probuja modyfikowac wylosowany - hehe - czyli
+prostujac jestem na pozycji (x,y) wylosowalem punkt (a,b) rzucam nim w okolice
+(a+rand(density), b+rand(density)}
+
+\subsection{Anchor Type} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+orginalnalnie jest to kwadrat 3x3, my proponujemy okrag (rownomierny), lub
+\hl{losowane punkty na okregu (doimplementowac)}.
+
+\subsection{Anchor Double} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+oprocz pojedynczego anchora, mozliwe jest uzycie podwojnej warstwy anchorow
+(czyli np. male kolko i wieksze) - idea - male kolko jest dokladne - a wielkie
+jest skautujace (w sumie to podobny mechanizm jak w Lookahead - wolny/szybki)
+
+\hl{ratio pomiedzy zewnetrznymi a wewnetrznymi (doimplementowac)}
+
+\subsection{Anchor Num} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ile ma byc punktow w anchorze (np. na okregu).
+\hl{czy da sie to sensownie zaimplementowac dla kwadratu? tak naprawde tylko
+3x3, 5x5 maja jakikolwiek sens}
+
+\subsection{Step Function} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+aktualnie 3 warianty, standart JFA, zmieniona podstawa na 3, oraz logstar krokow,
+powinna istniec tez wersja 4-ta, uzalezniona od num oraz shape - pozwalajaca na
+robienie \hl{piloksztaltnych lub isogaussowaskich ciagow}.
+
+\hl{wielomian z 3 parametrami (uzalezniony od dwoch
+wejsci - shape, num)}
+
+\subsection{Correction???} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+mozna domimplementowac flage dla +1, +2 (jak u JFA), lub przechowywanie 2
+najlepszych i ich przekazywanie (pewnie duzo wolniejsze wiec sie nie oplaca)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Results} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl {przeniesc legende? JAKO OSOBNY PDF? i podac w tej sekcji - tak sie nie robi
+ale bylo by ok i czytelnie + wiecej miejsca na wykresy a przypadkow bedzie
+wiecej}
+
+\subsection{Performance} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+wykres zostal zrobiony poprzez posortowanie scorow - dzieki temu widac roznice w
+przyroscie i latwo dostrzec ktory algorytm ma najwyzszy score lub jaka ma
+chaktersytyke (np. jest bardzo skuteczny dla waskiej grupy przykladow)
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\linewidth]{../figures/figure-1-time}
-	\caption{\emph{batchboost} presented in three phases: (a) pairing by sorting
-	  error (b) mixing with \emph{mixup} (c) feeding: a mixed feed-batch and new
-	  samples in half-batch by 1:1 ratio.}
+	\includegraphics[width=\linewidth]{../figures/figure-4-power}
+	\caption{bla bla bla}
 	\label{fig:abstract}
 \end{figure}
 
-\begin{table}
+\subsection{Performance? ale taki inny} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+te same dane jak w poprzedniej sekcji tylko nie posortowane - dlatego widac jak
+wygladaja "gorki" dla danych shapow i rosnacych gestosci
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{../figures/figure-3-score}
+	\caption{bla bla bla}
+	\label{fig:abstract}
+\end{figure}
+
+\begin{table}[H]
 	\centering
 	\input{../figures/table.tex}
 	\newline
 	\caption{domain: 32x32, 64x64, 128x128, 256x256}
 \end{table}
 
+\subsection{Error Rate} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+score jest scisle powiazany z errorem ale tutaj przejrzyscie widac w jakich
+przypadkach jest naprawde zle i ile (szarych) czesto jest bardzo szybkich - ale
+rowniez bardzo blednych dlatego maja finalnie niskie scory
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{../figures/figure-2-loss}
+	\caption{bla bla bla}
+	\label{fig:abstract}
+\end{figure}
+
+\subsection{Objectives} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{naprawic generowanie tego wykresu}
+
+czyli co ma wplyw na co (w sumie to najwazniejsze mialo byc w pracy)
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{../figures/raport}
+	\caption{bla bla bla}
+	\label{fig:abstract}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Practical Usage} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\bibliographystyle{unsrt}
-\bibliography{references} 
+\hl{polaczyc z Conclusions}
+
+Jest wiele projektow ktore potrzebuje DT lub voronoi-a. Jedyne dwa praktyczne
+przyklady z tej pracy to SOTA dla JFA - czyli JFAstar, oraz praktyczny Ensemble
+(uwzgledniajacy np. bruteforce dla malych instancji).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusions} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This paper presents the GPU's effective, almost constant, algorithm for calculating the Euclidean distance transform (DT) approximation for 2D and higher dimensional images.
+%
+As mentioned in \cite{cao2010parallel}, it remains challenging to balance the workload in such an approach.
+%
+\textit{\ourjfa} does not explicitly solve this issue but, by constructing an alternative solution utilizing random shortcuts and parameter estimation, it makes it a reasonable approximation.
+%
+In practice, such a constant time algorithm is useful in many interactive applications, such as tessellations, rendering, and image processing, involving \cite{rong2006jump}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Acknowledgements} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{Dziekuje swojemu psu!Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu! Dziekuje swojemu psu!  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\printbibliography
 
 \end{document}

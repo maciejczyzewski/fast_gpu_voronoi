@@ -775,7 +775,8 @@ DOMAIN = {
 
 DOMAIN_FAST = {
     "shapes":
-        [(32, 32), (64, 64), (128, 128), (256, 256)], # (128, 128) + (512, 512)
+        [(32, 32)],
+    #    [(32, 32), (64, 64), (128, 128), (256, 256)], # (128, 128) + (512, 512)
     "cases":
         [
             {gen_uniform: [use_num, 1]},
@@ -801,11 +802,13 @@ if __name__ == "__main__":
         MODEL_BRUTEFORCE,
         SPACE,
         DOMAIN_FAST, # DOMAIN vs DOMAIN_FAST
-        n_calls=100 # (20*60) 100 vs 10*60
+        n_calls=100, # (20*60) 100 vs 10*60
     )
 
-    _ = plot_objective(opt_result, n_points=10)
+    # FIXME: cos tu nie gra // naprawic?
+    # moze tak ---> https://scikit-optimize.github.io/stable/auto_examples/plots/partial-dependence-plot-2D.html#sphx-glr-auto-examples-plots-partial-dependence-plot-2d-py
+    _ = plot_objective(opt_result, n_points=40)
     # FIXME: nabrawic te marginy
-    plt.savefig('raport.png')
+    plt.savefig('figures/raport.png')
 
     print("ok")

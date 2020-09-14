@@ -18,3 +18,7 @@ test/*.pdf
 *.snm
 *.toc
 *.vrb
+*.blg
+*.bbl
+*-blx.bib
+*.xml
