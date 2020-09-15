@@ -156,8 +156,8 @@ def save(M, prefix=None):
 
     _M_color = mat2d_to_rgb(M)
     im = Image.fromarray(np.uint8(_M_color), "RGB")
-    im = im.resize((512, 512), Image.NEAREST)  # FIXME: option?
-    im.save(name, "PNG")
+    # im = im.resize((512, 512), Image.NEAREST)  # FIXME: option?
+    im.save(f"img/{name}", "PNG")
 
 # FIXME: add plot and simple table?
 
@@ -252,7 +252,7 @@ class Vorotron():
             T1 = timer()
             event = self.kernel_noise.fn(
                                  SESSION["queue"],
-                                 (x["shape"][0], x["shape"][1], 1), None,
+                                 (x["shape"][1], x["shape"][0], 1), None,
                                  points_in,
                                  seeds_in,
                                  mat2d_in,
@@ -275,7 +275,7 @@ class Vorotron():
             T1 = timer()
             event = self.kernel_bruteforce.fn(
                            SESSION["queue"],
-                           (x["shape"][0], x["shape"][1], 1),
+                           (x["shape"][1], x["shape"][0], 1),
                            None, # default?
                            points_in,
                            seeds_in,
@@ -298,7 +298,7 @@ class Vorotron():
                 T1 = timer()
                 event = self.kernel.fn(
                                SESSION["queue"],
-                               (x["shape"][0], x["shape"][1], 1),
+                               (x["shape"][1], x["shape"][0], 1),
                                None,
                                mat2d_in,
                                mat2d_out,
@@ -342,6 +342,7 @@ def valid(model1, model2, x, n=5):
             del x["__mat2d"]
         m2, t2, _, _ = model2.do(x)
         m2 = m2["__mat2d"][:, :, 0]
+        save(m2)
         # error
         loss = fn_loss(m1, m2)
         # append
@@ -364,7 +365,7 @@ def valid(model1, model2, x, n=5):
     
     loss_diff = round(loss, 6)
     time_diff = round(time_1 / time_2, 6)
-    print(f"\033[91m [[ {model2.name.ljust(20)} ]] =========> loss: {loss_diff:8}% | \033[94m time: {time_diff:6}\033[0m")
+    print(f"\033[91m [[ {model2.name.ljust(20)} ]] =========> loss: {loss_diff:8}% | \033[94m time: {time_1/1e9:6} : {time_2/1e9:6}\033[0m")
 
     gc.collect()
     return loss_diff, time_diff
@@ -579,13 +580,16 @@ def do_test_simple():
 
 TEST_DOMAIN = {
     "shapes":
-        [(128, 128), (512, 512)],
+        [(128, 128), (1024, 1024)],
     "cases":
         [
             {gen_uniform: [use_num, 1]},
             {gen_uniform: [use_num, 2]},
+            {gen_uniform: [use_num, 4]},
+            {gen_uniform: [use_density, 0.001]},
+            {gen_uniform: [use_density, 0.005]},
             {gen_uniform: [use_density, 0.01]},
-            {gen_uniform: [use_density, 0.05]},
+            # {gen_uniform: [use_density, 0.05]},
         ]
 }
 
@@ -623,7 +627,15 @@ def do_test_error():
         'noise': True,
         'step_function': step_function_star,
     }
-    model = Vorotron(config_0190)
+    config_jfa = {
+        'anchor_double': False,
+        'anchor_num': 9,
+        'anchor_type': mod_anchor_type__square,
+        'bruteforce': False,
+        'noise': True,
+        'step_function': step_function_default,
+    }
+    model = Vorotron(config_jfa)
     model_ref = MODEL_BRUTEFORCE
 
     for shape in TEST_DOMAIN["shapes"]:
@@ -908,8 +920,8 @@ if __name__ == "__main__":
     # do_test_gen()
     #do_test_simple()
     #sys.exit()
-    #do_test_error()
-    #sys.exit()
+    # do_test_error()
+    # sys.exit()
 
     # FIXME: kolejna generacja zastepuje `MODEL_BRUTEFORCE`
     opt_result = optimize(

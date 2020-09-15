@@ -13,8 +13,8 @@ __kernel void fn(
     int                 y_size,
 	int                 step
 ) {
-    int y = get_global_id(1);
-    int x = get_global_id(0);
+    int y = get_global_id(0);
+    int x = get_global_id(1);
 #define POS(X, Y, Z) ((X)*y_size*3 + (Y)*3 + Z)
 
 	// FIXME: setting to 0 gives similar results?
