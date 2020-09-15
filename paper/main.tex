@@ -288,6 +288,10 @@ przestrzen (od malych do duzych, gestych po rzadkie), a zeby miec najlepszego
 Vorotrona - czyli ensembla to trzeba bylo dla kazdej domeny z optymalizowac a
 pozniej jedynie zrobic balancera!!!!!!!!!!!!
 
+\hl{trzeba to przeszukiwac tak aby nie sfiksowal na zadanych parametrach - bo
+niechcacy ocenia na poczatku ze szum/dual jest nie fajny i pozniej go juz nie
+rozwaza}
+
 \subsection{Ensemble} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 patrzac na rezultaty mozemy znalesc jaki algorytm najlepiej sprawdza sie w
@@ -311,6 +315,10 @@ i wyjasnic jak powstaly nazwy? np. Circle11Dual|Factor3+Noise
 
 \hl{w poczatkowej wersji dodanie szumu pozwolilo zmienic zlozonosc - dodatkowo
 mamy na to dowod kamila}
+
+\hl{a moze zrobic rozne gestosci szumu? wiekszy grid na karcie mniej operacji
+np. losuje tylko 1 punkt na kwadracie 5x5 lub zadanego density - wtedy szum
+powinnien byc oplacalny}
 
 przed wykonaniem algorytmu punkty informacja o punktach jest losowo rozrzucana
 po macierzy - tworzac przypadkowe short-cuty
@@ -385,6 +393,9 @@ najlepszych i ich przekazywanie (pewnie duzo wolniejsze wiec sie nie oplaca)
 \hl {przeniesc legende? JAKO OSOBNY PDF? i podac w tej sekcji - tak sie nie robi
 ale bylo by ok i czytelnie + wiecej miejsca na wykresy a przypadkow bedzie
 wiecej}
+
+\hl{czy wykres loss oraz score dla przypadkow powinnien byc nalozony? albo
+polaczony subfigurem tak aby osie byly sync. i dalo sie porownac}
 
 \subsection{Performance} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
