@@ -52,7 +52,7 @@ np.random.seed(+oo)
 ################################################################################
 
 class Config:
-    pass
+    IS_SPECIAL = False
 
 DEBUG = {
     "iter": 0,
@@ -397,10 +397,14 @@ def human_algo_name(config):
         noise = ""
     step_function = config["step_function"].__name__.replace("step_function_", "").title()
 
-    ############3 SPECIAL
+    ############## SPECIAL
     if "Special" in step_function:
-        special = \
-        f"({config['A']}/{config['B']}/{config['C']}/{config['D']}/{config['X']})"
+        special = "(" + \
+        f"{round(config['A'], 2)}/" + \
+        f"{round(config['B'], 2)}/" + \
+        f"{round(config['C'], 2)}/" + \
+        f"{round(config['D'], 2)}/" + \
+        f"{round(config['X'], 2)})"
     else:
         special = ""
     ######################
@@ -503,11 +507,12 @@ def optimize(model_ref, space, domain, n_calls=10):
     })
 
     # [[ gp_minimize vs forest_minimize | dummy_minimize ]]
-    return gp_minimize(func=score, dimensions=space,
-                       n_calls=n_calls, random_state=0)
-    
-    #return forest_minimize(func=score, dimensions=space,
-    #                       n_calls=n_calls, random_state=0)
+    if Config.IS_SPECIAL:
+        return gp_minimize(func=score, dimensions=space,
+                           n_calls=n_calls, random_state=0)
+    else:
+        return forest_minimize(func=score, dimensions=space,
+                           n_calls=n_calls, random_state=0)
 
 def fn_metric(a, b): # b/(1+a)
     # FIXME: max aby w pewnych domenach mogly funkcjonowac
@@ -659,6 +664,9 @@ def step_function_star(shape, num, config=None):
             break
     return steps + [1] # + [3, 2, 1]
 
+# FIXME: pozwala polepszych jednak oslabia mocno inne parametry
+# ----->               wymaga innego podejscia w przeszukiwaniu? (rundy?)
+#           lub        uproszczenie / redukcja do najlepszych przypadkow
 def step_function_special(shape, num=None, config=None):
     A = config["A"] #1.2 # <1, 2>
     B = config["B"] #0   # <0, 1>
@@ -794,24 +802,23 @@ MODEL_JFA_STAR = Vorotron({
     'step_function': step_function_star
 })
 
+
+# FIXME: =====================
+# aby odpalic z step_function special ZMIEN forest_minimize na gp_minimize
+#                                           !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 SPACE = [
     #Real(0, 1, name='a'),
     #Real(0.25, 1, name='b'),
     #Real(0, 1, name='c'),
+    Categorical([step_function_default,
+                 step_function_star,
+                 step_function_factor3],
+                name='step_function'),
 
     Integer(6, 12+6, name='anchor_num'),
     Categorical([False, True], name='noise'),
-    Categorical([False, True], name='anchor_double'),
-
-
-    Real(1,   2, name='A'), #1.2 # <1, 2>
-    Real(0,   1, name='B'), #0   # <0, 1>
-    Real(0,   1, name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
-    Real(1,   2, name='D'), #1.5 # <1, 2>
-    Real(0.2, 1, name='X'), #0.6 # <0.2, 1>
-    Categorical([step_function_special],
-                name='step_function'),
-
+    Categorical([False, True], name='anchor_double'), 
 
     # BEST=================================
     #Categorical([step_function_default,
@@ -827,6 +834,18 @@ SPACE = [
                  mod_anchor_type__circle],
                 name='anchor_type'),
 ]
+
+if Config.IS_SPECIAL:
+    SPACE += [
+        Real(1,   2, name='A'), #1.2 # <1, 2>
+        Real(0,   1, name='B'), #0   # <0, 1>
+        Real(0,   1, name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
+        Real(1,   2, name='D'), #1.5 # <1, 2>
+        Real(0.2, 1, name='X'), #0.6 # <0.2, 1>
+    ]
+
+    SPACE[0] = Categorical([step_function_special],
+                    name='step_function')
 
 # FIXME: WYKRESY BO NIC NIE WIDAC KOTELY!!!!!!!!!!!!!!!!!!!!
 
@@ -852,7 +871,8 @@ DOMAIN = {
 
 DOMAIN_FAST = {
     "shapes":
-        [(32, 32), (128, 128)],
+        [(384, 384)],
+    #    [(32, 32), (128, 128)],
     #    [(32, 32), (64, 64), (128, 128), (256, 256)], # (128, 128) + (512, 512)
     "cases":
         [
