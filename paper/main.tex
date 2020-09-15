@@ -26,6 +26,7 @@
 \usepackage{bm}             % for special table cell (`cellcolor`)
 \usepackage{hhline,soul}    % for `hl` command (highlight text)
 \usepackage{amsmath}        % for multi-line math
+\usepackage[bottom]{footmisc}% for footnotes
 %%%%%%%%%%%%%
 
 %%% BIBTEX %%%
@@ -35,6 +36,7 @@
 \newcommand{\citep}[1]{\citeauthor*{#1} \cite{#1}} % for `fancy` cite style
 %%%%%%%%%%%%%%
 
+\newcommand{\ourjfasingle}{JFAStar}
 \newcommand{\ourjfa}{Lord Vorotron} % okJFAuto / JFAstar
 %\title{A survey of \emph{jump flooding algorithm} applied to Voronoi}
 % \emph{\ourjfa}: Evolving Fast GPU Algorithm for
@@ -93,13 +95,19 @@ possible algorithm in each case.  In the further part of the work, we discuss
 the results, compare the variants and ensemble for creating the final algorithm.
 \end{abstract}
 
+\hl{\textbf{CEL:} omawiamy dwa algorytmy? jeden nastepca JFA} -
+\textbf{\ourjfasingle} \hspace{0.01cm} \hl{oraz ensembla po naszym score fn. -}
+\textbf{\ourjfa}???????
+
 \keywords{aaaaaaaaaaaaaaaaaa \and bbbbbbbbbbbbbbb \and ccccccccccccccccccc}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-This paper studies a practical usage of machine learning to automate research
+% FIXME: na wypadek zmiany tytulu w przyszlsoci!!!!!!!!!! ;-)
+This paper\footnote{the original title for this paper was ``Lord Vorotron:
+Finding the Best JFA Variant for the Coming Winter''} studies a practical usage of machine learning to automate research
 towards discovering efficient Distance Transform algorithms (utilizing technique known as AutoML).
 Thus, by finding mutations which works best for specific data, and then ensembling them into
 one, we create new state-of-the-art algorithm in this field named \uline{\ourjfa \hspace{0.01cm} with
@@ -134,11 +142,16 @@ The algorithm would be an approximation of the output, thus we suggest using WTO
 \cite{manduhu2019work} for exact DT (EDT). The major contributions of this paper are thus:
 
 \begin{enumerate}
-\item Presenting new state-of-the-art version of JFA made as envolved ensemble of weak learners; and
-\item Proposing, for an input set of seeds in a 2D grid, the first
-parallel algorithm in GPU to compute in constant time (i.e.
-independent of the number of seeds) a highly accurate
-Voronoi diagram and distance transform.
+	\item Presenting new state-of-the-art variants of algorithm for Voronoi
+		Diagram and Distance Transform: \newline
+		\textbf{\ourjfasingle} - single best variant;
+		\textbf{\ourjfa} - ensemble of weak variants; and
+	\item Analyzing all possible variants of JFA: comparing error and speedup
+		relative to bruteforce method
+%\item Proposing, for an input set of seeds in a 2D grid, the first
+%parallel algorithm in GPU to compute in constant time (i.e.
+%independent of the number of seeds) a highly accurate
+%Voronoi diagram and distance transform.
 \end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -188,21 +201,7 @@ na szybkosc dzialania.
 
 \hl{przeniesc do Proposed Method}
 
-w naszym wypadku zdefiniowalismy pewien zbior variantow pewnych czesci
-algorytmu (Search Space), modul testujacy dana mutacje/wariant - sklada kod kernela a pozniej go weryfikuje na naszej Domain Space.
-
-dla voronoi-a interesuja nas 2 parametry Error oraz Szybkosc, aby wyniki byly
-wiarygodne porownujemy je z bruteforcem (a wiec bedzie to iloraz).
-aby ocenic dana mutacje musimy przypisac jakis Score danej wersji, wiec uzylismy
-wzor ponizej
-
-\begin{align}
-S(x,y) = max\{0, x \cdot (100-y^{1.5})\}, \\
-0 \leq y \leq 100, 0 < x
-\end{align}
-
-ktory kaze za zbyt wysokie errory, dajac zerowy wynik - skladnik przy y rosnie
-szybciej niz x wiec gdy przekroczy 100 da nam ujemny wynik - czyli 0.
+okay przenioslem - dodac prace co tez tak szuka algosow
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Proposed Method} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -248,8 +247,35 @@ jakie domeny i dlaczego (i jak dzialaly gen\_uniform, \hl{gen\_polar, gen\_grid}
 \subsection{Search Space} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \hl{bridge z score function gdziekolwiek to bedzie}
+\hl{obliczyc ile jest aktulanie wersji algosow np. czy jest to juz 2do14 jak
+mamy 3xreal w wielomianie}
 
 jakie modyfikacje, na to osobna sekcja? wiec co tu napisac
+chyba tylko o zlozonosci problemu i ze kod jest skladany i testowany a niektore
+wersje sa pomijane zgodnie z dzialaniem gp\_minimize (Bayesian optimization
+using Gaussian Processes).
+
+w naszym wypadku zdefiniowalismy pewien zbior variantow pewnych czesci
+algorytmu (Search Space), modul testujacy dana mutacje/wariant - sklada kod kernela a pozniej go weryfikuje na naszej Domain Space.
+
+\subsection{Score Function} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{SCORE CZY METRIC?}
+\hl{roznica w pikselach pomiedzy bruteforce a algorytmem - napisac o tym / tez
+ze to wszystko to ilorazy do bruteforce}
+
+dla voronoi-a interesuja nas 2 parametry Error oraz Szybkosc, aby wyniki byly
+wiarygodne porownujemy je z bruteforcem (a wiec bedzie to iloraz).
+aby ocenic dana mutacje musimy przypisac jakis Score danej wersji, wiec uzylismy
+wzor ponizej
+
+\begin{align}
+S(x,y) = max\{0, x \cdot (100-y^{1.5})\}, \\
+0 \leq y \leq 100, 0 < x
+\end{align}
+
+ktory kaze za zbyt wysokie errory, dajac zerowy wynik - skladnik przy y rosnie
+szybciej niz x wiec gdy przekroczy 100 da nam ujemny wynik - czyli 0.
 
 \subsection{Ensemble} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
