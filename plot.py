@@ -10,6 +10,8 @@ from pprint import pprint
 
 oo = 11111111
 
+# FIXME: wyswietlaj dla wszystkich z tabeli plot? ale na legendzie tylko najl.?
+
 ###############################
 # [IDEAS]
 # FIXME: 3d

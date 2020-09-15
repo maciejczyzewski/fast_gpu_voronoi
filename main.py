@@ -807,6 +807,21 @@ MODEL_JFA_STAR = Vorotron({
 # aby odpalic z step_function special ZMIEN forest_minimize na gp_minimize
 #                                           !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+# [[[BEST FOR 384x384]]]
+# Real(1.65, 1.73, name='A'), #1.2 # <1, 2>
+# Real(0.99,    1,    name='B'), #0   # <0, 1>
+# Real(0.8,  1,    name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
+# Real(1.2,  1.25, name='D'), #1.5 # <1, 2>
+# Real(0.65, 0.95, name='X'), #0.6 # <0.2, 1>
+
+# [[[BEST FOR 256x256]]]
+# Real(1.40, 1.5, name='A'), #1.2 # <1, 2>
+# Real(0.99,    1,    name='B'), #0   # <0, 1>
+# Real(0.8,  1,    name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
+# Real(1.2,  1.3, name='D'), #1.5 # <1, 2>
+# Real(0.65, 1, name='X'), #0.6 # <0.2, 1>
+
+
 SPACE = [
     #Real(0, 1, name='a'),
     #Real(0.25, 1, name='b'),
@@ -818,12 +833,18 @@ SPACE = [
                  step_function_special],
                  name='step_function'),
 
-    # FIXME: B nic nie robi? zawsze 1
-    Real(1.65, 1.73, name='A'), #1.2 # <1, 2>
+    Real(1.40, 1.5, name='A'), #1.2 # <1, 2>
     Real(0.99,    1,    name='B'), #0   # <0, 1>
     Real(0.8,  1,    name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
-    Real(1.2,  1.25, name='D'), #1.5 # <1, 2>
-    Real(0.65, 0.95, name='X'), #0.6 # <0.2, 1>
+    Real(1.2,  1.3, name='D'), #1.5 # <1, 2>
+    Real(0.65, 1, name='X'), #0.6 # <0.2, 1>
+
+    # FIXME: B nic nie robi? zawsze 1
+    #Real(1.65, 1.73, name='A'), #1.2 # <1, 2>
+    #Real(0.99,    1,    name='B'), #0   # <0, 1>
+    #Real(0.8,  1,    name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
+    #Real(1.2,  1.25, name='D'), #1.5 # <1, 2>
+    #Real(0.65, 0.95, name='X'), #0.6 # <0.2, 1>
  
     #############3
     # Categorical([step_function_default,
@@ -852,7 +873,7 @@ SPACE = [
 ]
 
 if Config.IS_SPECIAL:
-    SPACE += [
+    SPACE[1:1+5] = [
         Real(1,   2, name='A'), #1.2 # <1, 2>
         Real(0,   1, name='B'), #0   # <0, 1>
         Real(0,   1, name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
@@ -887,7 +908,10 @@ DOMAIN = {
 
 DOMAIN_FAST = {
     "shapes":
-         [(256, 256), (384, 384), (512, 512)],
+        [(256, 256)],
+    #    [(512, 512), (768, 768)],
+    #    [(64, 64)],
+    #    [(256, 256), (384, 384), (512, 512)], for BUG with fixed `sf_special`
     #    [(384, 384)], # best to DEBUG JFAStar
     #    [(32, 32), (128, 128)], # best to DEBUG optimizer
     #    [(32, 32), (64, 64), (128, 128), (256, 256)], # (128, 128) + (512, 512)
@@ -916,7 +940,7 @@ if __name__ == "__main__":
         MODEL_BRUTEFORCE,
         SPACE,
         DOMAIN_FAST, # DOMAIN vs DOMAIN_FAST
-        n_calls=100, # (20*60) 100 vs 10*60
+        n_calls=300, # BEST:[100] /// (20*60) 100 vs 10*60
     )
 
     # FIXME: cos tu nie gra // naprawic?
