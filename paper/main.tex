@@ -278,6 +278,16 @@ S(x,y) = max\{0, x \cdot (100-y^{1.5})\}, \\
 ktory kaze za zbyt wysokie errory, dajac zerowy wynik - skladnik przy y rosnie
 szybciej niz x wiec gdy przekroczy 100 da nam ujemny wynik - czyli 0.
 
+\subsection{Optimizer} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{opisac dwie osobne taktyki optymalizacji dla best single vs. ensemble}
+
+mozemy napisac ze korzystalismy z forest/gp minimize, ale tez wspomniec ze aby
+miec najlepszy best single to trzeba bylo optymalizowac rownoczesnie cala
+przestrzen (od malych do duzych, gestych po rzadkie), a zeby miec najlepszego
+Vorotrona - czyli ensembla to trzeba bylo dla kazdej domeny z optymalizowac a
+pozniej jedynie zrobic balancera!!!!!!!!!!!!
+
 \subsection{Ensemble} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 patrzac na rezultaty mozemy znalesc jaki algorytm najlepiej sprawdza sie w

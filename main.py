@@ -811,10 +811,26 @@ SPACE = [
     #Real(0, 1, name='a'),
     #Real(0.25, 1, name='b'),
     #Real(0, 1, name='c'),
+    
     Categorical([step_function_default,
-                 step_function_star,
-                 step_function_factor3],
-                name='step_function'),
+                  step_function_star,
+                  step_function_factor3,
+                 step_function_special],
+                 name='step_function'),
+
+    # FIXME: B nic nie robi? zawsze 1
+    Real(1.65, 1.73, name='A'), #1.2 # <1, 2>
+    Real(0.99,    1,    name='B'), #0   # <0, 1>
+    Real(0.8,  1,    name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
+    Real(1.2,  1.25, name='D'), #1.5 # <1, 2>
+    Real(0.65, 0.95, name='X'), #0.6 # <0.2, 1>
+ 
+    #############3
+    # Categorical([step_function_default,
+    #              step_function_star,
+    #              step_function_factor3],
+    #             name='step_function'),
+    ##############
 
     Integer(6, 12+6, name='anchor_num'),
     Categorical([False, True], name='noise'),
