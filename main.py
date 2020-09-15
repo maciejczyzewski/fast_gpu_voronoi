@@ -201,6 +201,8 @@ class Vorotron():
         "step_function": step_function_default,
         "anchor_type": placebo,
         "noise": False,
+        "anchor_distance_ratio": 1/2,
+        "anchor_number_ratio": 1/2,
     }
 
     def __init__(self, config=None):
@@ -368,13 +370,25 @@ def valid(model1, model2, x, n=5):
     return loss_diff, time_diff
 
 def human_algo_name(config):
+    from fractions import Fraction
+    max_denominator = 10 # FIXME: for bigger fractions?
     anchor_type = config["anchor_type"].__name__.split("__")[1].title()
     if config["anchor_double"]:
         anchor_double = "Dual"
+        if config['anchor_distance_ratio'] != 0.5:
+            anchor_double += "(" + \
+                str(Fraction(config['anchor_distance_ratio']) \
+                    .limit_denominator(max_denominator)) \
+            + ")"
     else:
         anchor_double = ""
     if anchor_type == "Circle":
-        anchor_num = config["anchor_num"]
+        anchor_num = str(config["anchor_num"])
+        if config['anchor_number_ratio'] != 0.5:
+            anchor_num += "(" + \
+                str(Fraction(config['anchor_number_ratio']) \
+                    .limit_denominator(max_denominator)) \
+            + ")"
     else:
         anchor_num = ""
     if config["noise"]:
@@ -666,14 +680,15 @@ def step_function_factor3(shape, num=None, config=None):
 
 # FIXME: how to define here multiple anchors?
 def mod_anchor_type__square(code, config=None):
+    anchor_distance_ratio = config["anchor_distance_ratio"]
     if config["anchor_double"]:
         code = code.replace("#{ANCHOR_TYPE}", """
-        int pos[] = {-step, -step/2, 0, step/2, step};
+        int pos[] = {-step, -step*(#{ANCHOR_DISTANCE_RATIO}), 0, step*(#{ANCHOR_DISTANCE_RATIO}), step};
         for(int i = 0; i < 5; i++)
             for(int j = 0; j < 5; j++) {
                 int nx = x + pos[i];
                 int ny = y + pos[j];
-        """)
+        """).replace("#{ANCHOR_DISTANCE_RATIO}", str(anchor_distance_ratio))
     else:
         code = code.replace("#{ANCHOR_TYPE}", """
         int pos[] = {-step, 0, step};
@@ -686,19 +701,27 @@ def mod_anchor_type__square(code, config=None):
 
 def mod_anchor_type__circle(code, config=None):
     anchor_num = config["anchor_num"]
+    anchor_distance_ratio = config["anchor_distance_ratio"]
+    anchor_number_ratio = config["anchor_number_ratio"]
     if config["anchor_double"]:
         code = code.replace("#{ANCHOR_TYPE}", """
-        for(int j = 0; j < 2; j++)
-        for(int i = 0; i < #{ANCHOR_NUM}; i++) {
+        for(int j = -1; j < 1; j++)
+        for(int i = 0; i < #{ANCHOR_NUM} * (
+                ( 1 + j) * (1 - #{ANCHOR_NUMBER_RATIO}) 
+                +
+                (-1 * j) * (#{ANCHOR_NUMBER_RATIO})
+            ); i++) {
             int A = (step * cos((float) ((6.28/#{ANCHOR_NUM}) * i) ));
             int B = (step * sin((float) ((6.28/#{ANCHOR_NUM}) * i) ));
             if (j == 0) {
-               A /= 2;
-               B /= 2;
+               A *= #{ANCHOR_DISTANCE_RATIO};
+               B *= #{ANCHOR_DISTANCE_RATIO};
             }
             int nx = x+A;
             int ny = y+B;
-        """.replace("#{ANCHOR_NUM}", str(anchor_num//2)))
+        """).replace("#{ANCHOR_NUM}", str(anchor_num//2)) \
+            .replace("#{ANCHOR_DISTANCE_RATIO}", str(anchor_distance_ratio)) \
+            .replace("#{ANCHOR_NUMBER_RATIO}", str(anchor_number_ratio))
     else:
         code = code.replace("#{ANCHOR_TYPE}", """
         for(int i = 0; i < #{ANCHOR_NUM}; i++) {
@@ -706,7 +729,7 @@ def mod_anchor_type__circle(code, config=None):
             int B = (step * sin((float) ((6.28/#{ANCHOR_NUM}) * i) ));
             int nx = x+A;
             int ny = y+B;
-        """.replace("#{ANCHOR_NUM}", str(anchor_num)))
+        """).replace("#{ANCHOR_NUM}", str(anchor_num))
     return code
 
 MODEL_BRUTEFORCE = Vorotron({
@@ -746,6 +769,9 @@ SPACE = [
                  step_function_factor3],
                 name='step_function'),
     
+    # FIXME: distance more than 1?????? FOR FUN??????????
+    Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_distance_ratio'),
+    Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_number_ratio'),
     Categorical([mod_anchor_type__square,
                  mod_anchor_type__circle],
                 name='anchor_type'),
@@ -775,7 +801,7 @@ DOMAIN = {
 
 DOMAIN_FAST = {
     "shapes":
-        [(32, 32)],
+        [(32, 32), (128, 128)],
     #    [(32, 32), (64, 64), (128, 128), (256, 256)], # (128, 128) + (512, 512)
     "cases":
         [
