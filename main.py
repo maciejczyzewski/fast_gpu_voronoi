@@ -396,7 +396,16 @@ def human_algo_name(config):
     else:
         noise = ""
     step_function = config["step_function"].__name__.replace("step_function_", "").title()
-    return f"{anchor_type}{anchor_num}{anchor_double}|{step_function}{noise}"
+
+    ############3 SPECIAL
+    if "Special" in step_function:
+        special = \
+        f"({config['A']}/{config['B']}/{config['C']}/{config['D']}/{config['X']})"
+    else:
+        special = ""
+    ######################
+
+    return f"{anchor_type}{anchor_num}{anchor_double}|{step_function}{special}{noise}"
 
 
 # FIXME: progress bar?
@@ -494,10 +503,11 @@ def optimize(model_ref, space, domain, n_calls=10):
     })
 
     # [[ gp_minimize vs forest_minimize | dummy_minimize ]]
-    #return gp_minimize(func=score, dimensions=space,
-    #                   n_calls=n_calls, random_state=0)
-    return forest_minimize(func=score, dimensions=space,
-                           n_calls=n_calls, random_state=0)
+    return gp_minimize(func=score, dimensions=space,
+                       n_calls=n_calls, random_state=0)
+    
+    #return forest_minimize(func=score, dimensions=space,
+    #                       n_calls=n_calls, random_state=0)
 
 def fn_metric(a, b): # b/(1+a)
     # FIXME: max aby w pewnych domenach mogly funkcjonowac
@@ -649,8 +659,40 @@ def step_function_star(shape, num, config=None):
             break
     return steps + [1] # + [3, 2, 1]
 
+def step_function_special(shape, num=None, config=None):
+    A = config["A"] #1.2 # <1, 2>
+    B = config["B"] #0   # <0, 1>
+    C = config["C"] #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
+    D = config["D"] #1.5 # <1, 2>
+    X = config["X"] #0.6 # <0.2, 1>
+
+    steps = []
+    q = num/(shape[0]*shape[1])
+    qm = ((shape[0]+shape[1])/2) * q**(1/2)
+    print(f"q={q} --> qm={qm}")
+    # qm <-----> max(shape)
+    # jakis x?
+    S = B*qm + (1-B)*(max(shape)/2)
+    St = math.log2(S)
+    print(f"====> S={S} | {St}")
+
+    print()
+    for i in range(1, int(X*St*2), 1):
+        f = round(1/(D**(i**A) + i%max(1, int(C*St))), 4)
+        fm = f * S
+        ffm = int(fm)
+        print(f"--------> {i} f={f:10} fm={fm} | {ffm}")
+        #f = math.ceil(max(shape) / (2**(i)))
+        if ffm >= 1:
+            steps.append(ffm)
+
+    print()
+    if len(steps) == 0:
+        return [1]
+    return steps
+
 # https://www.youtube.com/watch?v=SnIAxVx7ZUs
-def step_function_special(shape, num, config=None):
+def step_function_special__old(shape, num, config=None):
     a, b, c = config["a"], config["b"], config["c"]
     area = shape[0] * shape[1]
     q = area/(num+1)
@@ -761,13 +803,22 @@ SPACE = [
     Categorical([False, True], name='noise'),
     Categorical([False, True], name='anchor_double'),
 
-    #Categorical([step_function_special],
-    #            name='step_function'),
 
-    Categorical([step_function_default,
-                 step_function_star,
-                 step_function_factor3],
+    Real(1,   2, name='A'), #1.2 # <1, 2>
+    Real(0,   1, name='B'), #0   # <0, 1>
+    Real(0,   1, name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
+    Real(1,   2, name='D'), #1.5 # <1, 2>
+    Real(0.2, 1, name='X'), #0.6 # <0.2, 1>
+    Categorical([step_function_special],
                 name='step_function'),
+
+
+    # BEST=================================
+    #Categorical([step_function_default,
+    #             step_function_star,
+    #             step_function_factor3],
+    #            name='step_function'),
+    # =====================================
     
     # FIXME: distance more than 1?????? FOR FUN??????????
     Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_distance_ratio'),
