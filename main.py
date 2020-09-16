@@ -30,8 +30,9 @@ from skopt.space import Categorical, Integer, Real
 
 # FIXME: 
 #  0) porzadki i czysty konfig
-#  ---->) szybszy (valid) n=5 tylko n=3 --> i decyzja
 #  1) w turach optymalizacja - Special
+#       -----------> DRZEWO ZALEZNOSCI /
+#                        czyli co mozna z czym ratio/num ze squeare
 #  2) wiecej przypadkow / gestosci?
 #  3) lepsza funkcja scory / srednia? geometryczna?
 
@@ -588,15 +589,15 @@ def do_compirason(model, model_ref, domain=None):
 
             a, b = valid(model_ref, model, sample)
             score = fn_metric(a, b)
-            loss_arr.append(score)
+            loss_arr.append(score**2)
             print(f"shape={shape} | a={a} b={b} -> score={score}")
             
             log["loss"].append(a)
             log["time"].append(b)
             log["score"].append(score)
 
-    score = gmean(loss_arr)
-    #score = sum(loss_arr)/len(loss_arr)
+    score = math.sqrt(sum(loss_arr)/len(loss_arr))
+    # score = sum(loss_arr)/len(loss_arr)
     print(f"----> SCORE=\033[92m {score} \033[0m")
 
     return score, log
@@ -936,7 +937,8 @@ DOMAIN_COLAB = {
 
 DOMAIN_FAST = {
     "shapes":
-        [(128, 128)],
+    [(128, 128)],
+    #    [(512, 512), (1024, 1024), (1536, 1536)],
     "cases":
         [
             {gen_uniform: [use_num, 1]},
