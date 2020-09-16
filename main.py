@@ -362,6 +362,7 @@ def valid(model1, model2, x, n=5):
             del x["__mat2d"]
         m1, t1, _, _ = model1.do(x)
         m1 = m1["__mat2d"][:, :, 0]
+        # save(m1, prefix="brute")
         # algorithm
         if "__mat2d" in x:
             del x["__mat2d"]
@@ -601,7 +602,7 @@ def do_test_simple():
 
 TEST_DOMAIN = {
     "shapes":
-        [(128, 128), (1024, 1024)],
+        [(128, 128), (128, 1024)],
     "cases":
         [
             {gen_uniform: [use_num, 1]},
