@@ -8,6 +8,7 @@ build/
 *.egg-info
 _minted*
 
+*.zip
 *.aux
 *.nav
 *.log

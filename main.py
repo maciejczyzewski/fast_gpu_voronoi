@@ -21,11 +21,19 @@ from tqdm import tqdm
 from datetime import datetime
 from pprint import pprint, pformat
 from timeit import default_timer as timer
+from scipy.stats.mstats import gmean, variation
 
 from skopt import gp_minimize, forest_minimize, dummy_minimize
 from skopt.utils import use_named_args
 from skopt.plots import plot_objective, plot_evaluations, plot_convergence, plot_regret
 from skopt.space import Categorical, Integer, Real
+
+# FIXME: 
+#  0) porzadki i czysty konfig
+#  ---->) szybszy (valid) n=5 tylko n=3 --> i decyzja
+#  1) w turach optymalizacja - Special
+#  2) wiecej przypadkow / gestosci?
+#  3) lepsza funkcja scory / srednia? geometryczna?
 
 try:
     import sys
@@ -73,9 +81,12 @@ np.random.seed(+oo)
 ################################################################################
 
 class Config:
-    N_CALLS = 800 # 6h * 60min * 60sec / 8 sec per variant
+    N_CALLS = 300 # 6h * 60min * 60sec / 8 sec per variant
     OPTIMIZER = "auto"
-    IS_SPECIAL = False
+    DOMAIN = "colab" # FIXME: not working {colab, full, fast}
+    
+    IS_SPECIAL_ONLY = False
+    IS_CIRCLE_ONLY = False
 
 DEBUG = {
     "iter": 0,
@@ -320,7 +331,7 @@ class Vorotron():
             steps = self.config["step_function"](x["shape"],
                                                  x["points"].shape[0],
                                                  config=self.config)
-            print(steps)
+            # print(steps)
 
             for step in steps:
                 T1 = timer()
@@ -353,11 +364,11 @@ def use_density(shape, x): return int(shape[0] * shape[1] * x)
 def fn_loss(m1, m2):
     return 1 - np.count_nonzero((m1-m2) == 0)/(m1.shape[0]*m1.shape[1])
 
-def valid(model1, model2, x, n=5):
+def valid(model1, model2, x, n=3):
     loss_arr, time_1_arr, time_2_arr = [], [], []
 
     # FIXME: jesli nie ma duzych roznic przerwij - wczesniej?
-    for _ in range(n):
+    def do_single():
         # bruteforce
         if "__mat2d" in x:
             del x["__mat2d"]
@@ -377,14 +388,21 @@ def valid(model1, model2, x, n=5):
         time_1_arr.append(t1)
         time_2_arr.append(t2)
 
+    for _ in range(n):
+        do_single() # n=3
+
+    if max([variation(time_1_arr), variation(time_2_arr)]) > 0.05:
+        do_single() # +1
+
     # FIXME: debug
     # save(m1, prefix="gt")
     # save(m2, prefix="jfa")
-
-    def avgarr(arr):
+ 
+    def avgarr(arr):    
         shift = max(int(len(arr)*(0.1)), 1)
         arr = sorted(arr)[shift:-shift]
-        return round(sum(arr)/len(arr), 6)
+        # XXX: return round(sum(arr)/len(arr), 6)
+        return round(gmean(arr), 6)
 
     loss = avgarr(loss_arr)*100
     time_1 = avgarr(time_1_arr)
@@ -468,6 +486,7 @@ def optimize(model_ref, space, domain, n_calls=10):
             print("=============================> SPECIAL (JFA)")
             path_log = f"results/jfa.json"
             path_code = f"results/jfa.cl"
+            call(f"touch results/jfa={score}")
 
         log["name"] = f"({int(score)}) " + name
         print(f"[[[[[[[[[[[ \033[96m {log['name']} \033[0m ]]]]]]]]]]]")
@@ -534,7 +553,7 @@ def optimize(model_ref, space, domain, n_calls=10):
         obj = Config.OPTIMIZER(func=score, dimensions=space,
                                 n_calls=n_calls, random_state=0)
     else:
-        if Config.IS_SPECIAL:
+        if Config.IS_SPECIAL_ONLY:
             # faster but lower results?
             obj = gp_minimize(func=score, dimensions=space,
                                n_calls=n_calls, random_state=0)
@@ -546,7 +565,7 @@ def optimize(model_ref, space, domain, n_calls=10):
     return obj
 
 def fn_metric(a, b): # b/(1+a)
-    return max(0, (math.sqrt(b) * (100-a**2)))
+    return max(0, (math.sqrt(b) * (100-a**1.5)))
     # return max(0, (b * (100-a**1.5)))
 
 def do_compirason(model, model_ref, domain=None): 
@@ -576,7 +595,8 @@ def do_compirason(model, model_ref, domain=None):
             log["time"].append(b)
             log["score"].append(score)
 
-    score = sum(loss_arr)/len(loss_arr)
+    score = gmean(loss_arr)
+    #score = sum(loss_arr)/len(loss_arr)
     print(f"----> SCORE=\033[92m {score} \033[0m")
 
     return score, log
@@ -866,7 +886,7 @@ SPACE = [
                 name='anchor_type'),
 ]
 
-if Config.IS_SPECIAL:
+if Config.IS_SPECIAL_ONLY:
     SPACE[1:1+5] = [
         Real(1,   2, name='A'), # <1,   2>
         Real(0,   1, name='B'), # <0,   1>
@@ -877,6 +897,11 @@ if Config.IS_SPECIAL:
 
     SPACE[0] = Categorical([mod_step_function__special],
                     name='step_function')
+
+if Config.IS_CIRCLE_ONLY:
+    SPACE[-1] = Categorical([mod_anchor_type__circle],
+                    name='anchor_type')
+
 
 DOMAIN = {
     "shapes":
@@ -896,12 +921,28 @@ DOMAIN = {
         ]
 }
 
-DOMAIN_FAST = {
+DOMAIN_COLAB = {
     "shapes":
         [(64, 64), (128, 128), (256, 256), (512, 512), (768, 768), (1024, 1024)],
     "cases":
         [
             {gen_uniform: [use_num, 1]},
+            {gen_uniform: [use_density, 0.001]},
+            {gen_uniform: [use_density, 0.01]},
+            {gen_uniform: [use_density, 0.03]},
+            {gen_uniform: [use_density, 0.05]},
+        ]
+}
+
+DOMAIN_FAST = {
+    "shapes":
+        [(128, 128)],
+    "cases":
+        [
+            {gen_uniform: [use_num, 1]},
+            {gen_uniform: [use_num, 2]},
+            {gen_uniform: [use_num, 3]},
+            {gen_uniform: [use_density, 0.0001]},
             {gen_uniform: [use_density, 0.001]},
             {gen_uniform: [use_density, 0.01]},
             {gen_uniform: [use_density, 0.03]},
