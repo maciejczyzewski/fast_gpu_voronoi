@@ -52,6 +52,7 @@ plt.style.use(["science", "ieee"])
 plt.rcParams.update({"text.usetex": True})
 
 fig, ax = plt.subplots()
+fig.set_size_inches(12.5, 3)
 ax.autoscale(tight=True)
 
 def read_file(path=None, x_name=None, y_name=None):

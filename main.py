@@ -10,6 +10,7 @@ import sys
 import math
 import json
 import subprocess
+import collections
 import numpy as np
 import numba as nb
 import pyopencl as cl
@@ -72,8 +73,8 @@ np.random.seed(+oo)
 ################################################################################
 
 class Config:
-    N_CALLS = 2700 # 6h * 60min * 60sec / 8 sec per variant
-    OPTIMIZER = forest_minimize
+    N_CALLS = 800 # 6h * 60min * 60sec / 8 sec per variant
+    OPTIMIZER = "auto"
     IS_SPECIAL = False
 
 DEBUG = {
@@ -527,7 +528,8 @@ def optimize(model_ref, space, domain, n_calls=10):
         'step_function': mod_step_function__default,
     })
 
-    if Config.OPTIMIZER is not None or Config.OPTIMIZER != "auto":
+    if isinstance(Config.OPTIMIZER, collections.Callable):
+        print(f"-------> {Config.OPTIMIZER}")
         obj = Config.OPTIMIZER(func=score, dimensions=space,
                                 n_calls=n_calls, random_state=0)
     else:
@@ -543,7 +545,8 @@ def optimize(model_ref, space, domain, n_calls=10):
     return obj
 
 def fn_metric(a, b): # b/(1+a)
-    return max(0, (b * (100-a**1.5)))
+    return max(0, (math.sqrt(b) * (100-a**2)))
+    # return max(0, (b * (100-a**1.5)))
 
 def do_compirason(model, model_ref, domain=None): 
     loss_arr = []
@@ -856,7 +859,7 @@ SPACE = [
     
     Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_distance_ratio'),
     Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_number_ratio'),
- 
+
     Categorical([mod_anchor_type__square,
                  mod_anchor_type__circle],
                 name='anchor_type'),
