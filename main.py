@@ -217,11 +217,14 @@ def load_prg(name):
 def load_prg_from_str(code):
     return cl.Program(SESSION["ctx"], code).build()
 
-def copy_to_host(ptr, out, shape=None):
-    mat2d_new = np.empty_like(ptr)
-    event = cl.enqueue_copy(SESSION["queue"], mat2d_new, out)
+def copy_to_host(ptrs, outs, shape=None):
+    mat2d_new = []
+    for ptr, out in zip(ptrs, outs):
+        h_new = np.empty_like(ptr)
+        event = cl.enqueue_copy(SESSION["queue"], h_new, out)
+        mat2d_new.append(h_new)
     event.wait()
-    return mat2d_new.reshape(shape[0], shape[1], 3)
+    return np.stack(mat2d_new, axis=-1).reshape(shape[0], shape[1], 3)
 
 # FIXME: add modifiers like `noise kernel`
 
@@ -233,6 +236,16 @@ def mod_step_function__default(shape, num=None, config=None):
         if f <= 1:
             break
     return steps
+
+def mod_step_function__factor2(shape, num=None, config=None):
+    steps = []
+    f = 1
+    for factor in range(1, +oo, 1):
+        steps.append(f)
+        f*=2
+        if f > max(shape):
+            break
+    return list(reversed(steps))
 
 class Vorotron():
     name = "VOROTRON"
@@ -264,7 +277,9 @@ class Vorotron():
         if "__mat2d" not in x:
             x["__mat2d"] = to_mat2d(x)
 
-        mat2d_flatten = x["__mat2d"].flatten().astype(np.uint32)
+        h_id_in = x["__mat2d"][:,:,0].flatten().astype(np.uint32)
+        h_x_in = x["__mat2d"][:,:,1].flatten().astype(np.uint32)
+        h_y_in = x["__mat2d"][:,:,2].flatten().astype(np.uint32)
 
         T_ALL_1, T_CPU, T_GPU = timer(), 0, 0
         
@@ -275,11 +290,17 @@ class Vorotron():
             seeds_in = cl.Buffer(SESSION["ctx"], mf.COPY_HOST_PTR |
                                  mf.READ_ONLY, hostbuf=x["seeds"])
         else:
-            mat2d_in = cl.Buffer(SESSION["ctx"], mf.COPY_HOST_PTR | mf.READ_WRITE,
-                                 hostbuf=mat2d_flatten)
+            d_id_in = cl.Buffer(SESSION["ctx"], mf.COPY_HOST_PTR | mf.READ_WRITE,
+                             hostbuf=h_id_in)
+            d_x_in = cl.Buffer(SESSION["ctx"], mf.COPY_HOST_PTR | mf.READ_WRITE,
+                             hostbuf=h_x_in)
+            d_y_in = cl.Buffer(SESSION["ctx"], mf.COPY_HOST_PTR | mf.READ_WRITE,
+                             hostbuf=h_y_in)
 
         # === OUTPUT ===
-        mat2d_out = cl.Buffer(SESSION["ctx"], mf.READ_WRITE, mat2d_flatten.nbytes)
+        d_id_out = cl.Buffer(SESSION["ctx"], mf.READ_WRITE, h_id_in.nbytes)
+        d_x_out = cl.Buffer(SESSION["ctx"], mf.READ_WRITE, h_x_in.nbytes)
+        d_y_out = cl.Buffer(SESSION["ctx"], mf.READ_WRITE, h_y_in.nbytes)
 
         # === NOISE ===
         if self.config["noise"]:
@@ -295,7 +316,7 @@ class Vorotron():
                                  (x["shape"][1], x["shape"][0], 1), None,
                                  points_in,
                                  seeds_in,
-                                 mat2d_in,
+                                 d_id_in, d_x_in, d_y_in,
                                  np.int32(x["shape"][0]),
                                  np.int32(x["shape"][1]),
                                  np.int32(x["points"].shape[0]),
@@ -319,7 +340,7 @@ class Vorotron():
                            None, # default?
                            points_in,
                            seeds_in,
-                           mat2d_out,
+                           d_id_out, d_x_out, d_y_out,
                            np.int32(x["shape"][0]),
                            np.int32(x["shape"][1]),
                            np.int32(x["points"].shape[0]),
@@ -340,8 +361,8 @@ class Vorotron():
                                SESSION["queue"],
                                (x["shape"][1], x["shape"][0], 1),
                                None,
-                               mat2d_in,
-                               mat2d_out,
+                               d_id_in, d_x_in, d_y_in,
+                               d_id_out, d_x_out, d_y_out,
                                np.int32(x["shape"][0]),
                                np.int32(x["shape"][1]),
                                np.int32(step)
@@ -350,11 +371,15 @@ class Vorotron():
                 T_GPU += event.profile.end-event.profile.start
                 T2 = timer()
                 T_CPU += T2-T1
-                mat2d_in, mat2d_out = mat2d_out, mat2d_in
-            mat2d_in, mat2d_out = mat2d_out, mat2d_in
+                d_id_in, d_id_out = d_id_out, d_id_in
+                d_x_in, d_x_out = d_x_out, d_x_in
+                d_y_in, d_y_out = d_y_out, d_y_in
+            d_id_in, d_id_out = d_id_out, d_id_in
+            d_x_in, d_x_out = d_x_out, d_x_in
+            d_y_in, d_y_out = d_y_out, d_y_in
 
         T_ALL_2 = timer()
-        x["__mat2d"] = copy_to_host(mat2d_flatten, mat2d_out, x["shape"])
+        x["__mat2d"] = copy_to_host((h_id_in, h_x_in, h_y_in), (d_id_out, d_x_out, d_y_out), x["shape"])
         return x, T_GPU, T_ALL_2-T_ALL_1, T_CPU
 
 ################################################################################
@@ -375,13 +400,13 @@ def valid(model1, model2, x, n=3):
             del x["__mat2d"]
         m1, t1, _, _ = model1.do(x)
         m1 = m1["__mat2d"][:, :, 0]
-        # save(m1, prefix="brute")
+        save(m1, prefix="brute")
         # algorithm
         if "__mat2d" in x:
             del x["__mat2d"]
         m2, t2, _, _ = model2.do(x)
         m2 = m2["__mat2d"][:, :, 0]
-        # save(m2) # FIXME: debug
+        save(m2) # FIXME: debug
         # error
         loss = fn_loss(m1, m2)
         # append
@@ -626,7 +651,7 @@ def do_test_simple():
 
 TEST_DOMAIN = {
     "shapes":
-        [(128, 128), (128, 1024)],
+        [(128, 128), (1024, 1024)],
     "cases":
         [
             {gen_uniform: [use_num, 1]},
