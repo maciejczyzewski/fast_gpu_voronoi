@@ -26,7 +26,7 @@ __kernel void fn(
         best_score = 16776832;
 
 	#{ANCHOR_TYPE}
-            if(nx < 0 || y_size <= nx || ny < 0 || y_size <= ny) continue;
+            if(nx < 0 || x_size <= nx || ny < 0 || y_size <= ny) continue;
             int anchor_seed = mat2d_in[POS(nx, ny, 0)];
             if (anchor_seed == 0) continue;
 			int anchor_pos_x = mat2d_in[POS(nx, ny, 1)];
