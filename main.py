@@ -1,4 +1,8 @@
-# PYOPENCL_CTX='0:1'
+# FIXME: automatic PYOPENCL_CTX='0:1'
+
+# !pip3 install pyopencl
+# !pip3 install scikit-optimize
+# !pip3 install --upgrade numba
 
 import os
 import gc
@@ -13,6 +17,7 @@ import matplotlib.pyplot as plt
 
 from PIL import Image
 from tqdm import tqdm
+from datetime import datetime
 from pprint import pprint, pformat
 from timeit import default_timer as timer
 
@@ -28,6 +33,23 @@ try:
     sys.excepthook = IPython.core.ultratb.ColorTB()
 except BaseException:
     pass
+
+try:
+    import google.colab
+    """
+    function ClickConnect(){
+      console.log("Working");
+      document
+        .querySelector("#top-toolbar > colab-connect-button")
+        .shadowRoot
+        .querySelector("#connect")
+        .click()
+    }
+    setInterval(ClickConnect,60000)
+    """
+    IN_COLAB = True
+except BaseException:
+    IN_COLAB = False
 
 print("[MAIN]")
 
@@ -47,11 +69,11 @@ def call(cmd):
 
 np.random.seed(+oo)
 
-# FIXME: seed everything (but how OpenCl?)
-
 ################################################################################
 
 class Config:
+    N_CALLS = 2700 # 6h * 60min * 60sec / 8 sec per variant
+    OPTIMIZER = forest_minimize
     IS_SPECIAL = False
 
 DEBUG = {
@@ -77,6 +99,12 @@ call("rm -f __*.png")
 call("mkdir -p results/")
 call("mkdir -p results/log/")
 call("mkdir -p results/code/")
+
+if IN_COLAB:
+    from google.colab import drive
+    COLAB_OUTPUT = "/content/drive/My Drive/KAGGLE_OUTPUT/"
+    drive.mount("/content/drive", force_remount=True)
+    call(f"mkdir -p '{COLAB_OUTPUT}'")
 
 ################################################################################
 
@@ -157,7 +185,7 @@ def save(M, prefix=None):
     _M_color = mat2d_to_rgb(M)
     im = Image.fromarray(np.uint8(_M_color), "RGB")
     # im = im.resize((512, 512), Image.NEAREST)  # FIXME: option?
-    im.save(f"img/{name}", "PNG")
+    im.save(f"results/{name}", "PNG")
 
 # FIXME: add plot and simple table?
 
@@ -184,7 +212,7 @@ def copy_to_host(ptr, out, shape=None):
 
 # FIXME: add modifiers like `noise kernel`
 
-def step_function_default(shape, num=None, config=None):
+def mod_step_function__default(shape, num=None, config=None):
     steps = []
     for factor in range(1, +oo, 1):
         f = math.ceil(max(shape) / (2**(factor)))
@@ -198,7 +226,7 @@ class Vorotron():
     
     config = {
         "bruteforce": True,
-        "step_function": step_function_default,
+        "step_function": mod_step_function__default,
         "anchor_type": placebo,
         "noise": False,
         "anchor_distance_ratio": 1/2,
@@ -212,7 +240,6 @@ class Vorotron():
         self.kernel_noise = load_prg("algo_noise.cl")
         pprint(self.config)
 
-        # FIXME: apply
         if not self.config["bruteforce"]:
             code = open("algo_template.cl", 'r').read()
             for key in ["anchor_type"]:
@@ -315,7 +342,6 @@ class Vorotron():
 
         T_ALL_2 = timer()
         x["__mat2d"] = copy_to_host(mat2d_flatten, mat2d_out, x["shape"])
-        # return x, T_SUM, T2_all-T1_all
         return x, T_GPU, T_ALL_2-T_ALL_1, T_CPU
 
 ################################################################################
@@ -326,11 +352,10 @@ def use_density(shape, x): return int(shape[0] * shape[1] * x)
 def fn_loss(m1, m2):
     return 1 - np.count_nonzero((m1-m2) == 0)/(m1.shape[0]*m1.shape[1])
 
-# FIXME: n=10 IS STABLE!!!!!!!!!!!!!!!!!!!!!! but okay
 def valid(model1, model2, x, n=5):
     loss_arr, time_1_arr, time_2_arr = [], [], []
 
-    # FIXME: jesli nie ma duzych roznic przerwij
+    # FIXME: jesli nie ma duzych roznic przerwij - wczesniej?
     for _ in range(n):
         # bruteforce
         if "__mat2d" in x:
@@ -342,7 +367,7 @@ def valid(model1, model2, x, n=5):
             del x["__mat2d"]
         m2, t2, _, _ = model2.do(x)
         m2 = m2["__mat2d"][:, :, 0]
-        save(m2)
+        # save(m2) # FIXME: debug
         # error
         loss = fn_loss(m1, m2)
         # append
@@ -350,7 +375,7 @@ def valid(model1, model2, x, n=5):
         time_1_arr.append(t1)
         time_2_arr.append(t2)
 
-    # FIXME: tylko debug
+    # FIXME: debug
     # save(m1, prefix="gt")
     # save(m2, prefix="jfa")
 
@@ -365,7 +390,7 @@ def valid(model1, model2, x, n=5):
     
     loss_diff = round(loss, 6)
     time_diff = round(time_1 / time_2, 6)
-    print(f"\033[91m [[ {model2.name.ljust(20)} ]] =========> loss: {loss_diff:8}% | \033[94m time: {time_1/1e9:6} : {time_2/1e9:6}\033[0m")
+    print(f"\033[91m [[ {model2.name.ljust(20)} ]] =========> loss: {loss_diff:8}% \n\t| \033[94m time: {time_1/1e9:6} : {time_2/1e9:6}\033[0m")
 
     gc.collect()
     return loss_diff, time_diff
@@ -396,7 +421,7 @@ def human_algo_name(config):
         noise = "+Noise"
     else:
         noise = ""
-    step_function = config["step_function"].__name__.replace("step_function_", "").title()
+    step_function = config["step_function"].__name__.replace("mod_step_function__", "").title()
 
     ############## SPECIAL
     if "Special" in step_function:
@@ -412,48 +437,39 @@ def human_algo_name(config):
 
     return f"{anchor_type}{anchor_num}{anchor_double}|{step_function}{special}{noise}"
 
-
-# FIXME: progress bar?
+i_calls, pbar = 0, None # FIXME: progress bar? tqdm?
+best_name, best_score = "?", 0
 def optimize(model_ref, space, domain, n_calls=10):
+    global i_calls, pbar
+    pbar = tqdm(total=n_calls)
     ALGOMAP = {}
 
     def score_from_config(config):
-       # FIXME: if same HUMAN NAME----> continue
-        
+        global i_calls, best_name, best_score
         print("======= EXPERIMENT =======")
-        # FIXME: dla roznych domen rozne wyniki?
 
-        config["bruteforce"] = False
-        
         name = human_algo_name(config)
+        if name == "Square|Default":
+            name = "JFA (original)"
         if name in ALGOMAP:
+            print(f"----> {name} already saved")
             return ALGOMAP[name]
 
         model = Vorotron(config)
-
+        model.name = name
         score, log = do_compirason(model, model_ref, domain)
-        # log["name"] = str(score) # FIXME: human-name        
-        # FIXME: human-name        
 
         path_log = f"results/log/{score}.json"
         path_code = f"results/code/{score}.cl"
 
-        if name == "Square|Default":
+        if name == "JFA (original)":
             print("=============================> SPECIAL (JFA)")
             path_log = f"results/jfa.json"
             path_code = f"results/jfa.cl"
-            name = "JFA (original)"
 
         log["name"] = f"({int(score)}) " + name
-
-        # FIXME: plot need to import DOMAIN-------->?
-
-        # FIXME: -----> log[name] --> [generate here catchy name]
-        pprint(log)
         print(f"[[[[[[[[[[[ \033[96m {log['name']} \033[0m ]]]]]]]]]]]")
-        # FIXME: save to log/ then plot.py
-        # FIXME: 3d ---> wykres?
-        # FIXME: sorted [score] along all axis?
+        
         log_cl = json.dumps(log)
         text_file = open(path_log, "w")
         text_file.write(log_cl)
@@ -465,18 +481,22 @@ def optimize(model_ref, space, domain, n_calls=10):
         text_file.write(result_cl)
         text_file.close()
 
-        print("==========================")
+        print(f"========================== \033[94m {i_calls}/{n_calls} \033[0m")
+        if score >= best_score:
+            best_name, best_score = log["name"], score
         ALGOMAP[name] = -score
         return -score
 
     @use_named_args(space)
     def score(**config):
-        
+        global i_calls, pbar
         print("======= EXPERIMENT =======")
         # FIXME: dla roznych domen rozne wyniki?
-
+        i_calls += 1
         config["bruteforce"] = False
-        return score_from_config(config)
+        score = score_from_config(config)
+        pbar.update(1)
+        return score
 
     def save_domain(domain):
         domain_vec = []
@@ -504,25 +524,30 @@ def optimize(model_ref, space, domain, n_calls=10):
         'anchor_type': mod_anchor_type__square,
         'bruteforce': False,
         'noise': False,
-        'step_function': step_function_default,
+        'step_function': mod_step_function__default,
     })
 
-    # [[ gp_minimize vs forest_minimize | dummy_minimize ]]
-    if Config.IS_SPECIAL:
-        return gp_minimize(func=score, dimensions=space,
-                           n_calls=n_calls, random_state=0)
+    if Config.OPTIMIZER is not None or Config.OPTIMIZER != "auto":
+        obj = Config.OPTIMIZER(func=score, dimensions=space,
+                                n_calls=n_calls, random_state=0)
     else:
-        return forest_minimize(func=score, dimensions=space,
-                           n_calls=n_calls, random_state=0)
+        if Config.IS_SPECIAL:
+            # faster but lower results?
+            obj = gp_minimize(func=score, dimensions=space,
+                               n_calls=n_calls, random_state=0)
+        else:
+            obj = forest_minimize(func=score, dimensions=space,
+                               n_calls=n_calls, random_state=0)
+
+    pbar.close()
+    return obj
 
 def fn_metric(a, b): # b/(1+a)
-    # FIXME: max aby w pewnych domenach mogly funkcjonowac
     return max(0, (b * (100-a**1.5)))
 
 def do_compirason(model, model_ref, domain=None): 
     loss_arr = []
 
-    #FIMXE init with keys from domain/shapes
     log = {
         'loss': [],
         'time': [],
@@ -539,8 +564,6 @@ def do_compirason(model, model_ref, domain=None):
             sample = create_instance(func, shape=shape, num=num)
 
             a, b = valid(model_ref, model, sample)
-            # FIXME: wzor jakis na {a,b}?
-            # FIXME: DO FUNKCJI JAKIES
             score = fn_metric(a, b)
             loss_arr.append(score)
             print(f"shape={shape} | a={a} b={b} -> score={score}")
@@ -549,8 +572,6 @@ def do_compirason(model, model_ref, domain=None):
             log["time"].append(b)
             log["score"].append(score)
 
-    # FIXME: BETTER SCORE FUNCTION? multiple domains?
-    # ------------------> PYTORCH ]]]]]]]]]]]]]]]]]]]
     score = sum(loss_arr)/len(loss_arr)
     print(f"----> SCORE=\033[92m {score} \033[0m")
 
@@ -571,7 +592,7 @@ def do_test_simple():
         'anchor_type': mod_anchor_type__circle,
         'bruteforce': False,
         'noise': True,
-        'step_function': step_function_star
+        'step_function': mod_step_function__star
     }
     sample = create_instance(gen_uniform, shape=(32, 32), num=8)
     algo = Vorotron(config_star)
@@ -594,14 +615,13 @@ TEST_DOMAIN = {
 }
 
 def do_test_error():
-    # FIXME: plot?
     config_0015 = {
         'anchor_double': False,
         'anchor_num': 7,
         'anchor_type': mod_anchor_type__circle,
         'bruteforce': False,
         'noise': False,
-        'step_function': step_function_star
+        'step_function': mod_step_function__star
     }
     config_0190 = {
         'anchor_double': True,
@@ -609,7 +629,7 @@ def do_test_error():
         'anchor_type': mod_anchor_type__circle,
         'bruteforce': False,
         'noise': True,
-        'step_function': step_function_star
+        'step_function': mod_step_function__star
     }
     config_0195 = {
         'anchor_double': False,
@@ -617,7 +637,7 @@ def do_test_error():
         'anchor_type': mod_anchor_type__square,
         'bruteforce': False,
         'noise': True,
-        'step_function': step_function_factor3
+        'step_function': mod_step_function__factor3
     }
     config_star = {
         'anchor_double': False,
@@ -625,7 +645,7 @@ def do_test_error():
         'anchor_type': mod_anchor_type__circle,
         'bruteforce': False,
         'noise': True,
-        'step_function': step_function_star,
+        'step_function': mod_step_function__star,
     }
     config_jfa = {
         'anchor_double': False,
@@ -633,7 +653,7 @@ def do_test_error():
         'anchor_type': mod_anchor_type__square,
         'bruteforce': False,
         'noise': True,
-        'step_function': step_function_default,
+        'step_function': mod_step_function__default,
     }
     model = Vorotron(config_jfa)
     model_ref = MODEL_BRUTEFORCE
@@ -652,7 +672,7 @@ def do_test_error():
 
 ################################################################################
 
-def step_function_star(shape, num, config=None):
+def mod_step_function__star(shape, num, config=None):
     def LogStar(n):
         if n <= 1:
             return 0
@@ -667,19 +687,19 @@ def step_function_star(shape, num, config=None):
         if 65536 < n:
             return 5
     n = LogStar(num)
-    steps, i = [], 0 # FIXME: enum
+    steps, i = [], 0
     for factor in range(1, +oo, 1):
         i += 1
         f = math.ceil(max(shape) / (3**(factor)))
         steps.append(f)
         if f <= 1 or i == n + 1:
             break
-    return steps + [1] # + [3, 2, 1]
+    return steps + [1]
 
 # FIXME: pozwala polepszych jednak oslabia mocno inne parametry
 # ----->               wymaga innego podejscia w przeszukiwaniu? (rundy?)
 #           lub        uproszczenie / redukcja do najlepszych przypadkow
-def step_function_special(shape, num=None, config=None):
+def mod_step_function__special(shape, num=None, config=None):
     A = config["A"] #1.2 # <1, 2>
     B = config["B"] #0   # <0, 1>
     C = config["C"] #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
@@ -689,30 +709,30 @@ def step_function_special(shape, num=None, config=None):
     steps = []
     q = num/(shape[0]*shape[1])
     qm = ((shape[0]+shape[1])/2) * q**(1/2)
-    print(f"q={q} --> qm={qm}")
-    # qm <-----> max(shape)
-    # jakis x?
+    # print(f"q={q} --> qm={qm}")
     S = B*qm + (1-B)*(max(shape)/2)
     St = math.log2(S)
-    print(f"====> S={S} | {St}")
+    # print(f"====> S={S} | {St}")
 
-    print()
+    # print()
     for i in range(1, int(X*St*2), 1):
         f = round(1/(D**(i**A) + i%max(1, int(C*St))), 4)
         fm = f * S
         ffm = int(fm)
-        print(f"--------> {i} f={f:10} fm={fm} | {ffm}")
-        #f = math.ceil(max(shape) / (2**(i)))
+        # print(f"--------> {i} f={f:10} fm={fm} | {ffm}")
         if ffm >= 1:
             steps.append(ffm)
 
-    print()
+    # print()
     if len(steps) == 0:
         return [1]
     return steps
 
 # https://www.youtube.com/watch?v=SnIAxVx7ZUs
-def step_function_special__old(shape, num, config=None):
+# https://www.youtube.com/watch?v=fWvKvOViM3g
+# https://www.youtube.com/watch?v=Tx9zMFodNtA
+# https://www.youtube.com/watch?v=ckKi01gqW7A
+def mod_step_function__special__old(shape, num, config=None):
     a, b, c = config["a"], config["b"], config["c"]
     area = shape[0] * shape[1]
     q = area/(num+1)
@@ -729,7 +749,7 @@ def step_function_special__old(shape, num, config=None):
     print("----> CUR=", steps)
     return steps
 
-def step_function_factor3(shape, num=None, config=None):
+def mod_step_function__factor3(shape, num=None, config=None):
     steps = []
     for factor in range(1, +oo, 1):
         f = math.ceil(max(shape) / (3**(factor)))
@@ -738,9 +758,7 @@ def step_function_factor3(shape, num=None, config=None):
             break
     return steps
 
-# FIXME: modifiers here? to code? recurse?
-
-# FIXME: how to define here multiple anchors?
+# FIXME: nie dziala `anchor_number_ration` oraz `anchor_num`
 def mod_anchor_type__square(code, config=None):
     anchor_distance_ratio = config["anchor_distance_ratio"]
     if config["anchor_double"]:
@@ -797,88 +815,48 @@ def mod_anchor_type__circle(code, config=None):
 MODEL_BRUTEFORCE = Vorotron({
     'brutforce': True
 })
-MODEL_JFA = Vorotron({
-    'anchor_double': False,
-    'anchor_num': None,
-    'anchor_type': mod_anchor_type__square,
-    'bruteforce': False,
-    'noise': False,
-    'step_function': step_function_default,
-})
-MODEL_JFA_STAR = Vorotron({
-    'anchor_double': False,
-    'anchor_num': 12,
-    'anchor_type': mod_anchor_type__circle,
-    'bruteforce': False,
-    'noise': True,
-    'step_function': step_function_star
-})
-
-
-# FIXME: =====================
-# aby odpalic z step_function special ZMIEN forest_minimize na gp_minimize
-#                                           !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # [[[BEST FOR 384x384]]]
-# Real(1.65, 1.73, name='A'), #1.2 # <1, 2>
-# Real(0.99,    1,    name='B'), #0   # <0, 1>
-# Real(0.8,  1,    name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
-# Real(1.2,  1.25, name='D'), #1.5 # <1, 2>
-# Real(0.65, 0.95, name='X'), #0.6 # <0.2, 1>
+# Real(1.65, 1.73, name='A'), # <1,   2>
+# Real(0.99,    1, name='B'), # <0,   1>
+# Real(0.8,     1, name='C'), # <0,   1>
+# Real(1.2,  1.25, name='D'), # <1,   2>
+# Real(0.65, 0.95, name='X'), # <0.2, 1>
 
 # [[[BEST FOR 256x256]]]
-# Real(1.40, 1.5, name='A'), #1.2 # <1, 2>
-# Real(0.99,    1,    name='B'), #0   # <0, 1>
-# Real(0.8,  1,    name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
-# Real(1.2,  1.3, name='D'), #1.5 # <1, 2>
-# Real(0.65, 1, name='X'), #0.6 # <0.2, 1>
+# Real(1.40,  1.5, name='A'), # <1,   2>
+# Real(0.99,    1, name='B'), # <0,   1>
+# Real(0.8,     1, name='C'), # <0,   1>
+# Real(1.2,   1.3, name='D'), # <1,   2>
+# Real(0.65,    1, name='X'), # <0.2, 1>
 
+# [[[BEST FOR 512x512]]
+# Real(1.46,  1.5, name='A'), # <1,   2>
+# Real(0.99,    1, name='B'), # <0,   1>
+# Real(0.95,    1, name='C'), # <0,   1>
+# Real(1.26, 1.33, name='D'), # <1,   2>
+# Real(0.71, 0.90, name='X'), # <0.2, 1>
 
 SPACE = [
-    #Real(0, 1, name='a'),
-    #Real(0.25, 1, name='b'),
-    #Real(0, 1, name='c'),
-    
-    Categorical([step_function_default,
-                  step_function_star,
-                  step_function_factor3,
-                 step_function_special],
-                 name='step_function'),
+    Categorical([mod_step_function__default,
+                 mod_step_function__star,
+                 mod_step_function__factor3,
+                 mod_step_function__special],
+                name='step_function'),
 
-    Real(1.40, 1.5, name='A'), #1.2 # <1, 2>
-    Real(0.99,    1,    name='B'), #0   # <0, 1>
-    Real(0.8,  1,    name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
-    Real(1.2,  1.3, name='D'), #1.5 # <1, 2>
-    Real(0.65, 1, name='X'), #0.6 # <0.2, 1>
+    Real(1,   2, name='A'), # <1,   2>
+    Real(0,   1, name='B'), # <0,   1>
+    Real(0,   1, name='C'), # <0,   1>
+    Real(1,   2, name='D'), # <1,   2>
+    Real(0.2, 1, name='X'), # <0.2, 1>
 
-    # FIXME: B nic nie robi? zawsze 1
-    #Real(1.65, 1.73, name='A'), #1.2 # <1, 2>
-    #Real(0.99,    1,    name='B'), #0   # <0, 1>
-    #Real(0.8,  1,    name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
-    #Real(1.2,  1.25, name='D'), #1.5 # <1, 2>
-    #Real(0.65, 0.95, name='X'), #0.6 # <0.2, 1>
- 
-    #############3
-    # Categorical([step_function_default,
-    #              step_function_star,
-    #              step_function_factor3],
-    #             name='step_function'),
-    ##############
-
-    Integer(6, 12+6, name='anchor_num'),
+    Integer(4, 12+6, name='anchor_num'),
     Categorical([False, True], name='noise'),
     Categorical([False, True], name='anchor_double'), 
-
-    # BEST=================================
-    #Categorical([step_function_default,
-    #             step_function_star,
-    #             step_function_factor3],
-    #            name='step_function'),
-    # =====================================
     
-    # FIXME: distance more than 1?????? FOR FUN??????????
     Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_distance_ratio'),
     Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_number_ratio'),
+ 
     Categorical([mod_anchor_type__square,
                  mod_anchor_type__circle],
                 name='anchor_type'),
@@ -886,17 +864,15 @@ SPACE = [
 
 if Config.IS_SPECIAL:
     SPACE[1:1+5] = [
-        Real(1,   2, name='A'), #1.2 # <1, 2>
-        Real(0,   1, name='B'), #0   # <0, 1>
-        Real(0,   1, name='C'), #0.5 # <0, 1> FIXME: ile maksymalnie bedzie?
-        Real(1,   2, name='D'), #1.5 # <1, 2>
-        Real(0.2, 1, name='X'), #0.6 # <0.2, 1>
+        Real(1,   2, name='A'), # <1,   2>
+        Real(0,   1, name='B'), # <0,   1>
+        Real(0,   1, name='C'), # <0,   1>
+        Real(1,   2, name='D'), # <1,   2>
+        Real(0.2, 1, name='X'), # <0.2, 1>
     ]
 
-    SPACE[0] = Categorical([step_function_special],
+    SPACE[0] = Categorical([mod_step_function__special],
                     name='step_function')
-
-# FIXME: WYKRESY BO NIC NIE WIDAC KOTELY!!!!!!!!!!!!!!!!!!!!
 
 DOMAIN = {
     "shapes":
@@ -916,17 +892,9 @@ DOMAIN = {
         ]
 }
 
-# FIXME: znalesc na malych caly zakres parametrow?????????????????
-
 DOMAIN_FAST = {
     "shapes":
-        [(256, 256)],
-    #    [(512, 512), (768, 768)],
-    #    [(64, 64)],
-    #    [(256, 256), (384, 384), (512, 512)], for BUG with fixed `sf_special`
-    #    [(384, 384)], # best to DEBUG JFAStar
-    #    [(32, 32), (128, 128)], # best to DEBUG optimizer
-    #    [(32, 32), (64, 64), (128, 128), (256, 256)], # (128, 128) + (512, 512)
+        [(64, 64), (128, 128), (256, 256), (512, 512), (768, 768), (1024, 1024)],
     "cases":
         [
             {gen_uniform: [use_num, 1]},
@@ -934,7 +902,6 @@ DOMAIN_FAST = {
             {gen_uniform: [use_density, 0.01]},
             {gen_uniform: [use_density, 0.03]},
             {gen_uniform: [use_density, 0.05]},
-            #{gen_uniform: [use_density, 0.1]},
         ]
 }
 
@@ -942,23 +909,30 @@ DOMAIN_FAST = {
 
 if __name__ == "__main__":
     # do_test_gen()
-    #do_test_simple()
-    #sys.exit()
+    # do_test_simple()
+    # sys.exit()
     # do_test_error()
     # sys.exit()
 
-    # FIXME: kolejna generacja zastepuje `MODEL_BRUTEFORCE`
     opt_result = optimize(
         MODEL_BRUTEFORCE,
         SPACE,
         DOMAIN_FAST, # DOMAIN vs DOMAIN_FAST
-        n_calls=300, # BEST:[100] /// (20*60) 100 vs 10*60
+        n_calls=Config.N_CALLS, # BEST:[100] /// (20*60) 100 vs 10*60
     )
 
-    # FIXME: cos tu nie gra // naprawic?
-    # moze tak ---> https://scikit-optimize.github.io/stable/auto_examples/plots/partial-dependence-plot-2D.html#sphx-glr-auto-examples-plots-partial-dependence-plot-2d-py
-    _ = plot_objective(opt_result, n_points=40)
-    # FIXME: nabrawic te marginy
-    plt.savefig('figures/raport.png')
+    print(f"\033[92m {best_name} \033[0m")
+    
+    if IN_COLAB:
+        path_date = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+        call(f"cp -r results/ '{COLAB_OUTPUT}/{path_date}'")
+    print("end")
 
-    print("ok")
+    # FIXME: inline table? just to see results? (from plot.py)
+
+    # _ = plot_objective(opt_result, n_points=40)
+    # FIXME: nabrawic te marginy
+    # moze tak ---> https://scikit-optimize.github.io/stable/auto_examples/plots/partial-dependence-plot-2D.html#sphx-glr-auto-examples-plots-partial-dependence-plot-2d-py
+    # plt.savefig('figures/raport.png')
+
+    # print("ok")

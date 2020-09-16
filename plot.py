@@ -10,15 +10,11 @@ from pprint import pprint
 
 oo = 11111111
 
-# FIXME: wyswietlaj dla wszystkich z tabeli plot? ale na legendzie tylko najl.?
 
 ###############################
 # [IDEAS]
 # FIXME: 3d
-# FIXME: sorted by score
-# FIXME: time/loss (power line)
-# FIXME: [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[generacja tabelek]]]]]]]]
-# FIXME: case to ax[x]?????????????
+# FIXME: wyswietlaj dla wszystkich z tabeli plot? ale na legendzie tylko najl.?
 ###############################
 
 def slugify(text):
@@ -380,4 +376,3 @@ text_file.close()
 print(tab)
 
 # FIXME: 3d wykres?
-# FIXME: tabelka?
