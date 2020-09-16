@@ -82,9 +82,9 @@ np.random.seed(+oo)
 ################################################################################
 
 class Config:
-    N_CALLS = 300 # 6h * 60min * 60sec / 8 sec per variant
+    N_CALLS = 300 # FIXME: ustaw czas a nie ilosc iteracji
     OPTIMIZER = "auto"
-    DOMAIN = "colab" # FIXME: not working {colab, full, fast}
+    DOMAIN = "DOMAIN_FAST"
     
     IS_SPECIAL_ONLY = False
     IS_CIRCLE_ONLY = False
@@ -254,7 +254,7 @@ class Vorotron():
         "bruteforce": True,
         "step_function": mod_step_function__default,
         "anchor_type": placebo,
-        "noise": False,
+        "noise": "none",
         "anchor_distance_ratio": 1/2,
         "anchor_number_ratio": 1/2,
     }
@@ -264,6 +264,7 @@ class Vorotron():
             self.config = dict(list(self.config.items()) + list(config.items())) 
         self.kernel_bruteforce = load_prg("algo_bruteforce.cl")
         self.kernel_noise = load_prg("algo_noise.cl")
+        self.kernel_lnoise = load_prg("algo_local_noise.cl")
         pprint(self.config)
 
         if not self.config["bruteforce"]:
@@ -303,7 +304,7 @@ class Vorotron():
         d_y_out = cl.Buffer(SESSION["ctx"], mf.READ_WRITE, h_y_in.nbytes)
 
         # === NOISE ===
-        if self.config["noise"]:
+        if self.config["noise"] == "noise":
             points_in = cl.Buffer(SESSION["ctx"], mf.COPY_HOST_PTR |
                                   mf.READ_ONLY, hostbuf=x["points"])
             seeds_in = cl.Buffer(SESSION["ctx"], mf.COPY_HOST_PTR |
@@ -325,10 +326,36 @@ class Vorotron():
             T_GPU += event.profile.end-event.profile.start
             T2 = timer()
             T_CPU += T2-T1
+        elif self.config["noise"] == "lnoise":
+            points_in = cl.Buffer(SESSION["ctx"], mf.COPY_HOST_PTR |
+                                  mf.READ_ONLY, hostbuf=x["points"])
+            seeds_in = cl.Buffer(SESSION["ctx"], mf.COPY_HOST_PTR |
+                                 mf.READ_ONLY, hostbuf=x["seeds"])
+
+            # === RUN ===
+            T1 = timer()
+            event = self.kernel_lnoise.fn(
+                                 SESSION["queue"],
+                                 (x["shape"][1], x["shape"][0], 1), None,
+                                 points_in,
+                                 seeds_in,
+                                 d_id_in, d_x_in, d_y_in,
+                                 np.int32(x["shape"][0]),
+                                 np.int32(x["shape"][1]),
+                                 np.int32(x["points"].shape[0]),
+                                 )
+            event.wait()
+            T_GPU += event.profile.end-event.profile.start
+            T2 = timer()
+            T_CPU += T2-T1
 
             # DEBUG -----------------
-            # x["__mat2d"] = copy_to_host(mat2d_flatten, mat2d_in, x["shape"])
-            # save(x["__mat2d"][:, :, 0])
+            #x["__mat2d"] = copy_to_host((h_id_in, h_x_in, h_y_in), (d_id_in,
+            #                                                        d_x_in,
+            #                                                        d_y_in), x["shape"])
+            #save(x["__mat2d"][:, :, 0])
+            #x["__mat2d"] = copy_to_host(mat2d_flatten, mat2d_in, x["shape"])
+            #save(x["__mat2d"][:, :, 0])
             # -----------------------
 
         # === RUN ===
@@ -400,13 +427,13 @@ def valid(model1, model2, x, n=3):
             del x["__mat2d"]
         m1, t1, _, _ = model1.do(x)
         m1 = m1["__mat2d"][:, :, 0]
-        save(m1, prefix="brute")
+        #save(m1, prefix="brute")
         # algorithm
         if "__mat2d" in x:
             del x["__mat2d"]
         m2, t2, _, _ = model2.do(x)
         m2 = m2["__mat2d"][:, :, 0]
-        save(m2) # FIXME: debug
+        #save(m2) # FIXME: debug
         # error
         loss = fn_loss(m1, m2)
         # append
@@ -463,8 +490,10 @@ def human_algo_name(config):
             + ")"
     else:
         anchor_num = ""
-    if config["noise"]:
+    if config["noise"] == "noise":
         noise = "+Noise"
+    if config["noise"] == "lnoise":
+        noise = "+LNoise"
     else:
         noise = ""
     step_function = config["step_function"].__name__.replace("mod_step_function__", "").title()
@@ -570,7 +599,7 @@ def optimize(model_ref, space, domain, n_calls=10):
         'anchor_num': None,
         'anchor_type': mod_anchor_type__square,
         'bruteforce': False,
-        'noise': False,
+        'noise': "none",
         'step_function': mod_step_function__default,
     })
 
@@ -591,7 +620,7 @@ def optimize(model_ref, space, domain, n_calls=10):
     return obj
 
 def fn_metric(a, b): # b/(1+a)
-    return max(0, (math.sqrt(b) * (100-a**1.5)))
+    return max(0, (math.sqrt(b) * (100-a**2)))
     # return max(0, (b * (100-a**1.5)))
 
 def do_compirason(model, model_ref, domain=None): 
@@ -641,7 +670,7 @@ def do_test_simple():
         'anchor_num': 12,
         'anchor_type': mod_anchor_type__circle,
         'bruteforce': False,
-        'noise': True,
+        'noise': "noise",
         'step_function': mod_step_function__star
     }
     sample = create_instance(gen_uniform, shape=(32, 32), num=8)
@@ -670,7 +699,7 @@ def do_test_error():
         'anchor_num': 7,
         'anchor_type': mod_anchor_type__circle,
         'bruteforce': False,
-        'noise': False,
+        'noise': "none",
         'step_function': mod_step_function__star
     }
     config_0190 = {
@@ -678,7 +707,7 @@ def do_test_error():
         'anchor_num': 13,
         'anchor_type': mod_anchor_type__circle,
         'bruteforce': False,
-        'noise': True,
+        'noise': "noise",
         'step_function': mod_step_function__star
     }
     config_0195 = {
@@ -686,7 +715,7 @@ def do_test_error():
         'anchor_num': 18,
         'anchor_type': mod_anchor_type__square,
         'bruteforce': False,
-        'noise': True,
+        'noise': "noise",
         'step_function': mod_step_function__factor3
     }
     config_star = {
@@ -694,7 +723,7 @@ def do_test_error():
         'anchor_num': 12,
         'anchor_type': mod_anchor_type__circle,
         'bruteforce': False,
-        'noise': True,
+        'noise': "noise",
         'step_function': mod_step_function__star,
     }
     config_jfa = {
@@ -702,7 +731,7 @@ def do_test_error():
         'anchor_num': 9,
         'anchor_type': mod_anchor_type__square,
         'bruteforce': False,
-        'noise': True,
+        'noise': "noise",
         'step_function': mod_step_function__default,
     }
     model = Vorotron(config_jfa)
@@ -901,7 +930,7 @@ SPACE = [
     Real(0.2, 1, name='X'), # <0.2, 1>
 
     Integer(4, 12+6, name='anchor_num'),
-    Categorical([False, True], name='noise'),
+    Categorical(["none", "noise", "lnoise"], name='noise'),
     Categorical([False, True], name='anchor_double'), 
     
     Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_distance_ratio'),
@@ -928,6 +957,7 @@ if Config.IS_CIRCLE_ONLY:
     SPACE[-1] = Categorical([mod_anchor_type__circle],
                     name='anchor_type')
 
+################################################################################
 
 DOMAIN = {
     "shapes":
@@ -962,7 +992,7 @@ DOMAIN_COLAB = {
 
 DOMAIN_FAST = {
     "shapes":
-    [(128, 128)],
+        [(128, 128)],
     #    [(512, 512), (1024, 1024), (1536, 1536)],
     "cases":
         [
@@ -989,7 +1019,7 @@ if __name__ == "__main__":
     opt_result = optimize(
         MODEL_BRUTEFORCE,
         SPACE,
-        DOMAIN_FAST, # DOMAIN vs DOMAIN_FAST
+        globals()[Config.DOMAIN], # DOMAIN vs DOMAIN_FAST
         n_calls=Config.N_CALLS, # BEST:[100] /// (20*60) 100 vs 10*60
     )
 
