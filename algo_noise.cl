@@ -6,19 +6,21 @@ static float noise3D(float x, float y, float z) {
 __kernel void fn(
 	__global const uint2 *points_in,
     __global const uint  *seeds_in,
-    __global uint        *mat2d_out,
+    __global uint       *id_out,
+    __global uint       *x_out,
+    __global uint       *y_out,
     int                  x_size,
     int                  y_size,
     int                  number_of_seeds
 ) {
     int y = get_global_id(0);
     int x = get_global_id(1);
-#define POS(X, Y, Z) ((X)*y_size*3 + (Y)*3 + Z)
+#define POS(X, Y) ((X)*y_size + (Y))
 
-	if (mat2d_out[POS(x,y,0)] == 0) {
+	if (id_out[POS(x,y)] == 0) {
 		int pos = noise3D(y, 0.0f, x) * (number_of_seeds);
-		mat2d_out[POS(x,y,0)] = seeds_in[pos];
-		mat2d_out[POS(x,y,1)] = points_in[pos].x;
-		mat2d_out[POS(x,y,2)] = points_in[pos].y;
+		id_out[POS(x,y)] = seeds_in[pos];
+		x_out[POS(x,y)] = points_in[pos].x;
+		y_out[POS(x,y)] = points_in[pos].y;
 	}
 }
