@@ -1,4 +1,6 @@
-\documentclass{article}
+\documentclass[format=acmsmall,screen,review,authordraft,nonacm]{acmart}
+%\documentclass[format=acmsmall,screen,review,authordraft]{acmart}
+%\documentclass{article}
 
 % FIXME: https://arxiv.org/pdf/1709.06182.pdf
 %        maja ladny template / chyba dziabne
@@ -11,11 +13,11 @@
 %      https://www.youtube.com/watch?v=n_LcVqqHSY8
 %      https://www.youtube.com/watch?v=vpeljtzB1a4
 
-\usepackage{arxiv}
+%\usepackage{arxiv}
 
 \usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
-\usepackage[hidelinks]{hyperref}       % hyperlinks
+%\usepackage[hidelinks]{hyperref}       % hyperlinks
 \usepackage{url}            % simple URL typesetting
 \usepackage{booktabs}       % professional-quality tables
 \usepackage{amsfonts}       % blackboard math symbols
@@ -30,22 +32,23 @@
 \mathchardef\UrlBigBreakPenalty=100\url{#1}}
 
 %%% BONUS %%%
-\usepackage[table]{xcolor}  % for colors (like `red`)
+%\usepackage[table]{xcolor}  % for colors (like `red`)
 \usepackage[normalem]{ulem} % for underline
 \usepackage{booktabs}       % for better table
 \usepackage{bm}             % for special table cell (`cellcolor`)
 \usepackage{hhline,soul}    % for `hl` command (highlight text)
 \usepackage{amsmath}        % for multi-line math
 \usepackage[bottom]{footmisc}% for footnotes
+\usepackage{tabularx, booktabs}
 \newcolumntype{L}{>{\raggedright\footnotesize}m{6cm}}
 \renewcommand{\arraystretch}{1.2}
 %%%%%%%%%%%%%
 
 %%% BIBTEX %%%
 % https://sunsite.icm.edu.pl/pub/CTAN/info/biblatex-cheatsheet/biblatex-cheatsheet.pdf
-\usepackage[backend=bibtex, style=numeric, sorting=ynt]{biblatex}
-\addbibresource{main.bib} %                       `ynt` vs. `ydnt`
-\newcommand{\citep}[1]{\citeauthor*{#1} \cite{#1}} % for `fancy` cite style
+%\usepackage[backend=bibtex, style=numeric, sorting=ynt]{biblatex}
+%\addbibresource{main.bib} %                       `ynt` vs. `ydnt`
+%\newcommand{\citep}[1]{\citeauthor*{#1} \cite{#1}} % for `fancy` cite style
 %%%%%%%%%%%%%%
 
 \newcommand{\ourjfasingle}{JFAStar}
@@ -55,32 +58,44 @@
 % Voronoi Diagram and Distance Transform in O(1) from JFA using AutoML
 \title{lord vorotron: finding the best JFA variant for the coming winter} % $\approx$
 
-\renewcommand{\headeright}{}
-\renewcommand{\undertitle}{Draft}
-\renewcommand{\shorttitle}{\ourjfa}
+%\renewcommand{\headeright}{}
+%\renewcommand{\undertitle}{Draft}
+%\renewcommand{\shorttitle}{\ourjfa}
 
 %\date{September 9, 1985}	% Here you can change the date presented in the paper title
 %\date{} 					% Or removing it
 
-\author{
-  Maciej A.~Czyzewski\\
-  Institute of Computing Science\\
-  Poznan University of Technology\\
-  Piotrowo 2, 60-965 Poznan, Poland\\
-  \texttt{maciejanthonyczyzewski@gmail.com} \\
-  \And
-  Kamil~Piechowiak\\
-  Institute of Computing Science\\
-  Poznan University of Technology\\
-  Piotrowo 2, 60-965 Poznan, Poland\\
-  \texttt{kamil.cams@gmail.com} \\
-}
+
+\author{Maciej A. Czyzewski}
+\affiliation{%
+ \institution{Poznan University of Technology}
+ \city{Poznan}
+ \country{Poland}}
+
+\author{Kamil Piechowiak}
+\affiliation{%
+ \institution{Poznan University of Technology}
+ \city{Poznan}
+ \country{Poland}}
+
+
+% \author{
+%   Maciej A.~Czyzewski\\
+%   Institute of Computing Science\\
+%   Poznan University of Technology\\
+%   Piotrowo 2, 60-965 Poznan, Poland\\
+%   \texttt{maciejanthonyczyzewski@gmail.com} \\
+%   \And
+%   Kamil~Piechowiak\\
+%   Institute of Computing Science\\
+%   Poznan University of Technology\\
+%   Piotrowo 2, 60-965 Poznan, Poland\\
+%   \texttt{kamil.cams@gmail.com} \\
+% }
 
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\maketitle
 
 \hl{\textbf{UWAGA!} Przenioslem fragmenty ze starego szkicu, teraz jednak czuje ze
 powinnien byc to takie ogolne podsumowanie wszystkich mozliwych wariantow JFA - i
@@ -106,6 +121,8 @@ JFA.  This showed us that, AutoML could examine this space, and find the best
 possible algorithm in each case.  In the further part of the work, we discuss
 the results, compare the variants and ensemble for creating the final algorithm.
 \end{abstract}
+
+\maketitle
 
 \hl{\textbf{CEL:} omawiamy dwa algorytmy? jeden nastepca JFA} -
 \textbf{\ourjfasingle} \hspace{0.01cm} \hl{oraz ensembla po naszym score fn. -}
@@ -548,6 +565,8 @@ In practice, such a constant time algorithm is useful in many interactive applic
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\printbibliography
+%\printbibliography
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{main}
 
 \end{document}
