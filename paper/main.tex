@@ -1,5 +1,10 @@
 \documentclass{article}
 
+% FIXME: https://arxiv.org/pdf/1709.06182.pdf
+%        maja ladny template / chyba dziabne
+%        albo ten z brytyjskiego sem6
+%      https://github.com/borisveytsman/acmart
+
 % FIXME: https://github.com/google-research/arxiv-latex-cleaner
 
 % XXX: (mental anchor / looped / 3h) ->  UNDADASEA + LANE 8
@@ -208,6 +213,10 @@ na szybkosc dzialania.
 
 \hl{przeniesc do Proposed Method}
 
+\url{https://arxiv.org/pdf/1801.09373.pdf}
+\url{https://arxiv.org/pdf/1804.10120.pdf}
+\url{https://arxiv.org/pdf/1703.06353.pdf}
+
 okay przenioslem - dodac prace co tez tak szuka algosow
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -231,25 +240,10 @@ algorytmu bedzie nastepujace:
 
 \subsection{Domain Space} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-jakie domeny i dlaczego (i jak dzialaly gen\_uniform, \hl{gen\_polar, gen\_grid})
+\hl{okay, zupelnie inaczej tutaj podejsc, opisac jakie sa przypadki i jakie sa
+spotykane}
 
-\begin{itemize}
-	\item \textbf{shapes}: \{(64, 64), (128, 128), (256, 256), (512, 512), (768,
-		768)\}
-	\item \textbf{cases}:
-        \begin{itemize}
-			\item gen\_uniform: seeds=1,
-			\item gen\_uniform: seeds=2,
-			\item gen\_uniform: density=0.0001,
-			\item gen\_uniform: density=0.001,
-			\item gen\_uniform: density=0.01,
-			\item gen\_uniform: density=0.02,
-			\item gen\_uniform: density=0.03,
-			\item gen\_uniform: density=0.04,
-			\item gen\_uniform: density=0.05,
-			\item gen\_uniform: density=0.1,
-		\end{itemize}
-\end{itemize}
+jakie domeny i dlaczego (i jak dzialaly gen\_uniform, \hl{gen\_polar, gen\_grid})
 
 \subsection{Search Space} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -460,7 +454,22 @@ chaktersytyke (np. jest bardzo skuteczny dla waskiej grupy przykladow)
 
 \subsection{Multi-domain Algorithm (JFAStar)} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-32x32, 64x64, 96x96, 128x128, 256x256, 320x320, 384x384, 448x448, 512x512, 768x768, 1024x1024, 1536x1536
+\begin{itemize}
+	\item \textbf{shapes}: \{32x32, 64x64, 96x96, 128x128, 256x256, 320x320, 384x384, 448x448, 512x512, 768x768, 1024x1024, 1536x1536\}
+	\item \textbf{cases}:
+        \begin{itemize}
+			\item gen\_uniform: seeds=1,
+			\item gen\_uniform: seeds=2,
+			\item gen\_uniform: density=0.0001,
+			\item gen\_uniform: density=0.001,
+			\item gen\_uniform: density=0.01,
+			\item gen\_uniform: density=0.02,
+			\item gen\_uniform: density=0.03,
+			\item gen\_uniform: density=0.04,
+			\item gen\_uniform: density=0.05,
+			\item gen\_uniform: density=0.1,
+		\end{itemize}
+\end{itemize}
 
 \begin{figure}[H]
 	\centering
