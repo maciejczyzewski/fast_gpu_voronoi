@@ -44,40 +44,50 @@
 \renewcommand{\arraystretch}{1.2}
 %%%%%%%%%%%%%
 
-%%% BIBTEX %%%
-% https://sunsite.icm.edu.pl/pub/CTAN/info/biblatex-cheatsheet/biblatex-cheatsheet.pdf
-%\usepackage[backend=bibtex, style=numeric, sorting=ynt]{biblatex}
-%\addbibresource{main.bib} %                       `ynt` vs. `ydnt`
-%\newcommand{\citep}[1]{\citeauthor*{#1} \cite{#1}} % for `fancy` cite style
-%%%%%%%%%%%%%%
+\usepackage{listings}
+\lstset{
+  language=Python,
+  basicstyle=\footnotesize\ttfamily,
+  captionpos=b,
+  breaklines=false,
+  escapeinside={(*}{*)},
+  keywordstyle=\color{blue},
+  tabsize=2,
+  showspaces=false,
+  breakatwhitespace=true,
+  showstringspaces=false,
+  columns=fullflexible,
+  %numbers=left,
+  numbersep=3pt,
+  showtabs=false,
+  %numberstyle=\scriptsize\ttfamily\color{mygray},
+  morekeywords={string,foreach,var,async,await,lock},
+  frame=TB
+}
 
 \newcommand{\ourjfasingle}{JFAStar}
-\newcommand{\ourjfa}{Lord Vorotron} % okJFAuto / JFAstar
-%\title{A survey of \emph{jump flooding algorithm} applied to Voronoi}
+\newcommand{\ourjfa}{Vorotron} % okJFAuto
+
+% \title{A survey of \emph{jump flooding algorithm} applied to Voronoi}
 % \emph{\ourjfa}: Evolving Fast GPU Algorithm for
 % Voronoi Diagram and Distance Transform in O(1) from JFA using AutoML
-\title{lord vorotron: finding the best JFA variant for the coming winter} % $\approx$
 
-%\renewcommand{\headeright}{}
-%\renewcommand{\undertitle}{Draft}
-%\renewcommand{\shorttitle}{\ourjfa}
-
-%\date{September 9, 1985}	% Here you can change the date presented in the paper title
-%\date{} 					% Or removing it
-
+% https://capitalizemytitle.com/
+\title{Lord Vorotron: Finding the Best JFA Variant for the Coming Winter} % $\approx$
 
 \author{Maciej A. Czyzewski}
+\email{maciejanthonyczyzewski@gmail.com}
 \affiliation{%
  \institution{Poznan University of Technology}
  \city{Poznan}
  \country{Poland}}
 
 \author{Kamil Piechowiak}
+\email{kamil.cams@gmail.com}
 \affiliation{%
  \institution{Poznan University of Technology}
  \city{Poznan}
  \country{Poland}}
-
 
 % \author{
 %   Maciej A.~Czyzewski\\
@@ -97,13 +107,16 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\hl{\textbf{UWAGA!} Przenioslem fragmenty ze starego szkicu, teraz jednak czuje ze
-powinnien byc to takie ogolne podsumowanie wszystkich mozliwych wariantow JFA - i
-w jakich przypadkach sie sprawdzaja. A tak przyokazji nasza wersja z szumem+trikami
-ktora dobrze dziala, no i dodatek taki ze mozna teraz zrobic sobie ensembla (a
-nie jako glowny cel tej pracy). Dlatego wszystko co ponizej to praktycznie
-random/bardzo mocny szkic. Wykresy to wizualizacja smaku.}
-\newline
+% \hl{\textbf{UWAGA!} Przenioslem fragmenty ze starego szkicu, teraz jednak czuje ze
+% powinnien byc to takie ogolne podsumowanie wszystkich mozliwych wariantow JFA - i
+% w jakich przypadkach sie sprawdzaja. A tak przyokazji nasza wersja z szumem+trikami
+% ktora dobrze dziala, no i dodatek taki ze mozna teraz zrobic sobie ensembla (a
+% nie jako glowny cel tej pracy). Dlatego wszystko co ponizej to praktycznie
+% random/bardzo mocny szkic. Wykresy to wizualizacja smaku.}
+% \newline
+
+\hl{\textbf{UWAGA}: wymyslic prawidlowa nazwe pracy + poprawic zlozonosci +
+opisac dwa algorytmy}
 
 \begin{abstract}
 This paper studies a practical usage of machine learning (AutoML) to automate
@@ -122,13 +135,41 @@ possible algorithm in each case.  In the further part of the work, we discuss
 the results, compare the variants and ensemble for creating the final algorithm.
 \end{abstract}
 
+% http://dl.acm.org/ccs.cfm
+
+\begin{CCSXML}
+<ccs2012>
+<concept>
+<concept_id>10010147.10010371</concept_id>
+<concept_desc>Computing methodologies~Computer graphics</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10003752.10010061</concept_id>
+<concept_desc>Theory of computation~Randomness, geometry and discrete structures</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+<concept>
+<concept_id>10010147.10010169</concept_id>
+<concept_desc>Computing methodologies~Parallel computing methodologies</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10003752.10003809.10010031</concept_id>
+<concept_desc>Theory of computation~Data structures design and analysis</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computing methodologies~Computer graphics}
+\ccsdesc[300]{Theory of computation~Randomness, geometry and discrete structures}
+\ccsdesc[500]{Computing methodologies~Parallel computing methodologies}
+\ccsdesc[500]{Theory of computation~Data structures design and analysis}
+
+\keywords{Voronoi Diagram, Distance Transform, Code Generation}
+
 \maketitle
-
-\hl{\textbf{CEL:} omawiamy dwa algorytmy? jeden nastepca JFA} -
-\textbf{\ourjfasingle} \hspace{0.01cm} \hl{oraz ensembla po naszym score fn. -}
-\textbf{\ourjfa}???????
-
-\keywords{aaaaaaaaaaaaaaaaaa \and bbbbbbbbbbbbbbb \and ccccccccccccccccccc}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -173,8 +214,8 @@ The algorithm would be an approximation of the output, thus we suggest using WTO
 \begin{enumerate}
 	\item Presenting new state-of-the-art variants of algorithm for Voronoi
 		Diagram and Distance Transform: \newline
-		\textbf{\ourjfasingle} - single best variant;
-		\textbf{\ourjfa} - ensemble of weak variants; and
+		\textbf{\ourjfasingle} - (Multi-domain) single best variant;
+		\textbf{\ourjfa} - (Specific-domain) ensemble of weak variants; and
 	\item Analyzing all possible variants of JFA: comparing error and speedup
 		relative to bruteforce method
 %\item Proposing, for an input set of seeds in a 2D grid, the first
@@ -200,10 +241,17 @@ Reference                & Algorithm    & Exactness   & Time         & Work     
 \citep{de2017fast}       & FastGPU      & Exact       & $O(n^3/p)$   & -            \\
 \citep{cao2010parallel}  & PBA          & Exact       & $O(n)$       & $O(mN)$      \\
 \citep{honda2017simple}  & based on SKW & Exact       & $O(n)$       & $O(N)$       \\
-\citep{manduhu2019work}  & WTO          & \cellcolor{blue!25}\textbf{Exact}& \cellcolor{blue!25}$\bm{O(\log n)}$  & $O(N)$       \\
+\citep{manduhu2019work}  & WTO          & \cellcolor{blue!25}\textbf{Exact}&
+	\cellcolor{blue!25}$\mathbf{O(\log n)}$  & $O(N)$       \\
 \citep{schneider2009gpu} & SKW          & Approximate & $O(n)$       & $O(N)$       \\
 \citep{rong2006jump}     & JFA          & Approximate & $O(\log n)$  & $O(N\log n)$ \\ \bottomrule
-In this paper            & \ourjfa      & \cellcolor{blue!25}\textbf{Approximate} & \cellcolor{blue!25}$\sim$$\bm{O(1)}$ & $\sim$$O(N)$ \\ \bottomrule
+In this paper            & \ourjfasingle&
+	\cellcolor{blue!25}\textbf{Approximate} &
+	\cellcolor{blue!25}$\sim$$\mathbf{O(\log^{\ast} n)}$ & $\sim$$O(N)$ \\
+                         & \ourjfa      &
+	\cellcolor{blue!25}\textbf{Approximate} &
+	\cellcolor{blue!25}$\sim$$\mathbf{O(1)}$ & $\sim$$O(N)$ \\
+\bottomrule
 \end{tabular}
 \vspace{1em}
 \caption{Different GPU algorithms for computing EDT}
@@ -349,7 +397,6 @@ skonczyc algorytm w mniejszej ilosci krokow.
 
 Aby badania byly bardziej przejrzyste trzymalismy sie pewnej konfencji
 nazewniczej:
-
 $$
 [\bm{anchor\_type}][\bm{anchor\_num}][\bm{anchor\_double}]\qquad|\qquad[\bm{step\_function}]\qquad+\qquad[\bm{noise}]
 $$
@@ -357,11 +404,15 @@ $$
 dla przykladu \longvar{Circle11(1/3)Dual(1/4)|Factor3+Noise} ktore mozna
 przeczytac jako:
 
-\begin{multline}
-anchor\_type=Circle, anchor\_num=11, anchor\_number\_ratio=1/3, \\
-anchor\_double=True, anchor\_distance\_ratio=1/4, \\
-step\_function=Factor3, noise=True
-\end{multline}
+\begin{flalign*}
+	\text{[anchor\_type]}=Circle, \\
+	\text{[anchor\_num]}=11, \\
+	\text{[anchor\_number\_ratio]}=1/3, \\
+	\text{[anchor\_double]}=True, \\
+	\text{[anchor\_distance\_ratio]}=1/4, \\
+	\text{[step\_function]}=Factor3, \\
+	\text{[noise]}=True
+\end{flalign*}
 
 \subsection{Noise} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -399,7 +450,7 @@ ktorych bedziemy pobierac informacje. Naturalnie wydaje sie ze mala ilosc
 punktow w anchorze spowoduje wzrost bledu, a duza ilosc punktow spowoduje
 zmalenie bledu.
 
-\subsubsection{Anchor Num} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Anchor Number} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Dlatego kolejnym parametrem bedzie mozliwosc kontrolowania ilosci punktow.
 Niestety nie rozwazalismy wariantu kwadratow o dowolnej ilosci punktow (poniewaz
@@ -454,6 +505,35 @@ parametrami. Wada tego rozwiazania jest ze trzeba optymalizowac ta funkcje na
 calej dziedzinie (malej, duzej, gestej, zadkiej) - bo inaczej z overfituje ona
 ilosc krokow i wiekosc stepu pod rozmiar.
 
+\begin{lstlisting}
+def mod_step_function__special(shape, num=None, config=None):
+    # [EXAMPLE]
+    # Special(1.51/0.92/0.92/1.08/0.42)
+    # ------- A -- B -- C -- D -- X --- 
+
+    A = config["A"]  # <1,   2>
+    B = config["B"]  # <0,   1>
+    C = config["C"]  # <0,   1>
+    D = config["D"]  # <1,   2>
+    X = config["X"]  # <0.2, 1>
+
+    q = num / (shape[0] * shape[1])
+    qm = ((shape[0] + shape[1]) / 2) * q**(1 / 2)
+    S = B * qm + (1 - B) * (max(shape) / 2)
+    St = math.log2(S)
+
+    steps = []
+    for i in range(1, int(X * St * 2), 1):
+        f = round(1 / (D**(i**A) + i % max(1, int(C * St))), 4)
+        ffm = int(f * S)
+        if ffm >= 1:
+            steps.append(ffm)
+    if len(steps) == 0:
+        return [1]
+
+    return steps
+\end{lstlisting}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -469,7 +549,7 @@ przyroscie i latwo dostrzec ktory algorytm ma najwyzszy score lub jaka ma
 chaktersytyke (np. jest bardzo skuteczny dla waskiej grupy przykladow)
 }
 
-\subsection{Multi-domain Algorithm (JFAStar)} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Multi-domain Algorithm (\ourjfasingle)} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{itemize}
 	\item \textbf{shapes}: \{32x32, 64x64, 96x96, 128x128, 256x256, 320x320, 384x384, 448x448, 512x512, 768x768, 1024x1024, 1536x1536\}
@@ -499,7 +579,7 @@ chaktersytyke (np. jest bardzo skuteczny dla waskiej grupy przykladow)
 
 \begin{table}[H]
 	\centering
-	\hspace*{-1cm}
+	%\hspace*{-1cm}
 	\input{../figures/table.tex}
 	\newline
 	\caption{domain: 32x32, 64x64, 128x128, 256x256}
@@ -517,7 +597,7 @@ chaktersytyke (np. jest bardzo skuteczny dla waskiej grupy przykladow)
 
 \subsubsection{High Density}
 
-\subsection{Ensemble Across Domains (Vorotron)} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Ensemble Across Domains (\ourjfa)} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bla bla
 

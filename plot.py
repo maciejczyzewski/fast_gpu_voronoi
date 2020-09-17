@@ -332,6 +332,7 @@ with open(path, "r") as jsonfile:
 
 print(domain)
 
+GROUP_COL = 2 # FIXME: mozna zredykowac ilosc kolumn
 density_map = {}
 ROWS = []
 for i, (_, path) in enumerate(globlog()):
@@ -343,13 +344,13 @@ for i, (_, path) in enumerate(globlog()):
     score = int(score[1:-1])
     # print(f"==============> {score} {name}")
     local_avg = {}
-    last_shape, cur_i = "?x?", 0
+    last_shape, slow_i, cur_i = "?x?", 0, 0
     for j, e in enumerate(y):
         # FIXME: tak samo ale dla AxB
         shape = f"{domain[j]['shape'][0]}x{domain[j]['shape'][1]}"
         if last_shape != shape:
             last_shape, cur_i = shape, 0
-        # print("---->", shape, cur_i, e)
+        print("---->", shape, cur_i, e)
         if cur_i not in local_avg:
             local_avg[cur_i] = []
         local_avg[cur_i].append(e)
@@ -359,7 +360,13 @@ for i, (_, path) in enumerate(globlog()):
             density_map[cur_i] = []
         density_map[cur_i].append(domain[j]['num']/(domain[j]['shape'][0]*domain[j]['shape'][1]))
         ############
-        cur_i += 1
+        if slow_i+1 < GROUP_COL:
+            print("SLOW")
+            slow_i += 1
+        else:
+            print("FAST")
+            cur_i += 1
+            slow_i = 0
     # pprint(local_avg)
     local_row = []
     for i in range(0, +oo):

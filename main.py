@@ -90,9 +90,9 @@ np.random.seed(+oo)
 ################################################################################
 
 class Config:
-    N_CALLS = 50 # FIXME: ustaw czas a nie ilosc iteracji
+    N_CALLS = 2500 # FIXME: ustaw czas a nie ilosc iteracji
     OPTIMIZER = forest_minimize # "auto"
-    DOMAIN = "DOMAIN_FAST"
+    DOMAIN = "DOMAIN_JFASTAR"
     
     IS_SPECIAL_ONLY = False
     IS_CIRCLE_ONLY = False
@@ -580,6 +580,10 @@ def optimize(model_ref, space, domain, n_calls=10):
         config["bruteforce"] = False
         score = score_from_config(config)
         pbar.update(1)
+        ########### SECURITY ##############
+        if IN_COLAB and i_calls % 100 == 0 and i_calls > 1:
+            path_date = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+            call(f"cp -r results/ '{COLAB_OUTPUT}/{path_date}({i_calls}/{Config.N_CALLS})'")
         return score
 
     def save_domain(domain):
@@ -967,9 +971,11 @@ if Config.IS_CIRCLE_ONLY:
 
 ################################################################################
 
-DOMAIN = {
+DOMAIN_JFASTAR = {
     "shapes":
-        [(64, 64), (128, 128), (256, 256), (512, 512), (768, 768)],
+        [(32, 32), (64, 64), (96, 96), (128, 128), (256, 256), (320, 320),
+         (384, 384), (448, 448), (512, 512), (768, 768),
+         (1024, 1024), (1536, 1536)],
     "cases":
         [
             {gen_uniform: [use_num, 1]},
@@ -981,7 +987,7 @@ DOMAIN = {
             {gen_uniform: [use_density, 0.03]},
             {gen_uniform: [use_density, 0.04]},
             {gen_uniform: [use_density, 0.05]},
-            #{gen_uniform: [use_density, 0.1]},
+            {gen_uniform: [use_density, 0.1]},
         ]
 }
 
