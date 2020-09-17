@@ -372,7 +372,7 @@ for i, (_, path) in enumerate(globlog()):
         local_row.append(avg)
     # FIXME: if > 100 BOLDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD???
     # ----------------------> COLOR BEST IN COLUMN
-    ROWS.append([name] + local_row + [score])
+    ROWS.append(["\longvar{" + name + "}"] + local_row + [score])
     print("\n\n")
 
 header_row = []
@@ -393,12 +393,14 @@ table = ROWS
 headers = header_row
 tab = tabulate(table, headers=headers,
                tablefmt="latex_raw")
+tab_s = str(tab)
+tab_s = tab_s.replace("begin{tabular}{l", "begin{tabular}{L")
 
 path_table = "figures/table.tex"
 text_file = open(path_table, "w")
-text_file.write(str(tab))
+text_file.write(tab_s)
 text_file.close()
 
-print(tab)
+print(tab_s)
 
 # FIXME: 3d wykres?

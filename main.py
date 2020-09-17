@@ -90,8 +90,8 @@ np.random.seed(+oo)
 ################################################################################
 
 class Config:
-    N_CALLS = 300 # FIXME: ustaw czas a nie ilosc iteracji
-    OPTIMIZER = "auto"
+    N_CALLS = 50 # FIXME: ustaw czas a nie ilosc iteracji
+    OPTIMIZER = forest_minimize # "auto"
     DOMAIN = "DOMAIN_FAST"
     
     IS_SPECIAL_ONLY = False
@@ -1005,9 +1005,6 @@ DOMAIN_FAST = {
     "cases":
         [
             {gen_uniform: [use_num, 1]},
-            {gen_uniform: [use_num, 2]},
-            {gen_uniform: [use_num, 3]},
-            {gen_uniform: [use_density, 0.0001]},
             {gen_uniform: [use_density, 0.001]},
             {gen_uniform: [use_density, 0.01]},
             {gen_uniform: [use_density, 0.03]},

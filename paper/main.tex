@@ -10,7 +10,7 @@
 
 \usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
-\usepackage{hyperref}       % hyperlinks
+\usepackage[hidelinks]{hyperref}       % hyperlinks
 \usepackage{url}            % simple URL typesetting
 \usepackage{booktabs}       % professional-quality tables
 \usepackage{amsfonts}       % blackboard math symbols
@@ -20,6 +20,10 @@
 \usepackage{graphicx}
 \usepackage{float}
 
+\usepackage{url}
+\newcommand\longvar[1]{\mathchardef\UrlBreakPenalty=100
+\mathchardef\UrlBigBreakPenalty=100\url{#1}}
+
 %%% BONUS %%%
 \usepackage[table]{xcolor}  % for colors (like `red`)
 \usepackage[normalem]{ulem} % for underline
@@ -28,6 +32,8 @@
 \usepackage{hhline,soul}    % for `hl` command (highlight text)
 \usepackage{amsmath}        % for multi-line math
 \usepackage[bottom]{footmisc}% for footnotes
+\newcolumntype{L}{>{\raggedright\footnotesize}m{6cm}}
+\renewcommand{\arraystretch}{1.2}
 %%%%%%%%%%%%%
 
 %%% BIBTEX %%%
@@ -447,50 +453,29 @@ wiecej}
 \hl{czy wykres loss oraz score dla przypadkow powinnien byc nalozony? albo
 polaczony subfigurem tak aby osie byly sync. i dalo sie porownac}
 
-\subsection{Performance} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-wykres zostal zrobiony poprzez posortowanie scorow - dzieki temu widac roznice w
+performance plot\footnote{wykres zostal zrobiony poprzez posortowanie scorow - dzieki temu widac roznice w
 przyroscie i latwo dostrzec ktory algorytm ma najwyzszy score lub jaka ma
 chaktersytyke (np. jest bardzo skuteczny dla waskiej grupy przykladow)
+}
+
+\subsection{Multi-domain Algorithm (JFAStar)} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\linewidth]{../figures/figure-4-power}
-	\caption{bla bla bla}
-	\label{fig:abstract}
-\end{figure}
-
-\subsection{Performance? ale taki inny} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-te same dane jak w poprzedniej sekcji tylko nie posortowane - dlatego widac jak
-wygladaja "gorki" dla danych shapow i rosnacych gestosci
-
-\begin{figure}[H]
-	\centering
+	\includegraphics[width=\linewidth]{../figures/figure-2-loss}
 	\includegraphics[width=\linewidth]{../figures/figure-3-score}
+	\includegraphics[width=\linewidth]{../figures/figure-4-power}
 	\caption{bla bla bla}
 	\label{fig:abstract}
 \end{figure}
 
 \begin{table}[H]
 	\centering
+	%\hspace*{-1cm}
 	\input{../figures/table.tex}
 	\newline
 	\caption{domain: 32x32, 64x64, 128x128, 256x256}
 \end{table}
-
-\subsection{Error Rate} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-score jest scisle powiazany z errorem ale tutaj przejrzyscie widac w jakich
-przypadkach jest naprawde zle i ile (szarych) czesto jest bardzo szybkich - ale
-rowniez bardzo blednych dlatego maja finalnie niskie scory
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=\linewidth]{../figures/figure-2-loss}
-	\caption{bla bla bla}
-	\label{fig:abstract}
-\end{figure}
 
 \subsection{Objectives} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
