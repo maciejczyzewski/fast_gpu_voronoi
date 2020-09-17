@@ -29,6 +29,14 @@ from skopt.plots import plot_objective, plot_evaluations, plot_convergence, plot
 from skopt.space import Categorical, Integer, Real
 
 # FIXME: 
+
+# VERSJA 1:
+#        a) dla kazdej domeny szuka najlepszego algorytmu i zapisuje 
+#               (folder odpowiednia nazwa)
+#        b) dla wszystkich domen szuka najlepszego
+#        c) robi to w krokach bo ma ROZNE spacy to ziterowania
+#                             + optimizery
+
 #  0) porzadki i czysty konfig
 #  1) w turach optymalizacja - Special
 #       -----------> DRZEWO ZALEZNOSCI /
@@ -992,7 +1000,7 @@ DOMAIN_COLAB = {
 
 DOMAIN_FAST = {
     "shapes":
-        [(128, 128)],
+        [(32, 32)],
     #    [(512, 512), (1024, 1024), (1536, 1536)],
     "cases":
         [

@@ -271,7 +271,7 @@ aby ocenic dana mutacje musimy przypisac jakis Score danej wersji, wiec uzylismy
 wzor ponizej
 
 \begin{align}
-S(x,y) = max\{0, x \cdot (100-y^{1.5})\}, \\
+	S(x,y) = max\{0, \sqrt{x} \cdot (100-y^{2})\}, \\
 0 \leq y \leq 100, 0 < x
 \end{align}
 
@@ -310,88 +310,132 @@ To takich ensemblacji najlepiej sprawdzi sie drzewo decyzyjne (moze byc boostowa
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \hl{ZROBIC LADNE RYSUNECZKI w Google Slides - eksport to pdf!}
-wyjasnic slownictwo? np. co okreslamy przez anchor
-i wyjasnic jak powstaly nazwy? np. Circle11Dual|Factor3+Noise
+
+To compute the Voronoi diagram for a 2D grid of size n×n
+with a given set of seeds at some grid points, we are interested to
+propagate the content (in particular, position information) of each
+seed s to each grid point so that each grid point can decide which
+seed is its closest one.
+
+Niektore operacje propagacji informacji sa zbedne - tylko w przypadkach
+rzadkich macierzy potrzeba jest log(n) krokow aby uzyskac prawidlowy wynik.
+Rozne warianty omawiane w \cite{rong2007variants} pozwalaja zredukowac blad
+klasycznego JFA. Nie zostaly jednak omawiane przypadki gdzie poszczegolne
+modyfikacje sa uzywane z innymi.
+
+Dlatego w tej pracy prezentujemy dodatkowe modyfikacje ktore mozna zastosowac
+aby stworzyc nowe warianty. Pewne modyfikacje sa oczywiste i wynikaja z
+alternatywnego podejscia (zamiast anchoru\footnote{anchorem nazywamy metode
+ktora pobiera sasiadow do przekazania informacji} kwadratowego mozna uzyc kola),
+informacje mozna wstepnie rozpropagowac losowo - w nadzie ze pozwoli nam
+skonczyc algorytm w mniejszej ilosci krokow.
+
+Aby badania byly bardziej przejrzyste trzymalismy sie pewnej konfencji
+nazewniczej:
+
+$$
+[\bm{anchor\_type}][\bm{anchor\_num}][\bm{anchor\_double}]\qquad|\qquad[\bm{step\_function}]\qquad+\qquad[\bm{noise}]
+$$
+
+dla przykladu \textit{Circle11(1/3)Dual(1/4)|Factor3+Noise} ktore mozna
+przeczytac jako:
+
+\begin{multline}
+anchor\_type=Circle, anchor\_num=11, anchor\_number\_ratio=1/3, \\
+anchor\_double=True, anchor\_distance\_ratio=1/4, \\
+step\_function=Factor3, noise=True
+\end{multline}
+
+\subsection{Noise} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{FIXME: figure z przykladami szumu (+local) i jak to wyglada i jak wygladalo
+instancja!}
+
+Zamiast zaczynac od pustej macierzy z seed-ami poczatkowymi mozna ja losowa
+uzupelnic szumem - tworzac przypadkowe short-cuty. Mozna tego dokonac osobnym
+kernelem ktory zostatnie wywolany przed wykonaniem glownej czesci algorytmu.
+Interpretacja jest taka ze pewne rejony ktora w JFA sa wypelnione zerami podczas
+pierwszych iteracji nie podejmuja zadnych decyzji. Uzupelniajac szumem moga one
+przypadkowo ustawic sie na prawidlowa wartosc i propagowac w kolejnej rundzie
+najlepsza wartosc w swoim otoczeniu (zgodnie ze stepem).
+
+\hl{dowod kamila tutaj????????????????}
+
+\subsubsection{Local Noise} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Mozna tez szum uzupelniac nie losowo tylko w otoczeniu. Wiec gdy w punkcie
+$(x,y)$ wylosujemy losowego seed-a o wartosci $(x_{rand}, y_{rand})$ to
+wyliczamy nowa pozycje $(x', y')$ ktora znajduje sie
+w polowie drogi w nastepujacy sposob: $x' = \frac{x+x_{rand}}{2}$, analogicznie
+dla $y'$. Dodatkowo jesli $(x', y')$ jest pusta to tez uzupelniamy to pole ta
+informacja. Nie przejmujemy sie wyscigiem w dostepie do danych. Nadpisania beda
+losowe - a szum tez.
+
+\subsection{Anchor Type} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{losowane punkty na okregu???}
+
+Zamiast pobierac informacje od 8 sasiadow o step size from grid points at
+$(x+i, y+j)$ where $i, j \in \{-\text{step}, 0, \text{step}\}$. Mozna zastosowac
+okrag - otwiera nam to nowe mozliwosci na swobodna modyfikacje ilosci punktow od
+ktorych bedziemy pobierac informacje. Naturalnie wydaje sie ze mala ilosc
+punktow w anchorze spowoduje wzrost bledu, a duza ilosc punktow spowoduje
+zmalenie bledu.
+
+\subsubsection{Anchor Num} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Dlatego kolejnym parametrem bedzie mozliwosc kontrolowania ilosci punktow.
+Niestety nie rozwazalismy wariantu kwadratow o dowolnej ilosci punktow (poniewaz
+byly by to wielokrotnosci 2x2=4, 3x3=9, 4x4=16, 5x5=25) bo i tak nie dalo by sie
+wybrac uniformly tej wartosci. Dla okregu punkty sasiada $(x_i, y_i)$ byly liczone
+nastepujaco:
+   
+$$
+x_i = x + \text{step} \cdot \cos( \frac{2\pi}{\text{[anchor\_num]}} \cdot i ),
+y_i = y + \text{step} \cdot \sin( \frac{2\pi}{\text{[anchor\_num]}} \cdot i )
+$$
+
+\subsection{Anchor Double} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Oprocz pojedynczego anchora, mozliwe jest uzycie podwojnej warstwy anchorow
+(czyli np. male kolko i wieksze). Idea za tym stojaca to ze male kolko
+wewnetrzne jest dokladne (dziala jak w JFA) - a wielkie zewnetrzne
+jest skautujace lub aby poprawic error wynikajacy np. z mniejszej ilosci
+$\text{anchor\_num}$ (w sumie to podobny mechanizm jak w Lookahead - wolny/szybki)
+
+\subsubsection{Anchor Distance Ratio}
+
+Parametr mowiacy o stosunku dlugosci step size od wewnetrzengo anchora do
+zewnetrznego.
+
+\subsubsection{Anchor Number Ratio}
+
+Parametr mowiacy o statusnku ilosci detektorow od wewnetrznego anchora do
+zewnetrznego.
+
+\subsection{Step Function} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Gdy nasza informacja propaguje sie szybciej lub jest bardziej zageszczona
+dlatego sasiedzi szybciej dostaja prawidlowa informacje - to oznacza ze mozna
+skrocic ilosc round wykonania algorytmu.
+
+Step size jak i ich ilosc mozna okreslic za pomoca 2 podstawowych parametrow:
+shape and number of points - z ktorych pozniej mozemy okreslic np. srednia
+gestosc. Zaimplementowalismy 2 warianty ktore sa uzaleznione jedynie od shape:
+defaultowy z JFA, z JFA o podstawie 3; oraz jeden uzaleniony od shape oraz od num: logstar.
+Jednak aby wygeneralizowac problem stworzylismy tez mozliwosc wygenerowania
+dowolnego polynomialu.
+
+\subsubsection{Special Polynomial}
 
 \hl{problem z Special - on overfituje przyklady zmieniajac 5 miejsce po
 przecinsku aby 2 zamienialo sie np. w 1}
 
-\subsection{Noise} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\includegraphics[width=0.5\linewidth]{../figures/idea_noise}
-
-\hl{w poczatkowej wersji dodanie szumu pozwolilo zmienic zlozonosc - dodatkowo
-mamy na to dowod kamila}
-
-\hl{a moze zrobic rozne gestosci szumu? wiekszy grid na karcie mniej operacji
-np. losuje tylko 1 punkt na kwadracie 5x5 lub zadanego density - wtedy szum
-powinnien byc oplacalny}
-
-przed wykonaniem algorytmu punkty informacja o punktach jest losowo rozrzucana
-po macierzy - tworzac przypadkowe short-cuty
-
-\subsubsection{Local Noise} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\includegraphics[width=0.5\linewidth]{../figures/idea_local_noise}
-
-\hl{czy jest mozliwe losowanie szumu w takich plamach? aby lokalne seedy
-losowaly lokalne seedy? - albo probuja modyfikowac wylosowany - hehe - czyli
-prostujac jestem na pozycji (x,y) wylosowalem punkt (a,b) rzucam nim w okolice
-(a+rand(density), b+rand(density)}
-
-\subsection{Anchor Type} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\includegraphics[width=0.5\linewidth]{../figures/idea_anchor_type}
-
-orginalnalnie jest to kwadrat 3x3, my proponujemy okrag (rownomierny), lub
-\hl{losowane punkty na okregu (doimplementowac)}.
-
-\subsubsection{Anchor Num} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\includegraphics[width=0.5\linewidth]{../figures/idea_anchor_num}
-
-tylko dla okregow?
-ile ma byc punktow w anchorze (np. na okregu).
-\hl{czy da sie to sensownie zaimplementowac dla kwadratu? tak naprawde tylko
-3x3, 5x5 maja jakikolwiek sens}
-
-\subsection{Anchor Double} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\includegraphics[width=0.5\linewidth]{../figures/idea_anchor_double}
-
-oprocz pojedynczego anchora, mozliwe jest uzycie podwojnej warstwy anchorow
-(czyli np. male kolko i wieksze) - idea - male kolko jest dokladne - a wielkie
-jest skautujace (w sumie to podobny mechanizm jak w Lookahead - wolny/szybki)
-
-\subsubsection{Anchor Distance Ratio}
-
-\includegraphics[width=0.5\linewidth]{../figures/idea_anchor_distance_ratio}
-
-\hl{ratio pomiedzy zewnetrznymi a wewnetrznymi (doimplementowac) - mozliwosc od
-0 do 1}
-
-\subsubsection{Anchor Number Ratio}
-
-\includegraphics[width=0.5\linewidth]{../figures/idea_anchor_number_ratio}
-
-\hl{ratio ale ilosciowe pomiedzy zewnetrznymi a wewnetrznymi (doimplementowac) -
-czyli np. 5 na zewnetrznym a na bliskim 10}
-
-\subsection{Step Function} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\includegraphics[width=0.5\linewidth]{../figures/idea_step_function}
-
-aktualnie 3 warianty, standart JFA, zmieniona podstawa na 3, oraz logstar krokow,
-powinna istniec tez wersja 4-ta, uzalezniona od num oraz shape - pozwalajaca na
-robienie \hl{piloksztaltnych lub isogaussowaskich ciagow}.
-
-\hl{wielomian z 3 parametrami (uzalezniony od dwoch
-wejsci - shape, num)}
-
-\subsubsection{Correction???} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-mozna domimplementowac flage dla +1, +2 (jak u JFA), lub przechowywanie 2
-najlepszych i ich przekazywanie (pewnie duzo wolniejsze wiec sie nie oplaca)
+Implementacja nie jest wazna - chodzi o idea zwiazania shape oraz num. Oraz
+modyfikowanie wartosci, szybkosci spadku, ksztaltu (np. piloksztnego) - jakimis
+parametrami. Wada tego rozwiazania jest ze trzeba optymalizowac ta funkcje na
+calej dziedzinie (malej, duzej, gestej, zadkiej) - bo inaczej z overfituje ona
+ilosc krokow i wiekosc stepu pod rozmiar.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -400,7 +444,6 @@ najlepszych i ich przekazywanie (pewnie duzo wolniejsze wiec sie nie oplaca)
 \hl {przeniesc legende? JAKO OSOBNY PDF? i podac w tej sekcji - tak sie nie robi
 ale bylo by ok i czytelnie + wiecej miejsca na wykresy a przypadkow bedzie
 wiecej}
-
 \hl{czy wykres loss oraz score dla przypadkow powinnien byc nalozony? albo
 polaczony subfigurem tak aby osie byly sync. i dalo sie porownac}
 

@@ -1,3 +1,5 @@
+import os
+import pylab
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,6 +12,7 @@ from pprint import pprint
 
 oo = 11111111
 
+IS_LEGEND_ON_FIGURE = False
 
 ###############################
 # [IDEAS]
@@ -24,6 +27,13 @@ def slugify(text):
         return text[0:-1]
     return text
 
+# (1) better style
+plt.style.use(["science", "ieee"])
+plt.rcParams.update({"text.usetex": True})
+
+fig, ax = plt.subplots()
+fig.set_size_inches(12.5, 3)
+ax.autoscale(tight=True)
 
 # plt2 = None
 class figure:
@@ -36,6 +46,10 @@ class figure:
         print("--- FIGURE ---")
         print(f"`{self.name}`")
         plt.cla()
+        #ax.get_legend().remove()
+        ax = plt.gca()
+        ax.legend_ = None # delete legend
+
         plt.title(self.name)
         # plt2 = plt.twiny()
 
@@ -45,15 +59,6 @@ class figure:
         if self.prefix is not None:
             figure_prefix += f"{str(self.prefix)}-"
         fig.savefig(f"figures/{figure_prefix}{slugify(self.name)}.pdf")
-
-
-# (1) better style
-plt.style.use(["science", "ieee"])
-plt.rcParams.update({"text.usetex": True})
-
-fig, ax = plt.subplots()
-fig.set_size_inches(12.5, 3)
-ax.autoscale(tight=True)
 
 def read_file(path=None, x_name=None, y_name=None):
     X, Y = [], []
@@ -215,6 +220,22 @@ def annotate_group(name, xspan, ax=None):
 
 COLORS = ['g', 'b', 'm', 'orange']
 
+legend_saved = False
+def apply_legend():
+    global legend_saved
+    if IS_LEGEND_ON_FIGURE:
+        plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+    elif legend_saved == False and not os.path.isfile('figures/legend.png'):
+        print("======================== ONCE =======================")
+        figlegend = pylab.figure(figsize=(3,2))
+        figlegend.legend(*ax.get_legend_handles_labels(), loc="center")
+        figlegend.savefig('figures/legend.png')
+        del figlegend
+        legend_saved = True
+    #else:
+    #    print("OKAY NORMAL =========================================")
+    #    plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+
 ################################################################################
 # FIGURES
 ################################################################################
@@ -235,7 +256,8 @@ with figure("time", prefix=1):
 
     plt.ylabel("time")
     plt.xlabel("case")
-    plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+    
+    apply_legend()
 
 with figure("loss", prefix=2):
     for i, (_, path) in enumerate(globlog()):
@@ -252,7 +274,8 @@ with figure("loss", prefix=2):
 
     plt.ylabel("loss")
     plt.xlabel("case")
-    plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+    
+    apply_legend()
 
 with figure("score", prefix=3):
     for i, (_, path) in enumerate(globlog()):
@@ -269,7 +292,8 @@ with figure("score", prefix=3):
 
     plt.ylabel("score")
     plt.xlabel("case")
-    plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+
+    apply_legend()
 
 with figure("power", prefix=4):
     # FIXME: color just top 3 --> brutforce/jfa/special!
@@ -288,7 +312,8 @@ with figure("power", prefix=4):
 
     plt.ylabel("score")
     plt.xlabel("case (unordered)")
-    plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+
+    apply_legend()
 
 ################################################################################
 # TABLE
