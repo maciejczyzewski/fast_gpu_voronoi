@@ -23,7 +23,7 @@ from pprint import pprint, pformat
 from timeit import default_timer as timer
 from scipy.stats.mstats import gmean, variation
 
-from skopt import gp_minimize, forest_minimize, dummy_minimize
+from skopt import gp_minimize, forest_minimize, gbrt_minimize, dummy_minimize
 from skopt.utils import use_named_args
 from skopt.plots import plot_objective, plot_evaluations, plot_convergence, plot_regret
 from skopt.space import Categorical, Integer, Real
@@ -90,10 +90,11 @@ np.random.seed(+oo)
 ################################################################################
 
 class Config:
-    N_CALLS = 300 # FIXME: [2500] ustaw czas a nie ilosc iteracji
-    OPTIMIZER = forest_minimize # "auto"
-    DOMAIN = "DOMAIN_FAST" # "DOMAIN_JFASTAR"
+    N_CALLS = 50 # FIXME: [2500] ustaw czas a nie ilosc iteracji
+    OPTIMIZER = gp_minimize #forest_minimize # "auto"
+    DOMAIN = "DOMAIN_SPEC_1" #"DOMAIN_FAST" # "DOMAIN_JFASTAR"
     
+    IS_MULTI_SPACE = True
     IS_SPECIAL_ONLY = False
     IS_CIRCLE_ONLY = False
     IS_ONLY_WORKING = True
@@ -536,10 +537,13 @@ def human_algo_name(config):
 
 i_calls, pbar = 0, None # FIXME: progress bar? tqdm?
 best_name, best_score = "?", 0
-def optimize(model_ref, space, domain, n_calls=10):
+def optimize(model_ref, space, domain, n_calls=10, prefix=None):
     global i_calls, pbar
     pbar = tqdm(total=n_calls)
     ALGOMAP = {}
+
+    if not prefix:
+        prefix = "all"
 
     def score_from_config(config):
         global i_calls, best_name, best_score
@@ -597,7 +601,7 @@ def optimize(model_ref, space, domain, n_calls=10):
         ########### SECURITY ##############
         if IN_COLAB and i_calls % 100 == 0 and i_calls > 1:
             path_date = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-            call(f"cp -r results/ '{COLAB_OUTPUT}/{path_date}({i_calls}|{Config.N_CALLS})'")
+            call(f"cp -r results/ '{COLAB_OUTPUT}/{path_date}({prefix}|{i_calls}|{Config.N_CALLS})'")
         return score
 
     def save_domain(domain):
@@ -646,7 +650,8 @@ def optimize(model_ref, space, domain, n_calls=10):
     return obj
 
 def fn_metric(a, b): # b/(1+a)
-    return max(0, (math.sqrt(b) * (100-a**2)))
+    return (math.sqrt(b) * (100-a**2))
+    # FIXME: return max(0, (math.sqrt(b) * (100-a**2)))
     # return max(0, (b * (100-a**1.5)))
 
 def do_compirason(model, model_ref, domain=None): 
@@ -672,7 +677,7 @@ def do_compirason(model, model_ref, domain=None):
             if Config.IS_ONLY_WORKING:
                 loss_arr.append(score)
             else:
-                loss_arr.append(score**2)
+                loss_arr.append(max(0, score)**2)
             print(f"shape={shape} | a={a} b={b} -> score={score}")
             
             log["loss"].append(a)
@@ -680,7 +685,8 @@ def do_compirason(model, model_ref, domain=None):
             log["score"].append(score)
 
     if Config.IS_ONLY_WORKING:
-        score = gmean(loss_arr) # dla choc jednego zera -> score=0
+        scorer = sum(loss_arr)/len(loss_arr)
+        #score = gmean(loss_arr) # dla choc jednego zera -> score=0
     else:
         score = math.sqrt(sum(loss_arr)/len(loss_arr))
     # score = sum(loss_arr)/len(loss_arr)
@@ -948,6 +954,89 @@ MODEL_BRUTEFORCE = Vorotron({
 # Real(1.26, 1.33, name='D'), # <1,   2>
 # Real(0.71, 0.90, name='X'), # <0.2, 1>
 
+################################################################################
+
+SPACE_SQUARE_NORMAL = [
+    Categorical([mod_step_function__default,
+                 mod_step_function__star,
+                 mod_step_function__factor3],
+                name='step_function'),
+
+    Categorical(["none", "noise", "lnoise"], name='noise'),
+    Categorical([False, True], name='anchor_double'),
+
+    Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_distance_ratio'),
+
+    Categorical([mod_anchor_type__square],
+                name='anchor_type'),
+]
+
+SPACE_SQUARE_SPECIAL = [
+    Categorical([mod_step_function__special],
+                name='step_function'),
+
+    Real(1,   2, name='A'), # <1,   2>
+    Real(0,   1, name='B'), # <0,   1>
+    Real(0,   1, name='C'), # <0,   1>
+    Real(1,   2, name='D'), # <1,   2>
+    Real(0.2, 1, name='X'), # <0.2, 1>
+
+    Categorical(["none", "noise", "lnoise"], name='noise'),
+    Categorical([False, True], name='anchor_double'),
+
+    Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_distance_ratio'),
+
+    Categorical([mod_anchor_type__square],
+                name='anchor_type'),
+]
+
+SPACE_CIRCLE_NORMAL = [
+    Categorical([mod_step_function__default,
+                 mod_step_function__star,
+                 mod_step_function__factor3],
+                name='step_function'),
+
+    Integer(4, 12+6, name='anchor_num'),
+    Categorical(["none", "noise", "lnoise"], name='noise'),
+    Categorical([False, True], name='anchor_double'), 
+    
+    Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_distance_ratio'),
+    Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_number_ratio'),
+
+    Categorical([mod_anchor_type__circle],
+                name='anchor_type'),
+]
+
+SPACE_CIRCLE_SPECIAL = [
+    Categorical([mod_step_function__special],
+                name='step_function'),
+
+    Real(1,   2, name='A'), # <1,   2>
+    Real(0,   1, name='B'), # <0,   1>
+    Real(0,   1, name='C'), # <0,   1>
+    Real(1,   2, name='D'), # <1,   2>
+    Real(0.2, 1, name='X'), # <0.2, 1>
+
+    Integer(4, 12+6, name='anchor_num'),
+    Categorical(["none", "noise", "lnoise"], name='noise'),
+    Categorical([False, True], name='anchor_double'),
+
+    Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_distance_ratio'),
+    Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_number_ratio'),
+
+    Categorical([mod_anchor_type__circle],
+                name='anchor_type'),
+]
+
+SPACE_ALL = {
+    "square_normal": SPACE_SQUARE_NORMAL,
+    "square_special": SPACE_SQUARE_SPECIAL,
+    "circle_normal": SPACE_CIRCLE_NORMAL,
+    "circle_special": SPACE_CIRCLE_SPECIAL
+}
+
+################################################################################
+
 SPACE = [
     Categorical([mod_step_function__default,
                  mod_step_function__star,
@@ -999,7 +1088,7 @@ DOMAIN_JFASTAR = {
     "cases":
         [
             {gen_uniform: [use_num, 1]},
-            {gen_uniform: [use_num, 2]},
+            {gen_uniform: [use_num, 3]},
             {gen_uniform: [use_density, 0.0001]},
             {gen_uniform: [use_density, 0.001]},
             {gen_uniform: [use_density, 0.01]},
@@ -1008,6 +1097,20 @@ DOMAIN_JFASTAR = {
             {gen_uniform: [use_density, 0.04]},
             {gen_uniform: [use_density, 0.05]},
             {gen_uniform: [use_density, 0.1]},
+        ]
+}
+
+DOMAIN_SPEC_1 = {
+    "shapes":
+        [(32, 32), (64, 64), (96, 96), (128, 128)],
+    "cases":
+        [
+            {gen_uniform: [use_num, 1]},
+            {gen_uniform: [use_num, 3]},
+            {gen_uniform: [use_density, 0.001]},
+            {gen_uniform: [use_density, 0.01]},
+            {gen_uniform: [use_density, 0.03]},
+            {gen_uniform: [use_density, 0.05]},
         ]
 }
 
@@ -1026,7 +1129,7 @@ DOMAIN_COLAB = {
 
 DOMAIN_FAST = {
     "shapes":
-        [(128, 128)],
+        [(32, 32)],
     #    [(512, 512), (1024, 1024), (1536, 1536)],
     "cases":
         [
@@ -1048,12 +1151,23 @@ if __name__ == "__main__":
     # do_test_error()
     # sys.exit()
 
-    opt_result = optimize(
-        MODEL_BRUTEFORCE,
-        SPACE,
-        globals()[Config.DOMAIN], # DOMAIN vs DOMAIN_FAST
-        n_calls=Config.N_CALLS, # BEST:[100] /// (20*60) 100 vs 10*60
-    )
+    if Config.IS_MULTI_SPACE:
+        for name, SPACE_i in SPACE_ALL.items():
+            opt_result = optimize(
+                MODEL_BRUTEFORCE,
+                SPACE_i,
+                globals()[Config.DOMAIN], # DOMAIN vs DOMAIN_FAST
+                n_calls=Config.N_CALLS, # BEST:[100] /// (20*60) 100 vs 10*60
+                prefix=name
+            )
+    else:
+        opt_result = optimize(
+            MODEL_BRUTEFORCE,
+            SPACE,
+            globals()[Config.DOMAIN], # DOMAIN vs DOMAIN_FAST
+            n_calls=Config.N_CALLS, # BEST:[100] /// (20*60) 100 vs 10*60
+            prefix=None
+        )
 
     print(f"\033[92m {best_name} \033[0m")
     

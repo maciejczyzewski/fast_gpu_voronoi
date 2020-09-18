@@ -67,10 +67,10 @@ def read_file(path=None, x_name=None, y_name=None):
         log = json.loads(json_txt)
         for i in range(len(log["score"])):
             if x_name is not None:
-                X.append(float(log[x_name][i]))
+                X.append(max(0, float(log[x_name][i])))
             else:
-                X.append(i)
-            Y.append(float(log[y_name][i]))
+                X.append(max(0, i))
+            Y.append(max(0, float(log[y_name][i])))
     return X, Y, log
 
 def apply_SOTA(x_name=None, y_name=None, sort=False):
@@ -98,6 +98,8 @@ def globlog(sota=False):
     vec = []
     for path in glob("results/log/*.json"):
         x = float(path.replace(".json", "").replace("results/log/", ""))
+        if x < 0:
+            continue
         vec.append([x, path])
 
     if sota:
