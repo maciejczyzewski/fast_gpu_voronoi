@@ -59,6 +59,7 @@
 \usepackage{tabularx, booktabs}
 \newcolumntype{L}{>{\raggedright\footnotesize}m{5.75cm}}
 \renewcommand{\arraystretch}{1.2}
+\usepackage{makecell}
 %%%%%%%%%%%%%
 
 \usepackage{listings}
@@ -90,7 +91,9 @@
 % Voronoi Diagram and Distance Transform in O(1) from JFA using AutoML
 
 % https://capitalizemytitle.com/
-\title{Lord Vorotron: Finding the Best JFA Variant for the Coming Winter} % $\approx$
+%\title{Lord Vorotron: Finding the Best JFA Variant for the Coming Winter} % $\approx$
+% Evolving New State-of-the-Art for Distance Transform From JFA Using AutoML
+\title{Evolving New State-of-the-Art for Voronoi Diagram and Distance Transform From JFA Using AutoML}
 
 \author{Maciej A. Czyzewski}
 \email{maciejanthonyczyzewski@gmail.com}
@@ -139,12 +142,15 @@ opisac dwa algorytmy}
 
 \begin{abstract}
 This paper studies a practical usage of machine learning (AutoML) to automate
-research towards discovering efficient Voronoi Diagram and Distance Transform
-algorithms.  As the baseline we used the Jump Flooding Algorithm (JFA) - by
-finding new mutations which works best for specific data, and then ensembling
-them into one, we create new state-of-the-art algorithm in this field named
-\textbf{\ourjfa} \hspace{0.01cm} with time complexity \textcolor{red}{$\approx$O(1)} and
-work complexity \textcolor{red}{$\approx$O(N)}.
+research towards discovering efficient Voronoi Diagram and Distance
+Transform algorithms.  As the baseline we used the Jump Flooding Algorithm
+(JFA) - by finding new mutations which works best for specific data, and
+then ensembling them into one, we create new state-of-the-art algorithm in
+this field named \textbf{\ourjfa} \hspace{0.01cm} with best-case
+\textcolor{red}{$O(1)$} time complexity and \textcolor{red}{$O(N)$} work
+complexity - in addition, we introduce \textbf{\ourjfasingle}, a single
+variant that in most cases outperforms original JFA with proven worst-case
+\textcolor{red}{$O(\log^{*}N)$} time complexity.
 The algorithm is faster and produces more accurate approximations. It could be
 extended into 3D space in a slice-by-slice manner.  We started from the
 assumption that JFA has potential for improvement - some benefits can be
@@ -153,6 +159,9 @@ JFA.  This showed us that, AutoML could examine this space, and find the best
 possible algorithm in each case.  In the further part of the work, we discuss
 the results, compare the variants and ensemble for creating the final algorithm.
 \end{abstract}
+
+% [FIXME]
+% - additionally, we present \ourjfasingle, single variant that outperforms JFA in most cases.
 
 % http://dl.acm.org/ccs.cfm
 
@@ -199,8 +208,12 @@ This paper\footnote{the original title for this paper was ``Lord Vorotron:
 Finding the Best JFA Variant for the Coming Winter''} studies a practical usage of machine learning to automate research
 towards discovering efficient Distance Transform algorithms (utilizing technique known as AutoML).
 Thus, by finding mutations which works best for specific data, and then ensembling them into
-one, we create new state-of-the-art algorithm in this field named \uline{\ourjfa \hspace{0.01cm} with
-time complexity $\approx$O(1) and work complexity $\approx$O(N).}
+one, we create new state-of-the-art algorithm in this field named \uline{\ourjfa
+\hspace{0.01cm} with best-case $O(1)$ time complexity and $O(N)$ work complexity.}
+In addition, we introduce \uline{\ourjfasingle, a single
+variant that in most cases outperforms original JFA with proven worst-case
+$O(\log^{*}N)$ time complexity.}
+
 
 Notable contribution to the quick algorithm that makes Distance Transform (DT)
 using graphics hardware includes \citep{hoff1999fast} that creates a cone for
@@ -233,7 +246,7 @@ The algorithm would be an approximation of the output, thus we suggest using WTO
 \begin{enumerate}
 	\item Presenting new state-of-the-art variants of algorithm for Voronoi
 		Diagram and Distance Transform: \newline
-		\textbf{\ourjfasingle} - (Multi-domain) single best variant;
+		\textbf{\ourjfasingle} - (Multi-domain) single variant;
 		\textbf{\ourjfa} - (Specific-domain) ensemble of weak variants; and
 	\item Analyzing all possible variants of JFA: comparing error and speedup
 		relative to bruteforce method
@@ -582,6 +595,8 @@ dowolnego polynomialu.
 
 \subsubsection{Special Polynomial}
 
+\hl{powinno byc ograniczone do 3 PARAMETROW! wymyslis nowa funkcje}
+
 \hl{problem z Special - on overfituje przyklady zmieniajac 5 miejsce po
 przecinsku aby 2 zamienialo sie np. w 1}
 
@@ -623,6 +638,7 @@ def mod_step_function__special(shape, num=None, config=None):
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pagecolor{yellow}
 
 \hl {przeniesc legende? JAKO OSOBNY PDF? i podac w tej sekcji - tak sie nie robi
 ale bylo by ok i czytelnie + wiecej miejsca na wykresy a przypadkow bedzie
@@ -637,14 +653,26 @@ chaktersytyke (np. jest bardzo skuteczny dla waskiej grupy przykladow)
 
 \hl{\textbf{UWAGE}: usunac z tabelek PODOBNE ALGORYTMY i ich slabsze rezultaty}
 
+% FIXME: to nie jest wyjscie!!!
+% \makecell[l]{
+% 	Square-\\
+% 	Special(1.44/0.96/0.17/1.63/0.86)+\\
+% 	Noise}           &
+
 \begin{table}[H] \centering
 \begin{tabular}{@{}l|ccc@{}}
 \toprule
 \hspace*{0.175cm}\diagbox{\textbf{Density}}{\textbf{Shape}}
                          & Small (32-128)    & Medium (256-448)   & Large (512-1536)  \\
 \midrule
-Low ($\rho$=0.00005-0.001)    & JFA           & Blabla        & ?       \\
-High ($\rho$=0.01-0.1)        & JFAStar           & ?        & ?       \\
+Low ($\rho$=0.00005-0.001)    & 
+	Bruteforce & 
+	?          & 
+	?          \\
+High ($\rho$=0.01-0.1)        & 
+	?          &
+	?             &
+	?          \\
 \bottomrule
 \end{tabular}
 \vspace{1em}
