@@ -626,7 +626,7 @@ def optimize(model_ref, space, domain_generated, n_calls=10, prefix=None):
         ########### SECURITY ##############
         if IN_COLAB and i_calls % 100 == 0 and i_calls > 1:
             path_date = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-            call(f"cp -r results/ '{COLAB_OUTPUT}/{path_date}({prefix}|{i_calls}|{Config.N_CALLS})'")
+            call(f"cp -r results/ '{COLAB_OUTPUT}/{Config.DOMAIN}|{path_date}({prefix}|{i_calls}|{Config.N_CALLS})'")
         return score
 
     score_from_config({
@@ -655,6 +655,7 @@ def optimize(model_ref, space, domain_generated, n_calls=10, prefix=None):
     return obj
 
 def fn_metric(a, b): # b/(1+a)
+    # FIXME: score is still wrong?
     return (math.sqrt(b) * (100-a**2))
     # FIXME: return max(0, (math.sqrt(b) * (100-a**2)))
     # return max(0, (b * (100-a**1.5)))
@@ -1113,6 +1114,71 @@ DOMAIN_SPEC_1 = {
         ]
 }
 
+DOMAIN_SPEC_2 = {
+    "shapes":
+        [(256, 256), (320, 320), (384, 384), (448, 448)],
+    "cases":
+        [
+            {gen_uniform: [use_num, 1]},
+            {gen_uniform: [use_num, 3]},
+            {gen_uniform: [use_density, 0.001]},
+            {gen_uniform: [use_density, 0.01]},
+            {gen_uniform: [use_density, 0.03]},
+            {gen_uniform: [use_density, 0.05]},
+        ]
+}
+
+DOMAIN_SPEC_3 = {
+    "shapes":
+        [(512, 512), (768, 768), (1024, 1024), (1536, 1536)],
+    "cases":
+        [
+            {gen_uniform: [use_num, 1]},
+            {gen_uniform: [use_num, 3]},
+            {gen_uniform: [use_density, 0.001]},
+            {gen_uniform: [use_density, 0.01]},
+            {gen_uniform: [use_density, 0.03]},
+            {gen_uniform: [use_density, 0.05]},
+        ]
+}
+
+DOMAIN_LOW = {
+    "shapes":
+        [(32, 32), (64, 64), (96, 96), (128, 128), (256, 256), (320, 320),
+         (384, 384), (448, 448), (512, 512), (768, 768),
+         (1024, 1024), (1536, 1536)],
+    "cases":
+        [
+            {gen_uniform: [use_num, 1]},
+            {gen_uniform: [use_num, 3]},
+            {gen_uniform: [use_density, 0.00005]},
+            {gen_uniform: [use_density, 0.0001]},
+            {gen_uniform: [use_density, 0.0002]},
+            {gen_uniform: [use_density, 0.0003]},
+            {gen_uniform: [use_density, 0.0004]},
+            {gen_uniform: [use_density, 0.0005]},
+            {gen_uniform: [use_density, 0.001]},
+        ]
+}
+
+DOMAIN_HIGH = {
+    "shapes":
+        [(32, 32), (64, 64), (96, 96), (128, 128), (256, 256), (320, 320),
+         (384, 384), (448, 448), (512, 512), (768, 768),
+         (1024, 1024), (1536, 1536)],
+    "cases":
+        [
+            {gen_uniform: [use_density, 0.01]},
+            {gen_uniform: [use_density, 0.02]},
+            {gen_uniform: [use_density, 0.03]},
+            {gen_uniform: [use_density, 0.04]},
+            {gen_uniform: [use_density, 0.05]},
+            {gen_uniform: [use_density, 0.1]},
+        ]
+}
+
+################################################################################
+
 DOMAIN_COLAB = {
     "shapes":
         [(64, 64), (128, 128), (256, 256), (512, 512), (768, 768), (1024, 1024)],
@@ -1150,6 +1216,8 @@ if __name__ == "__main__":
     # do_test_error()
     # sys.exit()
 
+    # FIXME: experiment name!!!!!!!!!!!!
+
     domain = globals()[Config.DOMAIN]
     domain_generated = save_domain(domain)
 
@@ -1175,7 +1243,7 @@ if __name__ == "__main__":
     
     if IN_COLAB:
         path_date = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-        call(f"cp -r results/ '{COLAB_OUTPUT}/{path_date}'")
+        call(f"cp -r results/ '{COLAB_OUTPUT}/{Config.DOMAIN}|{path_date}'")
     print("end")
 
     # FIXME: inline table? just to see results? (from plot.py)
