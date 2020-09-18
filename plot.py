@@ -1,24 +1,17 @@
+import re
 import os
 import pylab
+import subprocess
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import unidecode
 import json, csv
-import re
 
 from glob import glob
 from pprint import pprint
 
 oo = 11111111
-
-IS_LEGEND_ON_FIGURE = False
-
-###############################
-# [IDEAS]
-# FIXME: 3d
-# FIXME: wyswietlaj dla wszystkich z tabeli plot? ale na legendzie tylko najl.?
-###############################
 
 def slugify(text):
     text = unidecode.unidecode(text).lower()
@@ -26,6 +19,38 @@ def slugify(text):
     if text[-1] == "-":
         return text[0:-1]
     return text
+
+#####################################################
+# FIXME: runner script???? to make all experiments???
+#           ------------------> AND PLOT THEM????????
+#####################################################
+
+# FIXME: Config class?
+PATH_RESULTS = "results_small_low/"
+PATH_FIGURES = f"figures/{slugify(PATH_RESULTS)}/"
+IS_LEGEND_ON_FIGURE = False
+
+if PATH_RESULTS is None:
+    PATH_RESULTS = "results/"
+if PATH_FIGURES is None:
+    PATH_FIGURES = "figures/default/"
+
+###############################
+# [IDEAS]
+# FIXME: 3d
+# FIXME: wyswietlaj dla wszystkich z tabeli plot? ale na legendzie tylko najl.?
+###############################
+
+################################################################################
+
+def call(cmd):
+    print(
+        f"\x1b[7;37;40m{cmd}\x1b[0m\n" + subprocess.check_output(
+            cmd, stderr=subprocess.STDOUT, shell=True).decode("utf-8"),
+        end="",
+    )
+
+call(f"mkdir -p {PATH_FIGURES}")
 
 # (1) better style
 plt.style.use(["science", "ieee"])
@@ -58,7 +83,7 @@ class figure:
         figure_prefix = "figure-"
         if self.prefix is not None:
             figure_prefix += f"{str(self.prefix)}-"
-        fig.savefig(f"figures/{figure_prefix}{slugify(self.name)}.pdf")
+        fig.savefig(f"{PATH_FIGURES}/{figure_prefix}{slugify(self.name)}.pdf")
 
 def read_file(path=None, x_name=None, y_name=None):
     X, Y = [], []
@@ -75,7 +100,7 @@ def read_file(path=None, x_name=None, y_name=None):
 
 def apply_SOTA(x_name=None, y_name=None, sort=False):
     # for [JFA]
-    path = "results/jfa.json"
+    path = f"{PATH_RESULTS}/jfa.json"
     x, y, log = read_file(path, x_name=x_name, y_name=y_name)
     if sort:
         y = sorted(y)
@@ -96,14 +121,14 @@ def apply_SOTA(x_name=None, y_name=None, sort=False):
 
 def globlog(sota=False):
     vec = []
-    for path in glob("results/log/*.json"):
-        x = float(path.replace(".json", "").replace("results/log/", ""))
+    for path in glob(f"{PATH_RESULTS}/log/*.json"):
+        x = float(path.replace(".json", "").replace(f"{PATH_RESULTS}/log/", ""))
         if x < 0:
             continue
         vec.append([x, path])
 
     if sota:
-        path = "results/jfa.json"
+        path = f"{PATH_RESULTS}/jfa.json"
         _, _, log_sota = read_file(path, x_name=None, y_name="score")
         sota_score = int(log_sota["name"].split()[0][1:-1])
         print(f"===========================> JFA (score) = {sota_score}")
@@ -118,7 +143,7 @@ def globlog(sota=False):
 # - na dole: jakie `seeds` jakie `rho`
 
 def apply_domain__classic(x=None, with_shape=True):
-    path = "results/domain.json"
+    path = f"{PATH_RESULTS}/domain.json"
     with open(path, "r") as jsonfile:
         json_txt = jsonfile.read()
         domain = json.loads(json_txt)
@@ -133,7 +158,7 @@ def apply_domain__classic(x=None, with_shape=True):
     plt.xticks(x, domain_str, rotation='horizontal', fontsize=2)
 
 def apply_domain__groups(x=None):
-    path = "results/domain.json"
+    path = f"{PATH_RESULTS}/domain.json"
     with open(path, "r") as jsonfile:
         json_txt = jsonfile.read()
         domain = json.loads(json_txt)
@@ -236,11 +261,11 @@ def apply_legend(force=False):
     if IS_LEGEND_ON_FIGURE:
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
     elif force == True or \
-        (legend_saved == False and not os.path.isfile('figures/legend.png')):
+        (legend_saved == False and not os.path.isfile(f'{PATH_FIGURES}/legend.png')):
         print("======================== ONCE =======================")
         figlegend = pylab.figure(figsize=(3,2))
         figlegend.legend(*ax.get_legend_handles_labels(), loc="center")
-        figlegend.savefig('figures/legend.png')
+        figlegend.savefig(f'{PATH_FIGURES}/legend.png')
         del figlegend
         legend_saved = True
     #else:
@@ -336,7 +361,7 @@ with figure("power", prefix=4):
 from tabulate import tabulate
 
 # FIXME: domain
-path = "results/domain.json"
+path = f"{PATH_RESULTS}/domain.json"
 with open(path, "r") as jsonfile:
     json_txt = jsonfile.read()
     domain = json.loads(json_txt)
@@ -426,7 +451,7 @@ tab = tabulate(table, headers=headers,
 tab_s = str(tab)
 tab_s = tab_s.replace("begin{tabular}{l", "begin{tabular}{L")
 
-path_table = "figures/table.tex"
+path_table = f"{PATH_FIGURES}/table.tex"
 text_file = open(path_table, "w")
 text_file.write(tab_s)
 text_file.close()

@@ -1,5 +1,7 @@
 # [music]       "AC DC - 1976 - High Voltage"
 # https://www.youtube.com/watch?v=78oIolvjIsw
+# [music] Queens of the Stone Age - ACOUSTIC COMPILATION
+# https://www.youtube.com/watch?v=qaRkqu7PJpQ
 
 # FIXME: automatic PYOPENCL_CTX='0:1'
 
@@ -660,8 +662,12 @@ def optimize(model_ref, space, domain_generated, n_calls=10, prefix=None):
     return obj
 
 def fn_metric(a, b): # b/(1+a)
+    return (math.sqrt(b) * (100-a**1.85))
+
     # FIXME: score is still wrong?
-    return (math.sqrt(b) * (100-a**2))
+    ######################################
+    # return (math.sqrt(b) * (100-a**2)) #
+    ######################################
     # FIXME: return max(0, (math.sqrt(b) * (100-a**2)))
     # return max(0, (b * (100-a**1.5)))
 
