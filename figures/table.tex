@@ -1,32 +1,45 @@
-\begin{tabular}{Lrrlr}
+\begin{tabular}{Lrrrrlr}
 \hline
- Algorithm                                                         &   $\rho$=0.0007 &   $\rho$=0.0054 & $\rho$=0.0398   &   Avg. score \\
+ Algorithm                                                          &   $\rho$=0.0003 &   $\rho$=0.0002 &   $\rho$=0.0003 &   $\rho$=0.0004 & $\rho$=0.0008   &   Score \\
 \hline
- \longvar{Square|Star}                                             &             0   &            47.9 & \textbf{139.7}  &          209 \\
- \longvar{Square|Star+Noise}                                       &            50.8 &            80.9 & \textbf{125.2}  &          187 \\
- \longvar{Square|Factor3+Noise}                                    &            41   &            79.5 & \textbf{127.3}  &          185 \\
- \cellcolor{blue!25}\textbf{JFA (original)}                        &            43.4 &            77.7 & \textbf{123.8}  &          184 \\
- \longvar{Square|Default+Noise}                                    &            35   &            70.5 & \textbf{116.3}  &          168 \\
- \longvar{SquareDual(1/4)|Special(1.62/0.4/0.78/1.77/0.72)+Noise}  &            32   &            59.2 & 70.8            &          132 \\
- \longvar{SquareDual(1/4)|Special(1.29/0.4/0.98/1.84/0.72)+Noise}  &            30   &            56.6 & 88.6            &          128 \\
- \longvar{SquareDual(1/4)|Special(1.55/0.39/1.0/1.5/0.72)+Noise}   &            27.9 &            54.5 & 87.5            &          122 \\
- \longvar{Circle10(3/4)|Special(1.68/0.45/0.98/1.12/0.81)+Noise}   &            28.9 &            54.5 & 86.1            &          122 \\
- \longvar{SquareDual(1/4)|Special(1.46/0.39/0.58/1.61/0.72)+Noise} &            29.7 &            54.7 & 87.2            &          122 \\
- \longvar{Circle10(3/4)|Special(1.68/0.45/1.0/1.11/0.81)+Noise}    &            28.6 &            54.2 & 83.9            &          112 \\
- \longvar{SquareDual(1/3)|Special(1.48/0.39/0.84/1.34/0.72)+Noise} &            25.2 &            47.6 & 77.3            &          112 \\
- \longvar{SquareDual(1/4)|Special(1.17/0.4/1.0/1.78/0.72)+Noise}   &            25.7 &            50.4 & 79.6            &          110 \\
- \longvar{SquareDual(2/3)|Star}                                    &             0   &            44.5 & 79.6            &          109 \\
- \longvar{SquareDual(1/3)|Special(1.51/0.4/0.76/1.28/0.72)+Noise}  &            24.4 &            45.7 & 75.3            &          108 \\
- \longvar{SquareDual(1/3)|Star+Noise}                              &            31.7 &            49.8 & 76.3            &          108 \\
- \longvar{SquareDual(1/4)|Star+Noise}                              &            31.8 &            50   & 75.9            &          108 \\
- \longvar{Circle10(3/4)|Special(1.64/0.46/0.9/1.16/0.81)+Noise}    &            29.7 &            56.2 & 83.7            &          104 \\
- \longvar{Circle18(2/3)|Default+Noise}                             &            21.7 &            42.2 & 69.7            &           95 \\
- \longvar{SquareDual|Default+Noise}                                &            21.1 &            40.4 & 67.7            &           95 \\
- \longvar{Circle18|Default+Noise}                                  &            21.9 &            42.1 & 70.0            &           95 \\
- \longvar{SquareDual(1/4)|Special(1.0/0.39/1.0/1.0/0.72)+Noise}    &            23.7 &            44.6 & 69.9            &           82 \\
- \longvar{Square|Default+LNoise}                                   &            18.8 &             3.5 & 10.0            &           68 \\
- \longvar{Circle17(2/3)|Factor3+Noise}                             &            26.2 &            50.2 & 68.8            &           41 \\
- \longvar{Circle18(2/3)|Star+Noise}                                &            33   &            52   & 65.6            &           38 \\
- \longvar{SquareDual(2/3)|Special(1.91/0.39/0.51/1.42/0.72)+Noise} &            30.8 &            58.3 & 60.6            &            3 \\
+ \longvar{Square|Special(1.92/0.9/0.68/1.2/0.67)+Noise}             &            40.4 &            51.1 &            74.8 &            95.1 & \textbf{113.6}  &      74 \\
+ \longvar{Square|Star+Noise}                                        &            44.5 &            50.5 &            71.2 &            87.9 & \textbf{115.8}  &      73 \\
+ \longvar{Square|Special(1.98/0.8/0.95/1.2/0.46)+Noise}             &            40.8 &            51.5 &            74.7 &            95.5 & \textbf{102.6}  &      72 \\
+ \longvar{Square|Special(1.47/0.68/0.75/1.52/0.41)+Noise}           &            41   &            51.9 &            75.5 &            96.7 & 98.3            &      69 \\
+ \longvar{Square|Special(1.46/0.81/0.68/1.33/0.5)+Noise}            &            39.6 &            50.9 &            73   &            88.1 & \textbf{112.1}  &      69 \\
+ \longvar{Square|Special(1.98/0.69/0.74/1.22/0.49)+Noise}           &            37.4 &            49.5 &            71.2 &            91.7 & \textbf{102.6}  &      66 \\
+ \longvar{Square|Special(1.14/0.8/0.61/1.38/0.62)+Noise}            &            34.6 &            44.9 &            64.7 &            80.4 & \textbf{108.7}  &      66 \\
+ \longvar{SquareDual(1/3)|Special(1.56/0.88/0.57/1.64/0.39)+Noise}  &            39.1 &            48.5 &            67.5 &            85.7 & 98.2            &      65 \\
+ \longvar{Square|Special(1.97/0.79/0.61/1.24/0.61)+Noise}           &            37.9 &            49.5 &            72.8 &            93.4 & 88.2            &      64 \\
+ \longvar{Square|Special(1.92/0.55/0.61/1.1/0.53)+Noise}            &            33.7 &            41.8 &            60.9 &            77.5 & \textbf{105.4}  &      63 \\
+ \longvar{Square|Special(1.83/0.69/0.81/1.24/0.45)+Noise}           &            38.3 &            49.5 &            72.5 &            92.7 & \textbf{102.5}  &      62 \\
+ \longvar{Square|Factor3+Noise}                                     &            31   &            39.4 &            58.9 &            76.2 & \textbf{105.3}  &      61 \\
+ \longvar{Square|Special(1.84/0.65/0.84/1.26/0.52)+Noise}           &            37.2 &            48.8 &            70.3 &            89.7 & \textbf{101.9}  &      60 \\
+ \longvar{Square|Special(1.8/0.65/0.58/1.27/0.59)+Noise}            &            36.9 &            46   &            67.5 &            86.8 & 98.0            &      59 \\
+ \longvar{Square|Special(1.94/0.64/0.8/1.28/0.4)+Noise}             &            40.1 &            52   &            77.7 &            96.3 & 88.2            &      58 \\
+ \longvar{Square|Special(1.82/0.71/0.73/1.2/0.42)+Noise}            &            40.4 &            51.5 &            75.1 &            94.4 & 82.5            &      58 \\
+ \longvar{Square|Special(1.33/0.5/0.7/1.26/0.46)+Noise}             &            35   &            46.1 &            65.8 &            80.9 & 81.3            &      57 \\
+ \longvar{SquareDual(1/3)|Special(1.71/0.06/0.95/1.46/0.34)+Noise}  &            32   &            38   &            54.2 &            68.8 & 92.2            &      56 \\
+ \longvar{Square|Special(1.93/0.64/0.92/1.21/0.98)+Noise}           &            34.6 &            43.9 &            65.6 &            85.4 & 96.7            &      56 \\
+ \cellcolor{blue!25}\textbf{JFA (original)}                         &            30.2 &            37.2 &            54.2 &            69.2 & 94.4            &      56 \\
+ \longvar{SquareDual(1/3)|Special(1.51/0.46/0.97/1.88/0.57)+Noise}  &            31.7 &            39.1 &            56.7 &            72.8 & 83.4            &      55 \\
+ \longvar{SquareDual(3/4)|Star+Noise}                               &            34.8 &            38.6 &            52.9 &            65.7 & 84.8            &      54 \\
+ \longvar{SquareDual(1/3)|Star+Noise}                               &            35.4 &            38   &            52.5 &            65.1 & 83.5            &      54 \\
+ \longvar{SquareDual|Star+Noise}                                    &            34.6 &            38   &            52   &            65.2 & 83.3            &      54 \\
+ \longvar{SquareDual(1/3)|Special(1.2/0.9/0.84/1.96/0.44)+Noise}    &            38.6 &            47.2 &            65.7 &            73.5 & 95.8            &      53 \\
+ \longvar{Square|Default+Noise}                                     &            26.6 &            33.6 &            49.9 &            64.1 & 88.7            &      52 \\
+ \longvar{Circle10(1/4)|Special(1.58/0.9/0.64/1.16/0.6)+Noise}      &            29.3 &            34.7 &            46.8 &            57.1 & 72.9            &      47 \\
+ \longvar{SquareDual(1/3)|Special(1.45/0.85/0.74/1.95/0.34)+LNoise} &            40.2 &            44.2 &            45.2 &            54.6 & 56.7            &      45 \\
+ \longvar{Circle11(1/3)|Star+Noise}                                 &            30   &            32.5 &            44.5 &            51.7 & 67.4            &      44 \\
+ \longvar{SquareDual|Special(1.48/0.39/0.84/1.34/0.72)+Noise}       &            24   &            29.9 &            42.8 &            54.7 & 74.6            &      44 \\
+ \longvar{Circle11(3/4)Dual(2/3)|Factor3+Noise}                     &            24.7 &            30   &            43.1 &            56.1 & 69.9            &      44 \\
+ \longvar{Circle9(1/4)|Star+Noise}                                  &            31.8 &            35.1 &            47.6 &            49.9 & 61.9            &      44 \\
+ \longvar{Circle9(3/4)|Star+Noise}                                  &            31.9 &            34.6 &            47.1 &            50.8 & 61.8            &      44 \\
+ \longvar{Circle12(1/3)|Star+Noise}                                 &            28.6 &            32   &            42.7 &            51.2 & 65.5            &      43 \\
+ \longvar{Circle14(1/4)|Special(1.38/0.71/0.93/1.77/0.95)+Noise}    &            24.3 &            29.4 &            41.5 &            51.5 & 62.2            &      41 \\
+ \longvar{Square|Special(1.56/0.7/0.63/1.29/0.43)+Noise}            &            40.9 &            51.6 &            73.7 &            92.9 & 73.2            &      40 \\
+ \longvar{SquareDual(3/4)|Default}                                  &            22.5 &            27.6 &            39.1 &            49.7 & 66.9            &      40 \\
+ \longvar{SquareDual|Default}                                       &            22.6 &            27.3 &            38.8 &            49.2 & 65.7            &      40 \\
+ \longvar{Circle9(3/4)|Factor3+Noise}                               &            21.6 &            26.7 &            38.2 &            48.8 & 66.3            &      39 \\
 \hline
 \end{tabular}

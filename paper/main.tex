@@ -54,6 +54,8 @@
 \usepackage{hhline,soul}    % for `hl` command (highlight text)
 \usepackage{amsmath}        % for multi-line math
 \usepackage[bottom]{footmisc}% for footnotes
+
+\usepackage{diagbox} % TABLE MASTERS - section
 \usepackage{tabularx, booktabs}
 \newcolumntype{L}{>{\raggedright\footnotesize}m{5.75cm}}
 \renewcommand{\arraystretch}{1.2}
@@ -254,7 +256,8 @@ WTO \cite{manduhu2019work}.
 \begin{table}[H] \centering
 \begin{tabular}{@{}lllll@{}}
 \toprule
-Reference                & Algorithm    & Exactness   & Time         & Work         \\ \midrule
+\textbf{Reference}                & \textbf{Algorithm}    & \textbf{Exactness}
+	& \textbf{Time}         & \textbf{Work}         \\ \midrule
 \citep{de2017fast}       & FastGPU      & Exact       & $O(n^3/p)$   & -            \\
 \citep{cao2010parallel}  & PBA          & Exact       & $O(n)$       & $O(mN)$      \\
 \citep{honda2017simple}  & based on SKW & Exact       & $O(n)$       & $O(N)$       \\
@@ -327,7 +330,35 @@ spotykane}
 
 jakie domeny i dlaczego (i jak dzialaly gen\_uniform, \hl{gen\_polar, gen\_grid})
 
+KWADRAT TUTAJ????????? (komentarz latex)
+
+
+\begin{table}[H] \centering
+\begin{tabular}{@{}l|ccc@{}}
+\toprule
+\hspace*{0.175cm}\diagbox{\textbf{Density}}{\textbf{Shape}}
+                         & Small (32-128)    & Medium (256-448)   & Large (512-1536)  \\
+\midrule
+Low ($\rho$=0.00005-0.001)    & Bruteforce           & Bruteforce        & JFA       \\
+High ($\rho$=0.01-0.1)        & JFA           & JFA        & JFA       \\
+\bottomrule
+\end{tabular}
+\vspace{1em}
+\caption{State-of-the-art for specific domains (before our work).}
+\end{table}
+
+% # kwadrat
+% #                   small          medium       big
+% #    low den.        ?                ?         JFA
+% #    high den.       ?                ?          ?
+
+% # [music]
+% # https://www.youtube.com/watch?v=78oIolvjIsw
+
 \subsection{Search Space} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hl{\textbf{UWAGA}: opisac ze szukamy 4 podprzestrzenie w turach! (moze tez o
+nowym wzorku ktory szuka tylko prawidlowych}
 
 \hl{bridge z score function gdziekolwiek to bedzie}
 \hl{obliczyc ile jest aktulanie wersji algosow np. czy jest to juz 2do14 jak
@@ -603,6 +634,20 @@ performance plot\footnote{wykres zostal zrobiony poprzez posortowanie scorow - d
 przyroscie i latwo dostrzec ktory algorytm ma najwyzszy score lub jaka ma
 chaktersytyke (np. jest bardzo skuteczny dla waskiej grupy przykladow)
 }
+
+\begin{table}[H] \centering
+\begin{tabular}{@{}l|ccc@{}}
+\toprule
+\hspace*{0.175cm}\diagbox{\textbf{Density}}{\textbf{Shape}}
+                         & Small (32-128)    & Medium (256-448)   & Large (512-1536)  \\
+\midrule
+Low ($\rho$=0.00005-0.001)    & JFA           & Blabla        & ?       \\
+High ($\rho$=0.01-0.1)        & JFAStar           & ?        & ?       \\
+\bottomrule
+\end{tabular}
+\vspace{1em}
+\caption{Found in this paper state-of-the-art for specific domains.}
+\end{table}
 
 \subsection{Multi-domain Algorithm (\ourjfasingle)} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

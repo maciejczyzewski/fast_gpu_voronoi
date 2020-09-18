@@ -1,3 +1,6 @@
+# [music]       "AC DC - 1976 - High Voltage"
+# https://www.youtube.com/watch?v=78oIolvjIsw
+
 # FIXME: automatic PYOPENCL_CTX='0:1'
 
 # !pip3 install pyopencl
@@ -91,11 +94,11 @@ np.random.seed(+oo)
 ################################################################################
 
 class Config:
-    N_CALLS = 50 # FIXME: [2500] ustaw czas a nie ilosc iteracji
+    N_CALLS = 100 # FIXME: [2500] ustaw czas a nie ilosc iteracji
     OPTIMIZER = forest_minimize # gbrt_minimize #forest_minimize # "auto"
-    DOMAIN = "DOMAIN_SPEC_1" #"DOMAIN_FAST" # "DOMAIN_JFASTAR"
+    DOMAIN = "DOMAIN_SPEC_SMALL_LOW" #"DOMAIN_FAST" # "DOMAIN_JFASTAR"
     
-    IS_MULTI_SPACE = True
+    IS_MULTI_SPACE = True # 4 przypadki --> FIXME: opisac w pracy
     IS_ONLY_WORKING = True
 
     # XXX: old params / not working
@@ -1084,129 +1087,117 @@ if Config.IS_CIRCLE_ONLY:
 
 ################################################################################
 
+SHAPES_SMALL = [(32, 32), (64, 64), (96, 96), (128, 128)]
+SHAPES_MEDIUM = [(256, 256), (320, 320), (384, 384), (448, 448)]
+SHAPES_LARGE = [(512, 512), (768, 768), (1024, 1024), (1536, 1536)]
+
+CASES_LOW = [
+    {gen_uniform: [use_num, 1]},
+    {gen_uniform: [use_num, 3]},
+    {gen_uniform: [use_density, 0.00005]},
+    {gen_uniform: [use_density, 0.0001]},
+    {gen_uniform: [use_density, 0.0002]},
+    {gen_uniform: [use_density, 0.0003]},
+    {gen_uniform: [use_density, 0.0004]},
+    {gen_uniform: [use_density, 0.0005]},
+    {gen_uniform: [use_density, 0.001]},
+]
+
+CASES_LOW_FAST = [ # XXX
+    {gen_uniform: [use_num, 1]},
+    {gen_uniform: [use_num, 3]},
+    {gen_uniform: [use_density, 0.0001]},
+    {gen_uniform: [use_density, 0.0003]},
+    {gen_uniform: [use_density, 0.001]},
+]
+
+CASES_HIGH = [
+    {gen_uniform: [use_density, 0.01]},
+    {gen_uniform: [use_density, 0.02]},
+    {gen_uniform: [use_density, 0.03]},
+    {gen_uniform: [use_density, 0.04]},
+    {gen_uniform: [use_density, 0.05]},
+    {gen_uniform: [use_density, 0.1]},
+]
+
+CASES_HIGH_FAST = [ # XXX
+    {gen_uniform: [use_density, 0.01]},
+    {gen_uniform: [use_density, 0.03]},
+    {gen_uniform: [use_density, 0.05]},
+    {gen_uniform: [use_density, 0.1]},
+]
+
+################################################################################
+
+# FIXME: dodac jako `param` jak shapes czy cases:
+#                  IS_ONLY_WORKING ---> ???
+
 DOMAIN_JFASTAR = {
-    "shapes":
-        [(32, 32), (64, 64), (96, 96), (128, 128), (256, 256), (320, 320),
-         (384, 384), (448, 448), (512, 512), (768, 768),
-         (1024, 1024), (1536, 1536)],
-    "cases":
-        [
-            {gen_uniform: [use_num, 1]},
-            {gen_uniform: [use_num, 3]},
-            {gen_uniform: [use_density, 0.0001]},
-            {gen_uniform: [use_density, 0.001]},
-            {gen_uniform: [use_density, 0.01]},
-            {gen_uniform: [use_density, 0.02]},
-            {gen_uniform: [use_density, 0.03]},
-            {gen_uniform: [use_density, 0.04]},
-            {gen_uniform: [use_density, 0.05]},
-            {gen_uniform: [use_density, 0.1]},
-        ]
+    "shapes": SHAPES_SMALL + SHAPES_MEDIUM + SHAPES_LARGE,
+    "cases": CASES_LOW_FAST + CASES_HIGH_FAST
 }
 
-DOMAIN_SPEC_1 = {
-    "shapes":
-        [(32, 32), (64, 64), (96, 96), (128, 128)],
-    "cases":
-        [
-            {gen_uniform: [use_num, 1]},
-            {gen_uniform: [use_num, 3]},
-            {gen_uniform: [use_density, 0.001]},
-            {gen_uniform: [use_density, 0.01]},
-            {gen_uniform: [use_density, 0.03]},
-            {gen_uniform: [use_density, 0.05]},
-        ]
+### SMALL ###
+
+DOMAIN_SPEC_SMALL_LOW = {
+    "shapes": SHAPES_SMALL,
+    "cases": CASES_LOW
 }
 
-DOMAIN_SPEC_2 = {
-    "shapes":
-        [(256, 256), (320, 320), (384, 384), (448, 448)],
-    "cases":
-        [
-            {gen_uniform: [use_num, 1]},
-            {gen_uniform: [use_num, 3]},
-            {gen_uniform: [use_density, 0.001]},
-            {gen_uniform: [use_density, 0.01]},
-            {gen_uniform: [use_density, 0.03]},
-            {gen_uniform: [use_density, 0.05]},
-        ]
+DOMAIN_SPEC_SMALL_HIGH = {
+    "shapes": SHAPES_SMALL,
+    "cases": CASES_HIGH
 }
 
-DOMAIN_SPEC_3 = {
-    "shapes":
-        [(512, 512), (768, 768), (1024, 1024), (1536, 1536)],
-    "cases":
-        [
-            {gen_uniform: [use_num, 1]},
-            {gen_uniform: [use_num, 3]},
-            {gen_uniform: [use_density, 0.001]},
-            {gen_uniform: [use_density, 0.01]},
-            {gen_uniform: [use_density, 0.03]},
-            {gen_uniform: [use_density, 0.05]},
-        ]
+### MEDIUM ###
+
+DOMAIN_SPEC_MEDIUM_LOW = {
+    "shapes": SHAPES_MEDIUM,
+    "cases": CASES_LOW
 }
 
-DOMAIN_LOW = {
-    "shapes":
-        [(32, 32), (64, 64), (96, 96), (128, 128), (256, 256), (320, 320),
-         (384, 384), (448, 448), (512, 512), (768, 768),
-         (1024, 1024), (1536, 1536)],
-    "cases":
-        [
-            {gen_uniform: [use_num, 1]},
-            {gen_uniform: [use_num, 3]},
-            {gen_uniform: [use_density, 0.00005]},
-            {gen_uniform: [use_density, 0.0001]},
-            {gen_uniform: [use_density, 0.0002]},
-            {gen_uniform: [use_density, 0.0003]},
-            {gen_uniform: [use_density, 0.0004]},
-            {gen_uniform: [use_density, 0.0005]},
-            {gen_uniform: [use_density, 0.001]},
-        ]
+DOMAIN_SPEC_MEDIUM_HIGH = {
+    "shapes": SHAPES_MEDIUM,
+    "cases": CASES_HIGH
 }
 
-DOMAIN_HIGH = {
-    "shapes":
-        [(32, 32), (64, 64), (96, 96), (128, 128), (256, 256), (320, 320),
-         (384, 384), (448, 448), (512, 512), (768, 768),
-         (1024, 1024), (1536, 1536)],
-    "cases":
-        [
-            {gen_uniform: [use_density, 0.01]},
-            {gen_uniform: [use_density, 0.02]},
-            {gen_uniform: [use_density, 0.03]},
-            {gen_uniform: [use_density, 0.04]},
-            {gen_uniform: [use_density, 0.05]},
-            {gen_uniform: [use_density, 0.1]},
-        ]
+### LARGE ###
+
+DOMAIN_SPEC_LARGE_LOW = {
+    "shapes": SHAPES_LARGE,
+    "cases": CASES_LOW
+}
+
+DOMAIN_SPEC_LARGE_HIGH = {
+    "shapes": SHAPES_LARGE,
+    "cases": CASES_HIGH
+}
+
+### ??? ###
+
+DOMAIN_SPEC_LOW = {
+    "shapes": SHAPES_SMALL + SHAPES_MEDIUM + SHAPES_LARGE,
+    "cases": CASES_LOW_FAST
+}
+
+DOMAIN_SPEC_HIGH = {
+    "shapes": SHAPES_SMALL + SHAPES_MEDIUM + SHAPES_LARGE,
+    "cases": CASES_HIGH_FAST
 }
 
 ################################################################################
 
-DOMAIN_COLAB = {
-    "shapes":
-        [(64, 64), (128, 128), (256, 256), (512, 512), (768, 768), (1024, 1024)],
-    "cases":
-        [
-            {gen_uniform: [use_num, 1]},
-            {gen_uniform: [use_density, 0.001]},
-            {gen_uniform: [use_density, 0.01]},
-            {gen_uniform: [use_density, 0.03]},
-            {gen_uniform: [use_density, 0.05]},
-        ]
-}
+# FIXME: remove small cases? IS_ONLY_WORKING -> false?
+# co gdy dla malych slabo dziala? IS_ONLY_WORKING
+#        zrobic ramke/window na szukanie scoru
 
-DOMAIN_FAST = {
+DOMAIN_DEBUG = {
     "shapes":
         [(32, 32)],
-    #    [(512, 512), (1024, 1024), (1536, 1536)],
     "cases":
         [
             {gen_uniform: [use_num, 3]},
-            #{gen_uniform: [use_num, 1]},
-            #{gen_uniform: [use_density, 0.001]},
             {gen_uniform: [use_density, 0.01]},
-            #{gen_uniform: [use_density, 0.03]},
             {gen_uniform: [use_density, 0.05]},
         ]
 }
