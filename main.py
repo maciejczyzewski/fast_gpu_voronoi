@@ -91,14 +91,16 @@ np.random.seed(+oo)
 ################################################################################
 
 class Config:
-    N_CALLS = 20 # FIXME: [2500] ustaw czas a nie ilosc iteracji
-    OPTIMIZER = gp_minimize #forest_minimize # "auto"
+    N_CALLS = 50 # FIXME: [2500] ustaw czas a nie ilosc iteracji
+    OPTIMIZER = forest_minimize # gbrt_minimize #forest_minimize # "auto"
     DOMAIN = "DOMAIN_SPEC_1" #"DOMAIN_FAST" # "DOMAIN_JFASTAR"
     
     IS_MULTI_SPACE = True
+    IS_ONLY_WORKING = True
+
+    # XXX: old params / not working
     IS_SPECIAL_ONLY = False
     IS_CIRCLE_ONLY = False
-    IS_ONLY_WORKING = True
 
 DEBUG = {
     "iter": 0,
@@ -685,7 +687,7 @@ def do_compirason(model, model_ref, domain_generated=None):
         log["score"].append(score)
 
     if Config.IS_ONLY_WORKING:
-        scorer = sum(loss_arr)/len(loss_arr)
+        score = sum(loss_arr)/len(loss_arr)
         #score = gmean(loss_arr) # dla choc jednego zera -> score=0
     else:
         score = math.sqrt(sum(loss_arr)/len(loss_arr))
@@ -996,7 +998,8 @@ SPACE_CIRCLE_NORMAL = [
                  mod_step_function__factor3],
                 name='step_function'),
 
-    Integer(4, 12+6, name='anchor_num'),
+    # FIXME: Integer(4, 12+6, name='anchor_num'),
+    Integer(9, 16, name='anchor_num'),
     Categorical(["none", "noise", "lnoise"], name='noise'),
     Categorical([False, True], name='anchor_double'), 
     
@@ -1017,7 +1020,8 @@ SPACE_CIRCLE_SPECIAL = [
     Real(1,   2, name='D'), # <1,   2>
     Real(0.2, 1, name='X'), # <0.2, 1>
 
-    Integer(4, 12+6, name='anchor_num'),
+    # FIXME: Integer(4, 12+6, name='anchor_num'),
+    Integer(9, 16, name='anchor_num'),
     Categorical(["none", "noise", "lnoise"], name='noise'),
     Categorical([False, True], name='anchor_double'),
 
