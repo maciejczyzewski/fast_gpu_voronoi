@@ -26,9 +26,10 @@ def slugify(text):
 #####################################################
 
 # FIXME: Config class?
-PATH_RESULTS = "results_small_low/"
+PATH_RESULTS = "results/" #"results_small_low/"
 PATH_FIGURES = f"figures/{slugify(PATH_RESULTS)}/"
 IS_LEGEND_ON_FIGURE = False
+FIGURE_SIZE = (5, 3) # (12.5, 3)
 
 if PATH_RESULTS is None:
     PATH_RESULTS = "results/"
@@ -57,7 +58,7 @@ plt.style.use(["science", "ieee"])
 plt.rcParams.update({"text.usetex": True})
 
 fig, ax = plt.subplots()
-fig.set_size_inches(12.5, 3)
+fig.set_size_inches(*FIGURE_SIZE)
 ax.autoscale(tight=True)
 
 # plt2 = None

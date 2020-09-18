@@ -447,10 +447,10 @@ skonczyc algorytm w mniejszej ilosci krokow.
 Aby badania byly bardziej przejrzyste trzymalismy sie pewnej konfencji
 nazewniczej:
 $$
-[\bm{anchor\_type}][\bm{anchor\_num}][\bm{anchor\_double}]\qquad|\qquad[\bm{step\_function}]\qquad+\qquad[\bm{noise}]
+[\bm{anchor\_type}][\bm{anchor\_num}][\bm{anchor\_double}]\qquad-\qquad[\bm{step\_function}]\qquad+\qquad[\bm{noise}]
 $$
 
-dla przykladu \longvar{Circle11(1/3)Dual(1/4)|Factor3+Noise} ktore mozna
+dla przykladu \longvar{Circle11(1/3)Dual(1/4)-Factor3+Noise} ktore mozna
 przeczytac jako:
 
 \begin{flalign*}
@@ -696,10 +696,12 @@ High ($\rho$=0.01-0.1)        & JFAStar           & ?        & ?       \\
 % FIXME: a w srodku dwie kolumny i wykresy???????????????????????????
 %                   low dense         |       high dense
 
+\longvar{Square-Special(1.44/0.96/0.17/1.63/0.86)+Noise}
 
 \begin{figure}[H]
 	\begin{minipage}{0.48\textwidth}
 		\centering
+		\includegraphics[height=4.5cm]{../figures/results-small-low/legend}
 		\includegraphics[width=1\linewidth]{../figures/results-small-low/figure-2-loss}
 		\includegraphics[width=1\linewidth]{../figures/results-small-low/figure-3-score}
 		\caption{Low Density}
@@ -707,11 +709,13 @@ High ($\rho$=0.01-0.1)        & JFAStar           & ?        & ?       \\
 	\end{minipage}\hfill
 	\begin{minipage}{0.48\textwidth}
 		\centering
+		\includegraphics[height=4.5cm]{../figures/results-small-high/legend}
 		\includegraphics[width=1\linewidth]{../figures/results-small-high/figure-2-loss}
 		\includegraphics[width=1\linewidth]{../figures/results-small-high/figure-3-score}
 		\caption{High Density}
 		\label{Fig:lnoise}
 	\end{minipage}
+	\label{Small Shape: 32x32, 64x64, 96x96, 128x128}
 \end{figure}
 
 % \begin{figure}[H]

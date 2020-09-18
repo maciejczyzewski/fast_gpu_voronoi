@@ -541,7 +541,7 @@ def human_algo_name(config):
         special = ""
     ######################
 
-    return f"{anchor_type}{anchor_num}{anchor_double}|{step_function}{special}{noise}"
+    return f"{anchor_type}{anchor_num}{anchor_double}-{step_function}{special}{noise}"
 
 def save_domain(domain):
     domain_vec = []
@@ -582,7 +582,7 @@ def optimize(model_ref, space, domain_generated, n_calls=10, prefix=None):
         print("======= EXPERIMENT =======")
 
         name = human_algo_name(config)
-        if name == "Square|Default":
+        if name == "Square-Default":
             name = "JFA (original)"
         if name in ALGOMAP:
             print(f"----> {name} already saved")
