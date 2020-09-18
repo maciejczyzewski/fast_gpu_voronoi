@@ -28,7 +28,8 @@ from skopt.utils import use_named_args
 from skopt.plots import plot_objective, plot_evaluations, plot_convergence, plot_regret
 from skopt.space import Categorical, Integer, Real
 
-# FIXME: 
+# FIXME: kazdy przyklad wygenerowany i trzymany na pozniej?????????????
+#                          ????????????????????????????????????????????
 
 # VERSJA 1:
 #        a) dla kazdej domeny szuka najlepszego algorytmu i zapisuje 
@@ -90,7 +91,7 @@ np.random.seed(+oo)
 ################################################################################
 
 class Config:
-    N_CALLS = 50 # FIXME: [2500] ustaw czas a nie ilosc iteracji
+    N_CALLS = 20 # FIXME: [2500] ustaw czas a nie ilosc iteracji
     OPTIMIZER = gp_minimize #forest_minimize # "auto"
     DOMAIN = "DOMAIN_SPEC_1" #"DOMAIN_FAST" # "DOMAIN_JFASTAR"
     
@@ -535,9 +536,33 @@ def human_algo_name(config):
 
     return f"{anchor_type}{anchor_num}{anchor_double}|{step_function}{special}{noise}"
 
+def save_domain(domain):
+    domain_vec = []
+    domain_generated = []
+    for shape in domain["shapes"]:
+        for case in domain["cases"]:
+            print("\n")
+            func, params = list(case.items())[0]
+            func_anchor, arg = params
+            num = max(1, func_anchor(shape, arg))
+            domain_vec.append({"shape": shape, "num": num})
+
+            sample = create_instance(func, shape=shape, num=num)
+            domain_generated.append(sample)
+
+    pprint(domain_vec)
+
+    path_domain = "results/domain.json"
+    domain_cl = json.dumps(domain_vec)
+    text_file = open(path_domain, "w")
+    text_file.write(domain_cl)
+    text_file.close()
+
+    return domain_generated
+
 i_calls, pbar = 0, None # FIXME: progress bar? tqdm?
 best_name, best_score = "?", 0
-def optimize(model_ref, space, domain, n_calls=10, prefix=None):
+def optimize(model_ref, space, domain_generated, n_calls=10, prefix=None):
     global i_calls, pbar
     pbar = tqdm(total=n_calls)
     ALGOMAP = {}
@@ -558,7 +583,7 @@ def optimize(model_ref, space, domain, n_calls=10, prefix=None):
 
         model = Vorotron(config)
         model.name = name
-        score, log = do_compirason(model, model_ref, domain)
+        score, log = do_compirason(model, model_ref, domain_generated)
 
         path_log = f"results/log/{score}.json"
         path_code = f"results/code/{score}.cl"
@@ -604,26 +629,6 @@ def optimize(model_ref, space, domain, n_calls=10, prefix=None):
             call(f"cp -r results/ '{COLAB_OUTPUT}/{path_date}({prefix}|{i_calls}|{Config.N_CALLS})'")
         return score
 
-    def save_domain(domain):
-        domain_vec = []
-        for shape in domain["shapes"]:
-            for case in domain["cases"]:
-                print("\n")
-                func, params = list(case.items())[0]
-                func_anchor, arg = params
-                num = max(1, func_anchor(shape, arg))
-                domain_vec.append({"shape": shape, "num": num})
-
-        pprint(domain_vec)
-
-        path_domain = "results/domain.json"
-        domain_cl = json.dumps(domain_vec)
-        text_file = open(path_domain, "w")
-        text_file.write(domain_cl)
-        text_file.close()
-
-    save_domain(domain)
-
     score_from_config({
         'anchor_double': False,
         'anchor_num': None,
@@ -654,7 +659,7 @@ def fn_metric(a, b): # b/(1+a)
     # FIXME: return max(0, (math.sqrt(b) * (100-a**2)))
     # return max(0, (b * (100-a**1.5)))
 
-def do_compirason(model, model_ref, domain=None): 
+def do_compirason(model, model_ref, domain_generated=None): 
     loss_arr = []
 
     log = {
@@ -663,26 +668,20 @@ def do_compirason(model, model_ref, domain=None):
         'score': []
     }
 
-    for shape in domain["shapes"]:
-        for case in domain["cases"]:
-            print("\n")
-            func, params = list(case.items())[0]
-            func_anchor, arg = params
-            num = max(1, func_anchor(shape, arg))
+    for sample in domain_generated:
+        print("\n")
 
-            sample = create_instance(func, shape=shape, num=num)
-
-            a, b = valid(model_ref, model, sample)
-            score = fn_metric(a, b)
-            if Config.IS_ONLY_WORKING:
-                loss_arr.append(score)
-            else:
-                loss_arr.append(max(0, score)**2)
-            print(f"shape={shape} | a={a} b={b} -> score={score}")
-            
-            log["loss"].append(a)
-            log["time"].append(b)
-            log["score"].append(score)
+        a, b = valid(model_ref, model, sample)
+        score = fn_metric(a, b)
+        if Config.IS_ONLY_WORKING:
+            loss_arr.append(score)
+        else:
+            loss_arr.append(max(0, score)**2)
+        print(f"shape={sample['shape']} | a={a} b={b} -> score={score}")
+        
+        log["loss"].append(a)
+        log["time"].append(b)
+        log["score"].append(score)
 
     if Config.IS_ONLY_WORKING:
         scorer = sum(loss_arr)/len(loss_arr)
@@ -1151,12 +1150,15 @@ if __name__ == "__main__":
     # do_test_error()
     # sys.exit()
 
+    domain = globals()[Config.DOMAIN]
+    domain_generated = save_domain(domain)
+
     if Config.IS_MULTI_SPACE:
         for name, SPACE_i in SPACE_ALL.items():
             opt_result = optimize(
                 MODEL_BRUTEFORCE,
                 SPACE_i,
-                globals()[Config.DOMAIN], # DOMAIN vs DOMAIN_FAST
+                domain_generated, # DOMAIN vs DOMAIN_FAST
                 n_calls=Config.N_CALLS, # BEST:[100] /// (20*60) 100 vs 10*60
                 prefix=name
             )
@@ -1164,7 +1166,7 @@ if __name__ == "__main__":
         opt_result = optimize(
             MODEL_BRUTEFORCE,
             SPACE,
-            globals()[Config.DOMAIN], # DOMAIN vs DOMAIN_FAST
+            domain_generated, # DOMAIN vs DOMAIN_FAST
             n_calls=Config.N_CALLS, # BEST:[100] /// (20*60) 100 vs 10*60
             prefix=None
         )
