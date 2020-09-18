@@ -92,7 +92,7 @@ np.random.seed(+oo)
 class Config:
     N_CALLS = 2500 # FIXME: ustaw czas a nie ilosc iteracji
     OPTIMIZER = forest_minimize # "auto"
-    DOMAIN = "DOMAIN_JFASTAR"
+    DOMAIN = "DOMAIN_FAST" # "DOMAIN_JFASTAR"
     
     IS_SPECIAL_ONLY = False
     IS_CIRCLE_ONLY = False
@@ -205,7 +205,7 @@ def save(M, prefix=None):
 
     _M_color = mat2d_to_rgb(M)
     im = Image.fromarray(np.uint8(_M_color), "RGB")
-    # im = im.resize((512, 512), Image.NEAREST)  # FIXME: option?
+    im = im.resize((512, 512), Image.NEAREST)  # FIXME: option?
     im.save(f"results/{name}", "PNG")
 
 # FIXME: add plot and simple table?
@@ -311,6 +311,12 @@ class Vorotron():
         d_x_out = cl.Buffer(SESSION["ctx"], mf.READ_WRITE, h_x_in.nbytes)
         d_y_out = cl.Buffer(SESSION["ctx"], mf.READ_WRITE, h_y_in.nbytes)
 
+        # if self.config["noise"] == "noise" or self.config["noise"] == "lnoise":
+        #     x["__mat2d"] = copy_to_host((h_id_in, h_x_in, h_y_in), (d_id_in,
+        #                                                             d_x_in,
+        #                                                             d_y_in), x["shape"])
+        #     save(x["__mat2d"][:, :, 0], prefix="input")
+
         # === NOISE ===
         if self.config["noise"] == "noise":
             points_in = cl.Buffer(SESSION["ctx"], mf.COPY_HOST_PTR |
@@ -334,6 +340,14 @@ class Vorotron():
             T_GPU += event.profile.end-event.profile.start
             T2 = timer()
             T_CPU += T2-T1
+
+            # # DEBUG -----------------
+            # x["__mat2d"] = copy_to_host((h_id_in, h_x_in, h_y_in), (d_id_in,
+            #                                                         d_x_in,
+            #                                                         d_y_in), x["shape"])
+            # save(x["__mat2d"][:, :, 0], prefix="noise")
+            # # -----------------------
+
         elif self.config["noise"] == "lnoise":
             points_in = cl.Buffer(SESSION["ctx"], mf.COPY_HOST_PTR |
                                   mf.READ_ONLY, hostbuf=x["points"])
@@ -357,14 +371,12 @@ class Vorotron():
             T2 = timer()
             T_CPU += T2-T1
 
-            # DEBUG -----------------
-            #x["__mat2d"] = copy_to_host((h_id_in, h_x_in, h_y_in), (d_id_in,
-            #                                                        d_x_in,
-            #                                                        d_y_in), x["shape"])
-            #save(x["__mat2d"][:, :, 0])
-            #x["__mat2d"] = copy_to_host(mat2d_flatten, mat2d_in, x["shape"])
-            #save(x["__mat2d"][:, :, 0])
-            # -----------------------
+            # # DEBUG -----------------
+            # x["__mat2d"] = copy_to_host((h_id_in, h_x_in, h_y_in), (d_id_in,
+            #                                                         d_x_in,
+            #                                                         d_y_in), x["shape"])
+            # save(x["__mat2d"][:, :, 0], prefix="lnoise")
+            # # -----------------------
 
         # === RUN ===
         if self.config["bruteforce"]:
@@ -583,7 +595,7 @@ def optimize(model_ref, space, domain, n_calls=10):
         ########### SECURITY ##############
         if IN_COLAB and i_calls % 100 == 0 and i_calls > 1:
             path_date = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-            call(f"cp -r results/ '{COLAB_OUTPUT}/{path_date}({i_calls}/{Config.N_CALLS})'")
+            call(f"cp -r results/ '{COLAB_OUTPUT}/{path_date}({i_calls}|{Config.N_CALLS})'")
         return score
 
     def save_domain(domain):
@@ -1010,11 +1022,12 @@ DOMAIN_FAST = {
     #    [(512, 512), (1024, 1024), (1536, 1536)],
     "cases":
         [
-            {gen_uniform: [use_num, 1]},
-            {gen_uniform: [use_density, 0.001]},
+            {gen_uniform: [use_num, 3]},
+            #{gen_uniform: [use_num, 1]},
+            #{gen_uniform: [use_density, 0.001]},
             {gen_uniform: [use_density, 0.01]},
-            {gen_uniform: [use_density, 0.03]},
-            {gen_uniform: [use_density, 0.05]},
+            #{gen_uniform: [use_density, 0.03]},
+            #{gen_uniform: [use_density, 0.05]},
         ]
 }
 
