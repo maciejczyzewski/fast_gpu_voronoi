@@ -413,7 +413,7 @@ for i in range(0, +oo):
     avg = round(sum(density_map[i])/len(density_map[i]), 4)
     header_row.append(f"$\\rho$={avg}")
 
-header_row = ["Algorithm"] + header_row + ["Avg. score"]
+header_row = ["Algorithm"] + header_row + ["Score"]
 pprint(header_row)
 # pprint(ROWS)
 
