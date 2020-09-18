@@ -18,8 +18,8 @@ __kernel void fn(
 #define POS(X, Y) ((X)*y_size + (Y))
 
 	int pos = noise3D(y, 0.0f, x) * (number_of_seeds);
-	int lx = (x+points_in[pos].x)/2;
-	int ly = (y+points_in[pos].y)/2;
+	int lx = (x+3*points_in[pos].x)/4;
+	int ly = (y+3*points_in[pos].y)/4;
 
 	if (id_out[POS(lx,ly)] == 0) {
 		id_out[POS(lx,ly)] = seeds_in[pos];

@@ -90,12 +90,13 @@ np.random.seed(+oo)
 ################################################################################
 
 class Config:
-    N_CALLS = 2500 # FIXME: ustaw czas a nie ilosc iteracji
+    N_CALLS = 300 # FIXME: [2500] ustaw czas a nie ilosc iteracji
     OPTIMIZER = forest_minimize # "auto"
     DOMAIN = "DOMAIN_FAST" # "DOMAIN_JFASTAR"
     
     IS_SPECIAL_ONLY = False
     IS_CIRCLE_ONLY = False
+    IS_ONLY_WORKING = True
 
 DEBUG = {
     "iter": 0,
@@ -312,6 +313,7 @@ class Vorotron():
         d_y_out = cl.Buffer(SESSION["ctx"], mf.READ_WRITE, h_y_in.nbytes)
 
         # if self.config["noise"] == "noise" or self.config["noise"] == "lnoise":
+        # if self.config["noise"] == "lnoise":
         #     x["__mat2d"] = copy_to_host((h_id_in, h_x_in, h_y_in), (d_id_in,
         #                                                             d_x_in,
         #                                                             d_y_in), x["shape"])
@@ -512,7 +514,7 @@ def human_algo_name(config):
         anchor_num = ""
     if config["noise"] == "noise":
         noise = "+Noise"
-    if config["noise"] == "lnoise":
+    elif config["noise"] == "lnoise":
         noise = "+LNoise"
     else:
         noise = ""
@@ -667,14 +669,20 @@ def do_compirason(model, model_ref, domain=None):
 
             a, b = valid(model_ref, model, sample)
             score = fn_metric(a, b)
-            loss_arr.append(score**2)
+            if Config.IS_ONLY_WORKING:
+                loss_arr.append(score)
+            else:
+                loss_arr.append(score**2)
             print(f"shape={shape} | a={a} b={b} -> score={score}")
             
             log["loss"].append(a)
             log["time"].append(b)
             log["score"].append(score)
 
-    score = math.sqrt(sum(loss_arr)/len(loss_arr))
+    if Config.IS_ONLY_WORKING:
+        score = gmean(loss_arr) # dla choc jednego zera -> score=0
+    else:
+        score = math.sqrt(sum(loss_arr)/len(loss_arr))
     # score = sum(loss_arr)/len(loss_arr)
     print(f"----> SCORE=\033[92m {score} \033[0m")
 
@@ -1018,7 +1026,7 @@ DOMAIN_COLAB = {
 
 DOMAIN_FAST = {
     "shapes":
-        [(32, 32)],
+        [(128, 128)],
     #    [(512, 512), (1024, 1024), (1536, 1536)],
     "cases":
         [
@@ -1027,7 +1035,7 @@ DOMAIN_FAST = {
             #{gen_uniform: [use_density, 0.001]},
             {gen_uniform: [use_density, 0.01]},
             #{gen_uniform: [use_density, 0.03]},
-            #{gen_uniform: [use_density, 0.05]},
+            {gen_uniform: [use_density, 0.05]},
         ]
 }
 

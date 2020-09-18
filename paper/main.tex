@@ -13,6 +13,19 @@
 %      https://www.youtube.com/watch?v=n_LcVqqHSY8
 %      https://www.youtube.com/watch?v=vpeljtzB1a4
 
+% kollektiv
+% https://www.youtube.com/watch?v=E8g5YrDXg2k
+% go with the flow
+% https://www.youtube.com/watch?v=DcHKOC64KnE
+% private party project
+% https://www.youtube.com/watch?v=ckKi01gqW7A&t=878s
+% royal blood
+% https://www.youtube.com/watch?v=sbx95gBb5HM
+% i don't want to sleep
+% https://www.youtube.com/watch?v=3oBCu9zywzE
+% hehe
+% https://www.youtube.com/watch?v=Dii8ZVtR9Tc&t=18s
+
 %\usepackage{arxiv}
 
 \usepackage[utf8]{inputenc} % allow utf-8 input
@@ -328,7 +341,8 @@ algorytmu (Search Space), modul testujacy dana mutacje/wariant - sklada kod kern
 
 \subsection{Score Function} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\hl{SCORE CZY METRIC?}
+\hl{JEST PROBLEM - zdazaja sie warianty ktore 0zeruja rzadkie i sa bardzo
+szybkie na duzy matrycach - trzeba do ponownie zbalansowac}
 \hl{roznica w pikselach pomiedzy bruteforce a algorytmem - napisac o tym / tez
 ze to wszystko to ilorazy do bruteforce}
 
@@ -434,11 +448,11 @@ przeczytac jako:
 	\end{minipage}\hfill
 	\begin{minipage}{0.48\textwidth}
 		\centering
-		\includegraphics[width=0.23\linewidth]{../figures/mod_lnoise_1_in}
-		\includegraphics[width=0.23\linewidth]{../figures/mod_lnoise_1_out}
+		\includegraphics[width=0.23\linewidth]{../figures/mod_lnoise_v2_1_in}
+		\includegraphics[width=0.23\linewidth]{../figures/mod_lnoise_v2_1_out}
 		,
-		\includegraphics[width=0.23\linewidth]{../figures/mod_lnoise_2_in}
-		\includegraphics[width=0.23\linewidth]{../figures/mod_lnoise_2_out}
+		\includegraphics[width=0.23\linewidth]{../figures/mod_lnoise_v2_2_in}
+		\includegraphics[width=0.23\linewidth]{../figures/mod_lnoise_v2_2_out}
 		\caption{Local Noise for 32x32}
 		\label{Fig:lnoise}
 	\end{minipage}
@@ -459,10 +473,21 @@ najlepsza wartosc w swoim otoczeniu (zgodnie ze stepem).
 
 \subsubsection{Local Noise} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\hl{przesunieta ciezkosci??? czyli srednia z wagami poprawila? \textbf{a moze uzaleznisc
+wage od rozmiaru pierwszego stepu?}}
+
+% Mozna tez szum uzupelniac nie losowo tylko w otoczeniu. Wiec gdy w punkcie
+% $(x,y)$ wylosujemy losowego seed-a o wartosci $(x_{rand}, y_{rand})$ to
+% wyliczamy nowa pozycje $(x', y')$ ktora znajduje sie
+% w polowie drogi w nastepujacy sposob: $x' = \frac{x+x_{rand}}{2}$, analogicznie
+% dla $y'$. Dodatkowo jesli $(x', y')$ jest pusta to tez uzupelniamy to pole ta
+% informacja. Nie przejmujemy sie wyscigiem w dostepie do danych. Nadpisania beda
+% losowe - a szum tez.
+
 Mozna tez szum uzupelniac nie losowo tylko w otoczeniu. Wiec gdy w punkcie
 $(x,y)$ wylosujemy losowego seed-a o wartosci $(x_{rand}, y_{rand})$ to
 wyliczamy nowa pozycje $(x', y')$ ktora znajduje sie
-w polowie drogi w nastepujacy sposob: $x' = \frac{x+x_{rand}}{2}$, analogicznie
+w polowie drogi w nastepujacy sposob: $x' = \frac{x+3x_{rand}}{4}$, analogicznie
 dla $y'$. Dodatkowo jesli $(x', y')$ jest pusta to tez uzupelniamy to pole ta
 informacja. Nie przejmujemy sie wyscigiem w dostepie do danych. Nadpisania beda
 losowe - a szum tez.
@@ -598,8 +623,11 @@ chaktersytyke (np. jest bardzo skuteczny dla waskiej grupy przykladow)
 
 \begin{figure}[H]
 	\centering
+	% \includegraphics[width=\linewidth]{../figures/figure-1-time}
 	\includegraphics[width=\linewidth]{../figures/figure-2-loss}
 	\includegraphics[width=\linewidth]{../figures/figure-3-score}
+
+	% not needed for single domain?
 	\includegraphics[width=\linewidth]{../figures/figure-4-power}
 	\caption{bla bla bla}
 	\label{fig:abstract}

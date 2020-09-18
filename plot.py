@@ -94,11 +94,19 @@ def apply_SOTA(x_name=None, y_name=None, sort=False):
         ax.fill_between(x, [1]*len(x), 0, facecolor='red', alpha=0.2)
     ax.grid(linestyle="--", linewidth=0.5, color='.25', zorder=-10, alpha=0.1)
 
-def globlog():
+def globlog(sota=False):
     vec = []
     for path in glob("results/log/*.json"):
         x = float(path.replace(".json", "").replace("results/log/", ""))
         vec.append([x, path])
+
+    if sota:
+        path = "results/jfa.json"
+        _, _, log_sota = read_file(path, x_name=None, y_name="score")
+        sota_score = int(log_sota["name"].split()[0][1:-1])
+        print(f"===========================> JFA (score) = {sota_score}")
+        vec.append([sota_score, path])
+
     return sorted(vec)[::-1]
 
 ### FIGURE (1): underfitting ###
@@ -221,11 +229,12 @@ def annotate_group(name, xspan, ax=None):
 COLORS = ['g', 'b', 'm', 'orange']
 
 legend_saved = False
-def apply_legend():
+def apply_legend(force=False):
     global legend_saved
     if IS_LEGEND_ON_FIGURE:
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
-    elif legend_saved == False and not os.path.isfile('figures/legend.png'):
+    elif force == True or \
+        (legend_saved == False and not os.path.isfile('figures/legend.png')):
         print("======================== ONCE =======================")
         figlegend = pylab.figure(figsize=(3,2))
         figlegend.legend(*ax.get_legend_handles_labels(), loc="center")
@@ -313,7 +322,7 @@ with figure("power", prefix=4):
     plt.ylabel("score")
     plt.xlabel("case (unordered)")
 
-    apply_legend()
+    apply_legend(force=True)
 
 ################################################################################
 # TABLE
@@ -330,18 +339,26 @@ with open(path, "r") as jsonfile:
     json_txt = jsonfile.read()
     domain = json.loads(json_txt)
 
+# FIXME: print JFA
+
 print(domain)
 
 GROUP_COL = 2 # FIXME: mozna zredykowac ilosc kolumn
+MAX_ROWS = 38
 density_map = {}
 ROWS = []
-for i, (_, path) in enumerate(globlog()):
+sota_in = False
+for i, (_, path) in enumerate(globlog(sota=True)):
+    if i > MAX_ROWS and sota_in == True:
+        break
     x, y, log = read_file(path, x_name=None, y_name="score")
     # [DEBUG]: for Kamil
     # for j, e in enumerate(y):
     #    print("---->", domain[j], e)
-    score, name = log["name"].split()
+    score, name = log["name"].split(' ', 1) # FIXME: only once
     score = int(score[1:-1])
+    if i >= MAX_ROWS and "JFA" not in name and sota_in == False:
+        continue
     # print(f"==============> {score} {name}")
     local_avg = {}
     last_shape, slow_i, cur_i = "?x?", 0, 0
@@ -379,7 +396,11 @@ for i, (_, path) in enumerate(globlog()):
         local_row.append(avg)
     # FIXME: if > 100 BOLDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD???
     # ----------------------> COLOR BEST IN COLUMN
-    ROWS.append(["\longvar{" + name + "}"] + local_row + [score])
+    if "JFA" in name:
+        sota_in = True
+        ROWS.append(["\cellcolor{blue!25}\\textbf{" + name + "}"] + local_row + [score])
+    else:
+        ROWS.append(["\longvar{" + name + "}"] + local_row + [score])
     print("\n\n")
 
 header_row = []
