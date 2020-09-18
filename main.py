@@ -665,7 +665,8 @@ def fn_metric(a, b): # b/(1+a)
     # FIXME: return max(0, (math.sqrt(b) * (100-a**2)))
     # return max(0, (b * (100-a**1.5)))
 
-def do_compirason(model, model_ref, domain_generated=None): 
+# FIXME: if first k is totally wrong resign???
+def do_compirason(model, model_ref, domain_generated=None, k = 0.25): 
     loss_arr = []
 
     log = {
@@ -674,27 +675,33 @@ def do_compirason(model, model_ref, domain_generated=None):
         'score': []
     }
 
-    for sample in domain_generated:
-        print("\n")
-
-        a, b = valid(model_ref, model, sample)
-        score = fn_metric(a, b)
+    def calc_metric(arr):
+        _score = 0
         if Config.IS_ONLY_WORKING:
-            loss_arr.append(score)
+            _score = sum(arr)/len(arr)
+            #score = gmean(loss_arr) # dla choc jednego zera -> score=0
         else:
-            loss_arr.append(max(0, score)**2)
-        print(f"shape={sample['shape']} | a={a} b={b} -> score={score}")
+            _score = math.sqrt(sum(arr)/len(arr))
+        return _score
+
+    for i, sample in enumerate(domain_generated):
+        if i/len(domain_generated) >= k and calc_metric(loss_arr) < 0:
+            print("\n")
+            a, b, score = 0, 100, 0
+        else:
+            a, b = valid(model_ref, model, sample)
+            score = fn_metric(a, b)
+            if Config.IS_ONLY_WORKING:
+                loss_arr.append(score)
+            else:
+                loss_arr.append(max(0, score)**2)
+            print(f"shape={sample['shape']} | a={a} b={b} -> score={score}")
         
         log["loss"].append(a)
         log["time"].append(b)
         log["score"].append(score)
 
-    if Config.IS_ONLY_WORKING:
-        score = sum(loss_arr)/len(loss_arr)
-        #score = gmean(loss_arr) # dla choc jednego zera -> score=0
-    else:
-        score = math.sqrt(sum(loss_arr)/len(loss_arr))
-    # score = sum(loss_arr)/len(loss_arr)
+    score = calc_metric(loss_arr)
     print(f"----> SCORE=\033[92m {score} \033[0m")
 
     return score, log
