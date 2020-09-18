@@ -1,7 +1,8 @@
 .DS_Store
 *.pickle
 __pycache__
-results*/
+
+results/
 
 dist/
 build/
