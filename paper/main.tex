@@ -13,6 +13,9 @@
 %      https://www.youtube.com/watch?v=n_LcVqqHSY8
 %      https://www.youtube.com/watch?v=vpeljtzB1a4
 
+%       tak wyglada mieszkanko jak pisze prace w nocy!
+%       https://www.youtube.com/watch?v=-5EQIiabJvk
+
 % kollektiv
 % https://www.youtube.com/watch?v=E8g5YrDXg2k
 % go with the flow
@@ -203,70 +206,67 @@ the results, compare the variants and ensemble for creating the final algorithm.
 \section{Introduction} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% FIXME: na wypadek zmiany tytulu w przyszlsoci!!!!!!!!!! ;-)
 This paper\footnote{the original title for this paper was ``Lord Vorotron:
-Finding the Best JFA Variant for the Coming Winter''} studies a practical usage of machine learning to automate research
-towards discovering efficient Distance Transform algorithms (utilizing technique known as AutoML).
-Thus, by finding mutations which works best for specific data, and then ensembling them into
-one, we create new state-of-the-art algorithm in this field named \uline{\ourjfa
-\hspace{0.01cm} with best-case $O(1)$ time complexity and $O(N)$ work complexity.}
-In addition, we introduce \uline{\ourjfasingle, a single
-variant that in most cases outperforms original JFA with proven worst-case
-$O(\log^{*}N)$ time complexity.}
-
+Finding the Best JFA Variant for the Coming Winter''} studies a practical usage
+of machine learning to automate research towards discovering efficient Distance
+Transform algorithms (utilizing technique known as AutoML).  Thus, by finding
+mutations which works best for specific data, and then ensembling them into one,
+we create new state-of-the-art algorithm in this field named \uline{\ourjfa
+\hspace{0.01cm} with best-case $O(1)$ time complexity and $O(N)$ work
+complexity.} In addition, we introduce \uline{\ourjfasingle, a single variant
+that in most cases outperforms original JFA with proven worst-case
+$O(\log^{*}N)$ time complexity.}\footnote{source code is available at
+\url{https://github.com/maciejczyzewski/fast_gpu_voronoi}}
 
 Notable contribution to the quick algorithm that makes Distance Transform (DT)
 using graphics hardware includes \citep{hoff1999fast} that creates a cone for
-each input (point/seed) and renders those cones to obtain the Voronoi diagram as the lower envelope of these cones.
-\cite{fischer2006fast} use planes tangent to a paraboloid and thus avoid the errors caused by the tessellation of the cones.
-Unfortunately, the drawback of this approach is the significant amount of computation and the implementation complexity.
+each input (point/seed) and renders those cones to obtain the Voronoi diagram as
+the lower envelope of these cones.  \cite{fischer2006fast} use planes tangent to
+a paraboloid and thus avoid the errors caused by the tessellation of the cones.
+Unfortunately, the drawback of this approach is the significant amount of
+computation and the implementation complexity.
 
-Jump flooding algorithm (JFA)\footnote{a novel pattern of
-communication} is an interesting way to utilize the graphics processing unit to
-efficiently compute Voronoi diagrams and distance transforms
-\cite{rong2006jump}. This method is faster and produces more accurate results
-\cite{rong2007variants}, and furthermore, it could be extended into 3D space in a slice-by-slice manner.
+Jump flooding algorithm (JFA)\footnote{a novel pattern of communication} is an
+interesting way to utilize the graphics processing unit to efficiently compute
+Voronoi diagrams and distance transforms \cite{rong2006jump}. This method is
+faster and produces more accurate results \cite{rong2007variants}, and
+furthermore, it could be extended into 3D space in a slice-by-slice manner.
 This is more effective than the previous research carried out by
-\citep{sud2006interactive}, because the speed of JFA is almost independent to the number of seeds \cite{rong2007variants}.
+\citep{sud2006interactive}, because the speed of JFA is almost independent to
+the number of seeds \cite{rong2007variants}.
 
-Based on this research and findings, several efficient GPU-based algorithms which are either
-work optimal or time optimal have been proposed including
-SKW \cite{schneider2009gpu}, PBA \cite{cao2010parallel}, FastGPU \cite{de2017fast}, Honda's algorithm \cite{honda2017simple} and
-WTO \cite{manduhu2019work}.
+Based on this research and findings, several efficient GPU-based algorithms
+which are either work optimal or time optimal have been proposed including SKW
+\cite{schneider2009gpu}, PBA \cite{cao2010parallel}, FastGPU \cite{de2017fast},
+Honda's algorithm \cite{honda2017simple} and WTO \cite{manduhu2019work}.
 % XXX
-The main question that needs to be addressed is whether JFA has potential
-for improvement. We found some benefits for specific data by adding random noise
-and adjusting the phase size in JFA. Therefore, this shows that, AutoML could examine this
-unknown space, and find the best possible algorithm in each case.
+The main question that needs to be addressed is whether JFA has potential for
+improvement. We found some benefits for specific data by adding random noise and
+adjusting the phase size in JFA. Therefore, this shows that, AutoML could
+examine this unknown space, and find the best possible algorithm in each case.
 
-For convenience, this work focus on the Voronoi diagram only - because this problem can be translated to DT \cite{rong2006jump}.
-The algorithm would be an approximation of the output, thus we suggest using WTO
-\cite{manduhu2019work} for exact DT (EDT). The major contributions of this paper are thus:
+For convenience, this work focus on the Voronoi diagram only - because this
+problem can be translated to DT \cite{rong2006jump}.  The algorithm would be an
+approximation of the output, thus we suggest using WTO \cite{manduhu2019work}
+for exact DT (EDT). The major contributions of this paper are thus:
 
 \begin{enumerate}
 	\item Presenting new envolved state-of-the-art variants of algorithm for Voronoi
 		Diagram and Distance Transform: % \newline
-		\textbf{\ourjfasingle} - (Multi-domain) single variant, replacement of JFA;
-		\textbf{\ourjfa} - (Ensemble of Domain-specific) multiple weak variants, production ready; and
+		\textbf{\ourjfasingle} - Multi-domain single variant, replacement of JFA;
+		\textbf{\ourjfa} - Ensemble of domain-specific variants, production ready; and
 	\item Analyzing all possible variants of JFA: comparing error and speedup
 		relative to bruteforce method in different domains.
-%\item Proposing, for an input set of seeds in a 2D grid, the first
-%parallel algorithm in GPU to compute in constant time (i.e.
-%independent of the number of seeds) a highly accurate
-%Voronoi diagram and distance transform.
 \end{enumerate}
-
-\hl{czy (Ensemble of Domain-specific) weak variants - jest prawidlowo?}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Related Work} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Several efficient GPU-based algorithms which are either
-work optimal or time optimal have been proposed including
-JFA \cite{rong2006jump}, SKW \cite{schneider2009gpu},
-PBA \cite{cao2010parallel}, FastGPU \cite{de2017fast}, Honda's algorithm \cite{honda2017simple} and
-WTO \cite{manduhu2019work}.
+Several efficient GPU-based algorithms which are either work optimal or time
+optimal have been proposed including JFA \cite{rong2006jump}, SKW
+\cite{schneider2009gpu}, PBA \cite{cao2010parallel}, FastGPU \cite{de2017fast},
+Honda's algorithm \cite{honda2017simple} and WTO \cite{manduhu2019work}.
 
 \begin{table}[H] \centering
 \begin{tabular}{@{}lllll@{}}
@@ -291,6 +291,10 @@ In this paper            & \ourjfasingle&
 \vspace{1em}
 \caption{Different GPU algorithms for computing EDT}
 \end{table}
+
+The original author of JFA\footnote{Guodong Rong} defined some variants and
+modifications \citep{rong2007variants}, in this work we continue on this subject
+and examine the relationship between them.
 
 \subsection{Jump Flooding} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -681,7 +685,7 @@ High ($\rho$=0.01-0.1)        &
 \caption{Found in this paper state-of-the-art for specific domains.}
 \end{table}
 
-\subsection{Multi-domain Algorithm (\ourjfasingle)} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Multi-domain Variant (\ourjfasingle)} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{itemize}
 	\item \textbf{shapes}: \{32x32, 64x64, 96x96, 128x128, 256x256, 320x320, 384x384, 448x448, 512x512, 768x768, 1024x1024, 1536x1536\}
@@ -720,7 +724,7 @@ High ($\rho$=0.01-0.1)        &
 	\caption{domain: 32x32, 64x64, 128x128, 256x256}
 \end{table}
 
-\subsection{Domain-specific Algorithms} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Domain-specific Variants} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Small Shape: 32x32, 64x64, 96x96, 128x128}
 
@@ -759,7 +763,7 @@ and\hfill \longvar{Square-Special(1.07/0.24/0.9/1.88/0.64)}
 %\subsubsection{Low Density}
 %\subsubsection{High Density}
 
-\subsection{Ensemble Across Domains (\ourjfa)} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Ensemble of Domain-specific (\ourjfa)} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bla bla
 
