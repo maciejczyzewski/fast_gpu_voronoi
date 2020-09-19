@@ -242,7 +242,7 @@ Honda's algorithm \cite{honda2017simple} and WTO \cite{manduhu2019work}.
 % XXX
 The main question that needs to be addressed is whether JFA has potential for
 improvement. We found some benefits for specific data by adding random noise and
-adjusting the phase size in JFA. Therefore, this shows that, AutoML could
+adjusting the step size in JFA. Therefore, this shows that, AutoML could
 examine this unknown space, and find the best possible algorithm in each case.
 
 For convenience, this work focus on the Voronoi diagram only - because this
@@ -436,20 +436,32 @@ required \citep{balog2016deepcoder}.
 \section{Proposed Method} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\hl{przepisac ten szkic bo jezyk sie placzy}
-
-JFA opiera sie na tym ze infomacja jest przekazywana ??????.  Przekazanie odbywa
-sie w log(n) krokach. Wiec przeprowadzilismy krotki eksperyment applyujac losowy
-szum na wejsciowa masce. Okazalosie sie ze ilosc potrzebnych krokow spadla -
-powstaly losowe shortcuty.  Co oznacza ze powinny istniec inne "mutacje"
-algorytmow lepsze w pewnych okreslonych przypadkach.  Wiec szukanie najszybszego
-algorytmu bedzie nastepujace:
+In this section we outline the general approach that we follow in this work.
+When testing a JFA on different domains, we found some performance improvements
+by adding random noise and adjusting the step size between flooding rounds. In
+order to systematize our research, we adopted the following scheme:
 
 \begin{itemize}
-\item Wymyslenie wszystkich mozliwych wariantow JFA
-\item Mutacje i zapisanie najlepszych wersji dla danej domeny
-\item Ensemblacja algorytmow tak aby wybierac najlepszy variant dla danej domeny
+	\item Developing manually new modifications that can be made to the JFA (such
+		as using a circle instead of interacting with neighbours in a square
+		pattern) and designing them as parameters.
+	\item Heuristic search algorithm\footnote{Bayesian optimization
+		using Gaussian Processes.} - to examine enormous space of possible variants:
+		\begin{itemize}
+			\item Implements a new variant from a combination of several
+				modifications (mutation).
+			\item Tests current variant on various domains and scores the results to update gradient descent.
+		\end{itemize}
+	\item Knowing the best variant in a specific domain, we can use it in ensemble (when entering the input, ensemble algorithm will decide which algorithm will solve it).
 \end{itemize}
+
+%\begin{itemize}
+%\item Wymyslenie wszystkich mozliwych wariantow JFA
+%\item Mutacje i zapisanie najlepszych wersji dla danej domeny
+%\item Ensemblacja algorytmow tak aby wybierac najlepszy variant dla danej domeny
+%\end{itemize}
+
+% Come up with new modifications that can be made to the JFA (e.g. instead of communicating with your neighbors in a square shape, use a circle)
 
 \subsection{Domain Space} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
