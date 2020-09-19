@@ -295,6 +295,9 @@ In this paper            & \ourjfasingle&
 The original author of JFA\footnote{Guodong Rong} defined some variants and
 modifications \citep{rong2007variants}, in this work we continue on this subject
 and examine the relationship between them.
+We chose this algorithm because it is the simplest to implement and it has a wide variety of improvements.
+
+% We choose this variant because it's the simplest and have wide range of improvements to apply.
 
 \subsection{Jump Flooding} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -357,13 +360,77 @@ rounds, for an $n \times n$ grid \citep{yuan2011generalized}.
 
 \subsection{AutoML} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\hl{przeniesc do Proposed Method}
+% FIXME:
+% --> "DEEPCODER: LEARNING TO WRITE PROGRAMS"
+%      https://arxiv.org/pdf/1611.01989.pdf
+% --> "Deep Learning for Source Code Modeling and Generation:
+%                                 Models, Applications and Challenges"
+%      https://arxiv.org/pdf/2002.05442.pdf
+% --> "Selecting Representative Examples for Program Synthesis"
+%      https://arxiv.org/pdf/1711.03243.pdf
+% --> "Enhancing Dynamic Symbolic Execution by
+%             Automatically Learning Search Heuristics"
+%      https://arxiv.org/pdf/1907.09700.pdf
 
-\url{https://arxiv.org/pdf/1801.09373.pdf}
-\url{https://arxiv.org/pdf/1804.10120.pdf}
-\url{https://arxiv.org/pdf/1703.06353.pdf}
+Program synthesis is a class of regression problems where one seeks a solution,
+in the form of a source-code program, mapping the inputs to their corresponding
+outputs errorless \citep{pu2018selecting}.  If we have a broad range of
+acceptable solutions, another aspect is how efficient the produced code is.
 
-okay przenioslem - dodac prace co tez tak szuka algosow
+There are two key ingredients to a synthesis problem: a domain specific language
+(DSL for short) and a specification. The DSL defines a space of candidate
+programs which serve as the model class. DSL-based models create different
+grammar rules for common code statements (e.g., control flow, comments, and
+brackets).  The specification is commonly expressed as a set of input-output
+examples which the candidate program needs to fit exactly. In our problem, these
+examples are produced by bruteforce algorithm.
+
+Given the precise and combinatorial nature of synthesis, gradient-descent based
+approaches perform poorly and an explicit search over the solution space is
+required \citep{balog2016deepcoder}.
+
+% https://arxiv.org/pdf/1611.01989.pdf
+
+% Another factor is how efficient the generated code is if we have wide range
+% acceptable solution.
+
+% [FIXME]
+% \hl{nie wiem jak opisac to ze generujemy kody ze slownika, definiujemy sobie
+% jakies punkty i szukamy najlepszego w danej dziedzinie - NAJlepsze ze w tej
+% sekcji powinnismy to zrobic bez naszego approchu - tylko patrzcie TEN pan to juz
+% robil przed nami - zrobimy podobnie}
+
+% chlip: https://www.youtube.com/watch?v=Azf0BVBrJ0c&t=0s
+
+% Selecting Representative Examples for Program Synthesis
+% \url{https://arxiv.org/pdf/1711.03243.pdf}
+
+% Deep Learning for Source Code Modeling and Generation:
+%  Models, Applications and Challenges
+%\url{https://arxiv.org/pdf/2002.05442.pdf}
+
+% CEL: automl-zero zdefiniowalo operacje i budowalo kod
+%      my zrobimy cos jak DSL na voronoi-a implementujac jako opcje rozne
+%      modyfikacje (np. typ anchoru)
+
+% Domain-specific languages (DSLs) are often used to define the parametrization
+% rules and states for generating the structure of a program. DSL-based models
+% create different grammar rules for common code statements (e.g., control flow,
+% comments, and brackets). Compared to a general purpose programming language, the
+% grammar size of a DSL is usually smaller, which makes it more efficient for
+% specific code generation tasks.
+
+% Our solution will use \textit{program template}.
+
+% \url{https://arxiv.org/pdf/1801.09373.pdf}
+% \url{https://arxiv.org/pdf/1804.10120.pdf}
+% \url{https://arxiv.org/pdf/1703.06353.pdf}
+
+% [TAGS]
+% SOURCE CODE MODELING
+% MuZero
+% program synthesis
+% Selecting representative examples for program synthesis
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Proposed Method} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
