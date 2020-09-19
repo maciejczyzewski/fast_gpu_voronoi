@@ -298,20 +298,62 @@ and examine the relationship between them.
 
 \subsection{Jump Flooding} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\hl{redukcja i bridge pomiedzy intro (usunac subsection)}
+Algorithm for Voronoi Diagram that uses jump flooding as communication pattern
+propagates the information (2D coordinates and ID) of all sites to all the
+pixels in the matrix.  It is based on the observation that while flooding an
+area with a seed, each seeded pixel can transmit its information, instead of
+just the ones on the boundaries of the Voronoi cell.
 
-co to jest jump flooding? tak naprawde to nie jest algorytm do voronoi-a tylko
-pattern komunikacyjny w programowaniu rownoleglym - swojej pracy doktorskiej
-autor tej techniki podaje wiele zastosowan jednak w swoich badaniach ogranicza
-sie do Voronoi-a. glownym pytaniem roznych takich patternow jest ile potrzebnych
-jest rund/operacji komunikacji aby zagwarantowac aby dana informacja zostanie
-dostarczona. akurat w voronoi-u wiele komorek jest lokalna w skali calego
-przykladu - wiec JFA ktora gwarantuje dostarczenie informacji globalnie do
-kazdego punktu - wykonuje pewne niepotrzebne operacje.  szybkosc i zajetosc
-pamieciowa JFA jest satysfakcujaca, jednak proste modyfikacje pokazuja ze
-algorytm ten wykonuje sie szybciej w pewnych przypadkach (i to typowych).
-dlatego naturalnym pytanie powinno byc w jakich oraz jakie modyfikacje wplywaja
-na szybkosc dzialania.
+In each round, the site information stored in each pixel $(x, y)$ is propagated
+to at most eight other pixels at $(x+i, x+j)$ where $i,j \in \{-k, 0, k\}$, and
+$k$ is the step length of the current round.  In the first round, we use $n/2$
+as the initial step length to ensure that each pixel is reached by at least one
+site. The step length $k$ is halved in each of the following round.  All pixels
+are processed in parallel by the GPU. This ensures an exponential increase in
+the number of seeded pixels in a grid and thus, can be flooded in $O(\log n)$
+rounds, for an $n \times n$ grid \citep{yuan2011generalized}.
+
+% (JFA) o dowodzie ze log(n)
+% (JFA) o zbednych przekazaniach
+
+% [original]
+% 
+% "Generalized Voronoi Diagram Computation on GPU"
+%
+% The jump flooding algorithm (JFA) computes a Voronoi
+% diagram in a discrete 2D space represented by a 2D texture.
+% It propagates the information (2D coordinates and ID) of all
+% sites to all the pixels in the texture. In the first stage, called
+% mapping stage, each site is mapped to its corresponding
+% pixel in the texture. It can be done in parallel by the GPU
+% rasterizer. The second stage, flooding stage, consists of log 𝑛
+% rounds of flooding, where 𝑛 is the dimension of the texture.
+% All pixels are processed in parallel by the GPU. In each
+% round, the site information stored in each pixel 𝑝(𝑥, 𝑦) is
+% propagated to at most eight other pixels at (𝑥 + 𝑖, 𝑦 + 𝑗)
+% where 𝑖, 𝑗 ∈ {−𝑘, 0, 𝑘}, and 𝑘 is the step length of the
+% current round. In the first round, we use 𝑛/2 as the initial
+% step length to ensure that each pixel is reached by at least
+% one site. Here we assume 𝑛 is a power of 2. If not, the initial
+% step length is set as 2⌈log 𝑛⌉−1. The step length 𝑘 is halved
+% in each of the following round. When more than one sites
+% are propagated into the same pixel, the nearest site to the
+% pixel will be chosen to update it. After the round with the
+% step length of 1, the result is the computed Voronoi diagram.
+
+% [FIXME]
+% co to jest jump flooding? tak naprawde to nie jest algorytm do voronoi-a tylko
+% pattern komunikacyjny w programowaniu rownoleglym - swojej pracy doktorskiej
+% autor tej techniki podaje wiele zastosowan jednak w swoich badaniach ogranicza
+% sie do Voronoi-a. glownym pytaniem roznych takich patternow jest ile potrzebnych
+% jest rund/operacji komunikacji aby zagwarantowac aby dana informacja zostanie
+% dostarczona. akurat w voronoi-u wiele komorek jest lokalna w skali calego
+% przykladu - wiec JFA ktora gwarantuje dostarczenie informacji globalnie do
+% kazdego punktu - wykonuje pewne niepotrzebne operacje.  szybkosc i zajetosc
+% pamieciowa JFA jest satysfakcujaca, jednak proste modyfikacje pokazuja ze
+% algorytm ten wykonuje sie szybciej w pewnych przypadkach (i to typowych).
+% dlatego naturalnym pytanie powinno byc w jakich oraz jakie modyfikacje wplywaja
+% na szybkosc dzialania.
 
 \subsection{AutoML} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -356,7 +398,9 @@ KWADRAT TUTAJ????????? (komentarz latex)
 \begin{tabular}{@{}l|ccc@{}}
 \toprule
 \hspace*{0.175cm}\diagbox{\textbf{Density}}{\textbf{Shape}}
-                         & Small (32-128)    & Medium (256-448)   & Large (512-1536)  \\
+    & Small (32-128$\times$)
+	& Medium (256-448$\times$)
+	& Large (512-1536$\times$)  \\
 \midrule
 Low ($\rho$=0.00005-0.001)    & Bruteforce           & Bruteforce        & JFA       \\
 High ($\rho$=0.01-0.1)        & JFA           & JFA        & JFA       \\
@@ -495,7 +539,7 @@ przeczytac jako:
 		,
 		\includegraphics[width=0.23\linewidth]{../figures/mod_noise_2_in}
 		\includegraphics[width=0.23\linewidth]{../figures/mod_noise_2_out}
-		\caption{Noise for 32x32}
+		\caption{Noise for $32 \times 32$}
 		\label{Fig:noise}
 	\end{minipage}\hfill
 	\begin{minipage}{0.48\textwidth}
@@ -505,7 +549,7 @@ przeczytac jako:
 		,
 		\includegraphics[width=0.23\linewidth]{../figures/mod_lnoise_v2_2_in}
 		\includegraphics[width=0.23\linewidth]{../figures/mod_lnoise_v2_2_out}
-		\caption{Local Noise for 32x32}
+		\caption{Local Noise for $32 \times 32$}
 		\label{Fig:lnoise}
 	\end{minipage}
 \end{figure}
@@ -669,7 +713,9 @@ chaktersytyke (np. jest bardzo skuteczny dla waskiej grupy przykladow)
 \begin{tabular}{@{}l|ccc@{}}
 \toprule
 \hspace*{0.175cm}\diagbox{\textbf{Density}}{\textbf{Shape}}
-                         & Small (32-128)    & Medium (256-448)   & Large (512-1536)  \\
+    & Small (32-128$\times$)
+	& Medium (256-448$\times$)
+	& Large (512-1536$\times$)  \\
 \midrule
 Low ($\rho$=0.00005-0.001)    & 
 	Bruteforce & 
@@ -726,7 +772,7 @@ High ($\rho$=0.01-0.1)        &
 
 \subsection{Domain-specific Variants} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Small Shape: 32x32, 64x64, 96x96, 128x128}
+\subsubsection{Small Shape: $32\times32$, $64\times64$, $96\times96$, $128\times128$}
 
 \longvar{Square-Special(1.44/0.96/0.17/1.63/0.86)+Noise}
 \newline
@@ -751,8 +797,8 @@ and\hfill \longvar{Square-Special(1.07/0.24/0.9/1.88/0.64)}
 	\end{minipage}
 \end{figure}
 
-\subsubsection{Medium Shape: 256x256, 320x320, 384x384, 448x448}
-\subsubsection{Large Shape: 512x512, 768x768, 1024x1024, 1536x1536}
+\subsubsection{Medium Shape: $256\times256$, $320\times320$, $384\times384$, $448\times448$}
+\subsubsection{Large Shape: $512\times512$, $768\times768$, $1024\times1024$, $1536\times1536$}
 
 \subsubsection{Low Density}
 \subsubsection{High Density}
