@@ -505,20 +505,25 @@ with neighbours}, the bruteforce algorithm is ideal for use.
 
 \subsection{Search Space} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% FIXME: bla bla co to jest search space?
+
+%W sekcji warianty opisujemy poszczegolne modyfikacje - niektore parametry sa
+%scicle zwiazane z innymi. Aby miec spojny loss landscape nalezy rozdzieli
+%przestrzen parametrow na podprzestrzenie zawierajaca tylko te gdzie kazda para w
+%podprzestrzeni jest parami zalezna od siebie.
+
+In order to have a consistent loss landscape, search space was divided
+into subspaces containing only those parameters where each pair is strongly
+dependent on each other.
+
 \hl{\textbf{UWAGA}: opisac ze szukamy 4 podprzestrzenie w turach! (moze tez o
 nowym wzorku ktory szuka tylko prawidlowych}
-
 \hl{bridge z score function gdziekolwiek to bedzie}
-\hl{obliczyc ile jest aktulanie wersji algosow np. czy jest to juz 2do14 jak
-mamy 3xreal w wielomianie AKTUALNIE JEST okolo 7,200?}
+\hl{obliczyc ile jest mniej wiecej wersji algosow (bez special?)}
 
 jakie modyfikacje, na to osobna sekcja? wiec co tu napisac
 chyba tylko o zlozonosci problemu i ze kod jest skladany i testowany a niektore
-wersje sa pomijane zgodnie z dzialaniem gp\_minimize (Bayesian optimization
-using Gaussian Processes).
-
-w naszym wypadku zdefiniowalismy pewien zbior variantow pewnych czesci
-algorytmu (Search Space), modul testujacy dana mutacje/wariant - sklada kod kernela a pozniej go weryfikuje na naszej Domain Space.
+wersje sa pomijane (Bayesian optimization using Gaussian Processes).
 
 \subsection{Score Function} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -526,6 +531,10 @@ algorytmu (Search Space), modul testujacy dana mutacje/wariant - sklada kod kern
 szybkie na duzy matrycach - trzeba do ponownie zbalansowac}
 \hl{roznica w pikselach pomiedzy bruteforce a algorytmem - napisac o tym / tez
 ze to wszystko to ilorazy do bruteforce}
+\hl{napisac jak score jest liczony w dziedzinie - srednia geom? czy cos}
+
+% w naszym wypadku zdefiniowalismy pewien zbior variantow pewnych czesci
+% algorytmu (Search Space), modul testujacy dana mutacje/wariant - sklada kod kernela a pozniej go weryfikuje na naszej Domain Space.
 
 dla voronoi-a interesuja nas 2 parametry Error oraz Szybkosc, aby wyniki byly
 wiarygodne porownujemy je z bruteforcem (a wiec bedzie to iloraz).
