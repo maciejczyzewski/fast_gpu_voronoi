@@ -465,13 +465,16 @@ order to systematize our research, we adopted the following scheme:
 
 \subsection{Domain Space} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\hl{okay, zupelnie inaczej tutaj podejsc, opisac jakie sa przypadki i jakie sa
-spotykane}
+The Voronoi Diagram has a stronger relationship with the initial density of
+input seeds than the matrix shape.  Intuitively, if we have a dense matrix,
+there is no need to deliver information about a particular seed to every pixel
+of the matrix, only to its surrounding neighbours. Hence, less passes of
+information can be performed, therefore the algorithm can be terminated earlier.
 
-jakie domeny i dlaczego (i jak dzialaly gen\_uniform, \hl{gen\_polar, gen\_grid})
-
-KWADRAT TUTAJ????????? (komentarz latex)
-
+% [FIXME]
+% jakie domeny i dlaczego (i jak dzialaly gen\_uniform, \hl{gen\_polar, gen\_grid})
+% \hl{okay, zupelnie inaczej tutaj podejsc, opisac jakie sa przypadki i jakie sa
+% spotykane}
 
 \begin{table}[H] \centering
 \begin{tabular}{@{}l|ccc@{}}
@@ -481,18 +484,21 @@ KWADRAT TUTAJ????????? (komentarz latex)
 	& Medium (256-448$\times$)
 	& Large (512-1536$\times$)  \\
 \midrule
-Low ($\rho$=0.00005-0.001)    & Bruteforce           & Bruteforce        & JFA       \\
+Low ($\rho$=0.00005-0.001)    & Bruteforce           & JFA        & JFA       \\
 High ($\rho$=0.01-0.1)        & JFA           & JFA        & JFA       \\
 \bottomrule
 \end{tabular}
 \vspace{1em}
-\caption{State-of-the-art for specific domains (before our work).}
+\caption{State-of-the-art for specific domains (before our work)}
+\label{tab:domains}
 \end{table}
 
-% # kwadrat
-% #                   small          medium       big
-% #    low den.        ?                ?         JFA
-% #    high den.       ?                ?          ?
+In order to find out which variants are domain-specific, we have to divide the
+domain into subdomains as in the Table~\ref{tab:domains}.
+Unfortunately, we can already identify that the jump flooding algorithm would
+not be efficient in cases with low density of seeds. If there are less than 8
+seeds to iterate\footnote{each thread in original JFA needs 8 iterations to communicate
+with neighbours}, the bruteforce algorithm is ideal for use.
 
 % # [music]
 % # https://www.youtube.com/watch?v=78oIolvjIsw
@@ -807,7 +813,7 @@ High ($\rho$=0.01-0.1)        &
 \bottomrule
 \end{tabular}
 \vspace{1em}
-\caption{Found in this paper state-of-the-art for specific domains.}
+\caption{Found in this paper state-of-the-art for specific domains}
 \end{table}
 
 \subsection{Multi-domain Variant (\ourjfasingle)} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
