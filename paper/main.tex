@@ -137,8 +137,8 @@
 % random/bardzo mocny szkic. Wykresy to wizualizacja smaku.}
 % \newline
 
-\hl{\textbf{UWAGA}: wymyslic prawidlowa nazwe pracy + poprawic zlozonosci +
-opisac dwa algorytmy}
+%\hl{\textbf{UWAGA}: wymyslic prawidlowa nazwe pracy + poprawic zlozonosci +
+%opisac dwa algorytmy}
 
 \begin{abstract}
 This paper studies a practical usage of machine learning (AutoML) to automate
@@ -146,7 +146,7 @@ research towards discovering efficient Voronoi Diagram and Distance
 Transform algorithms.  As the baseline we used the Jump Flooding Algorithm
 (JFA) - by finding new mutations which works best for specific data, and
 then ensembling them into one, we create new state-of-the-art algorithm in
-this field named \textbf{\ourjfa} \hspace{0.01cm} with best-case
+this field named \textbf{\ourjfa} with best-case
 \textcolor{red}{$O(1)$} time complexity and \textcolor{red}{$O(N)$} work
 complexity - in addition, we introduce \textbf{\ourjfasingle}, a single
 variant that in most cases outperforms original JFA with proven worst-case
@@ -233,8 +233,8 @@ Based on this research and findings, several efficient GPU-based algorithms whic
 work optimal or time optimal have been proposed including
 SKW \cite{schneider2009gpu}, PBA \cite{cao2010parallel}, FastGPU \cite{de2017fast}, Honda's algorithm \cite{honda2017simple} and
 WTO \cite{manduhu2019work}.
-
-The main question that needs to be addressed now is whether JFA has potential
+% XXX
+The main question that needs to be addressed is whether JFA has potential
 for improvement. We found some benefits for specific data by adding random noise
 and adjusting the phase size in JFA. Therefore, this shows that, AutoML could examine this
 unknown space, and find the best possible algorithm in each case.
@@ -244,17 +244,19 @@ The algorithm would be an approximation of the output, thus we suggest using WTO
 \cite{manduhu2019work} for exact DT (EDT). The major contributions of this paper are thus:
 
 \begin{enumerate}
-	\item Presenting new state-of-the-art variants of algorithm for Voronoi
-		Diagram and Distance Transform: \newline
-		\textbf{\ourjfasingle} - (Multi-domain) single variant;
-		\textbf{\ourjfa} - (Specific-domain) ensemble of weak variants; and
+	\item Presenting new envolved state-of-the-art variants of algorithm for Voronoi
+		Diagram and Distance Transform: % \newline
+		\textbf{\ourjfasingle} - (Multi-domain) single variant, replacement of JFA;
+		\textbf{\ourjfa} - (Ensemble of Domain-specific) multiple weak variants, production ready; and
 	\item Analyzing all possible variants of JFA: comparing error and speedup
-		relative to bruteforce method
+		relative to bruteforce method in different domains.
 %\item Proposing, for an input set of seeds in a 2D grid, the first
 %parallel algorithm in GPU to compute in constant time (i.e.
 %independent of the number of seeds) a highly accurate
 %Voronoi diagram and distance transform.
 \end{enumerate}
+
+\hl{czy (Ensemble of Domain-specific) weak variants - jest prawidlowo?}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Related Work} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -280,7 +282,7 @@ WTO \cite{manduhu2019work}.
 \citep{rong2006jump}     & JFA          & Approximate & $O(\log n)$  & $O(N\log n)$ \\ \bottomrule
 In this paper            & \ourjfasingle&
 	\cellcolor{blue!25}\textbf{Approximate} &
-	\cellcolor{blue!25}$\sim$$\mathbf{O(\log^{\ast} n)}$ & $\sim$$O(N)$ \\
+	\cellcolor{blue!25}$\sim$$\mathbf{O(\log^{\ast} n)}$ & $\sim$$O(N\log^{\ast} n)$ \\
                          & \ourjfa      &
 	\cellcolor{blue!25}\textbf{Approximate} &
 	\cellcolor{blue!25}$\sim$$\mathbf{O(1)}$ & $\sim$$O(N)$ \\
@@ -718,7 +720,7 @@ High ($\rho$=0.01-0.1)        &
 	\caption{domain: 32x32, 64x64, 128x128, 256x256}
 \end{table}
 
-\subsection{Specific-domain Algorithm} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Domain-specific Algorithms} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Small Shape: 32x32, 64x64, 96x96, 128x128}
 
