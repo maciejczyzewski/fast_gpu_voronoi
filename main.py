@@ -98,7 +98,7 @@ np.random.seed(+oo)
 class Config:
     N_CALLS = 100 # FIXME: [2500] ustaw czas a nie ilosc iteracji
     OPTIMIZER = forest_minimize # gbrt_minimize #forest_minimize # "auto"
-    DOMAIN = "DOMAIN_SPEC_SMALL_LOW" #"DOMAIN_FAST" # "DOMAIN_JFASTAR"
+    DOMAIN = "DOMAIN_SPEC_MEDIUM_HIGH" #"DOMAIN_FAST" # "DOMAIN_JFASTAR"
     
     IS_MULTI_SPACE = True # 4 przypadki --> FIXME: opisac w pracy
     IS_ONLY_WORKING = True
@@ -499,6 +499,40 @@ def valid(model1, model2, x, n=3):
     gc.collect()
     return loss_diff, time_diff
 
+def evaluate(model, x, n=5):
+    loss_arr, time_arr = [], []
+
+    def do_single():
+        if "__mat2d" in x:
+            del x["__mat2d"]
+        m, t, _, _ = model.do(x)
+        m = m["__mat2d"][:, :, 0]
+        #save(m1)
+        loss = fn_loss(x["optimal_solution"], m)
+        # append
+        loss_arr.append(loss)
+        time_arr.append(t)
+
+    for _ in range(n):
+        do_single() # n=3
+
+    if variation(time_arr) > 0.05:
+        do_single() # +1
+ 
+    def avgarr(arr):    
+        shift = max(int(len(arr)*(0.1)), 1)
+        arr = sorted(arr)[shift:-shift]
+        # XXX: return round(sum(arr)/len(arr), 6)
+        return round(gmean(arr), 6)
+
+    avg_loss = avgarr(loss_arr)*100
+    avg_time = avgarr(time_arr)
+    
+    print(f"\033[91m [[ {model.name.ljust(20)} ]] =========> loss: {avg_loss:8}% \n\t| \033[94m time: {avg_time/1e9:6}\033[0m")
+
+    gc.collect()
+    return avg_loss, avg_time
+
 def human_algo_name(config):
     from fractions import Fraction
     max_denominator = 10 # FIXME: for bigger fractions?
@@ -577,6 +611,21 @@ def optimize(model_ref, space, domain_generated, n_calls=10, prefix=None):
     if not prefix:
         prefix = "all"
 
+    def add_optimal_solutions(domain_generated, model):
+        for i, sample in enumerate(domain_generated):
+            if "__mat2d" in sample:
+                del sample["__mat2d"]
+            m, _, _, _ = model.do(sample)
+            m = m["__mat2d"][:, :, 0]
+            sample["optimal_solution"] = m
+
+    def add_reference_time(domain_generated, model):
+        for i, sample in enumerate(domain_generated):
+            if "__mat2d" in sample:
+                del sample["__mat2d"]
+            _, t = evaluate(model, sample)
+            sample["reference_time"] = t
+
     def score_from_config(config):
         global i_calls, best_name, best_score
         print("======= EXPERIMENT =======")
@@ -590,7 +639,7 @@ def optimize(model_ref, space, domain_generated, n_calls=10, prefix=None):
 
         model = Vorotron(config)
         model.name = name
-        score, log = do_compirason(model, model_ref, domain_generated)
+        score, log = do_comparison(model, model_ref, domain_generated)
 
         path_log = f"results/log/{score}.json"
         path_code = f"results/code/{score}.cl"
@@ -616,10 +665,10 @@ def optimize(model_ref, space, domain_generated, n_calls=10, prefix=None):
         text_file.close()
 
         print(f"========================== \033[94m {i_calls}/{n_calls} \033[0m")
-        if score >= best_score:
+        if score <= best_score:
             best_name, best_score = log["name"], score
-        ALGOMAP[name] = -score
-        return -score
+        ALGOMAP[name] = score
+        return score
 
     @use_named_args(space)
     def score(**config):
@@ -636,14 +685,21 @@ def optimize(model_ref, space, domain_generated, n_calls=10, prefix=None):
             call(f"cp -r results/ '{COLAB_OUTPUT}/{Config.DOMAIN}|{path_date}({prefix}|{i_calls}|{Config.N_CALLS})'")
         return score
 
-    score_from_config({
+    jfa_config = {
         'anchor_double': False,
         'anchor_num': None,
         'anchor_type': mod_anchor_type__square,
         'bruteforce': False,
         'noise': "none",
         'step_function': mod_step_function__default,
-    })
+    }
+
+    add_optimal_solutions(domain_generated, model_ref)
+    add_reference_time(domain_generated, Vorotron(jfa_config))
+
+    score_from_config(jfa_config)
+
+    # sys.exit()
 
     if isinstance(Config.OPTIMIZER, collections.Callable):
         print(f"-------> {Config.OPTIMIZER}")
@@ -661,8 +717,9 @@ def optimize(model_ref, space, domain_generated, n_calls=10, prefix=None):
     pbar.close()
     return obj
 
-def fn_metric(a, b): # b/(1+a)
-    return (math.sqrt(b) * (100-a**1.85))
+def fn_metric(loss, speedup): # b/(1+a)
+    # return (math.sqrt(b) * (100-a**1.85))
+    return loss/speedup
 
     # FIXME: score is still wrong?
     ######################################
@@ -672,7 +729,7 @@ def fn_metric(a, b): # b/(1+a)
     # return max(0, (b * (100-a**1.5)))
 
 # FIXME: if first k is totally wrong resign???
-def do_compirason(model, model_ref, domain_generated=None, k = 0.25): 
+def do_comparison(model, model_ref, domain_generated=None, k = 0.25): 
     loss_arr = []
 
     log = {
@@ -695,7 +752,9 @@ def do_compirason(model, model_ref, domain_generated=None, k = 0.25):
             print("\n")
             a, b, score = 0, 100, 0
         else:
-            a, b = valid(model_ref, model, sample)
+            # a, b = valid(model_ref, model, sample)
+            a, b = evaluate(model, sample)
+            b/= sample["reference_time"]
             score = fn_metric(a, b)
             if Config.IS_ONLY_WORKING:
                 loss_arr.append(score)
@@ -893,6 +952,16 @@ def mod_step_function__factor3(shape, num=None, config=None):
             break
     return steps
 
+def mod_step_function__limited_factors(shape, num=None, config=None):
+    steps = []
+    factor = 2**config["factor"] #<.5; 2>
+    num_steps = config["num_steps"] #{1,2,3,...,16}
+    step = 1
+    for i in range(num_steps):
+        steps.append(step)
+        step*=factor
+    return list(reversed(steps))
+
 # FIXME: nie dziala `anchor_number_ration` oraz `anchor_num`
 def mod_anchor_type__square(code, config=None):
     anchor_distance_ratio = config["anchor_distance_ratio"]
@@ -990,14 +1059,11 @@ SPACE_SQUARE_NORMAL = [
 ]
 
 SPACE_SQUARE_SPECIAL = [
-    Categorical([mod_step_function__special],
+    Categorical([mod_step_function__limited_factors],
                 name='step_function'),
 
-    Real(1,   2, name='A'), # <1,   2>
-    Real(0,   1, name='B'), # <0,   1>
-    Real(0,   1, name='C'), # <0,   1>
-    Real(1,   2, name='D'), # <1,   2>
-    Real(0.2, 1, name='X'), # <0.2, 1>
+    Real(0.5,   2, name='factor'), # <1,   2>
+    Integer(1, 16, name='num_steps'), # {1,2,3,...16}
 
     Categorical(["none", "noise", "lnoise"], name='noise'),
     Categorical([False, True], name='anchor_double'),
@@ -1027,14 +1093,10 @@ SPACE_CIRCLE_NORMAL = [
 ]
 
 SPACE_CIRCLE_SPECIAL = [
-    Categorical([mod_step_function__special],
+    Categorical([mod_step_function__limited_factors],
                 name='step_function'),
-
-    Real(1,   2, name='A'), # <1,   2>
-    Real(0,   1, name='B'), # <0,   1>
-    Real(0,   1, name='C'), # <0,   1>
-    Real(1,   2, name='D'), # <1,   2>
-    Real(0.2, 1, name='X'), # <0.2, 1>
+    Real(0.5,   2, name='factor'), # <1,   2>
+    Integer(1, 16, name='num_steps'), # {1,2,3,...16}
 
     # FIXME: Integer(4, 12+6, name='anchor_num'),
     Integer(9, 16, name='anchor_num'),
