@@ -97,6 +97,7 @@ def read_file(path=None, x_name=None, y_name=None):
             else:
                 X.append(max(0, i))
             Y.append(max(0, float(log[y_name][i])))
+    log["name"] = log["name"].replace("_", "")
     return X, Y, log
 
 def apply_SOTA(x_name=None, y_name=None, sort=False):

@@ -250,6 +250,11 @@ problem can be translated to DT \cite{rong2006jump}.  The algorithm would be an
 approximation of the output, thus we suggest using WTO \cite{manduhu2019work}
 for exact DT (EDT). The major contributions of this paper are thus:
 
+\hl{\textbf{UWAGA:} napisac ze podczas real-time processingu, czyli np. w grach
+gdzie przejrze pomiedzy kolejnymi klatkami jest dosc podobne (kolejne przyklady
+maja male roznice w punktach) - mozna re-uzyc poprzedniego wyniku zamiast szumu
+i zredykowac step, wtedy ma sie duzo fps-ow?}
+
 \begin{enumerate}
 	\item Presenting new envolved state-of-the-art variants of algorithm for Voronoi
 		Diagram and Distance Transform: % \newline
@@ -582,24 +587,30 @@ To takich ensemblacji najlepiej sprawdzi sie drzewo decyzyjne (moze byc boostowa
 
 \hl{ZROBIC LADNE RYSUNECZKI w Google Slides - eksport to pdf!}
 
-To compute the Voronoi diagram for a 2D grid of size n×n
-with a given set of seeds at some grid points, we are interested to
-propagate the content (in particular, position information) of each
-seed s to each grid point so that each grid point can decide which
-seed is its closest one.
+% To compute the Voronoi diagram for a 2D grid of size n×n
+% with a given set of seeds at some grid points, we are interested to
+% propagate the content (in particular, position information) of each
+% seed s to each grid point so that each grid point can decide which
+% seed is its closest one.
 
-Niektore operacje propagacji informacji sa zbedne - tylko w przypadkach
-rzadkich macierzy potrzeba jest log(n) krokow aby uzyskac prawidlowy wynik.
-Rozne warianty omawiane w \cite{rong2007variants} pozwalaja zredukowac blad
-klasycznego JFA. Nie zostaly jednak omawiane przypadki gdzie poszczegolne
-modyfikacje sa uzywane z innymi.
+% Niektore operacje propagacji informacji sa zbedne - tylko w przypadkach
+% rzadkich macierzy potrzeba jest log(n) krokow aby uzyskac prawidlowy wynik.
+% Rozne warianty omawiane w \cite{rong2007variants} pozwalaja zredukowac blad
+% klasycznego JFA. Nie zostaly jednak omawiane przypadki gdzie poszczegolne
+% modyfikacje sa uzywane z innymi.
 
-Dlatego w tej pracy prezentujemy dodatkowe modyfikacje ktore mozna zastosowac
-aby stworzyc nowe warianty. Pewne modyfikacje sa oczywiste i wynikaja z
-alternatywnego podejscia (zamiast anchoru\footnote{anchorem nazywamy metode
-ktora pobiera sasiadow do przekazania informacji} kwadratowego mozna uzyc kola),
-informacje mozna wstepnie rozpropagowac losowo - w nadzie ze pozwoli nam
-skonczyc algorytm w mniejszej ilosci krokow.
+In this paper, we present additional modifications that can be applied to create new JFA variants. 
+Some modifications result from an alternative approach from previous works
+\citep{rong2006jump} (anchor\footnote{anchor is a method of communication between neighbors}
+ type), \citep{rong2007variants} (propagation/step
+function), \citep{yuan2011generalized} (anchor number), \citep{fischer2006fast}
+(anchor double).
+
+%such as using a circle instead of interacting with neighbours in a square pattern
+
+%Pewne modyfikacje sa oczywiste i wynikaja z alternatywnego podejscia (zamiast anchoru kwadratowego mozna uzyc kola)
+
+informacje mozna wstepnie rozpropagowac losowo - w nadzie ze pozwoli nam skonczyc algorytm w mniejszej ilosci krokow.
 
 Aby badania byly bardziej przejrzyste trzymalismy sie pewnej konfencji
 nazewniczej:
@@ -619,6 +630,8 @@ przeczytac jako:
 	\text{[step\_function]}=Factor3, \\
 	\text{[noise]}=True
 \end{flalign*}
+
+\hl{wariant gdzie step jest mnozony razy error z metric? w kernelu}
 
 \subsection{Noise} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
