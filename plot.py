@@ -54,8 +54,8 @@ def call(cmd):
 call(f"mkdir -p {PATH_FIGURES}")
 
 # (1) better style
-plt.style.use(["science", "ieee"])
-plt.rcParams.update({"text.usetex": True})
+# plt.style.use(["science", "ieee"])
+# plt.rcParams.update({"text.usetex": True})
 
 fig, ax = plt.subplots()
 fig.set_size_inches(*FIGURE_SIZE)
@@ -136,7 +136,8 @@ def globlog(sota=False):
         print(f"===========================> JFA (score) = {sota_score}")
         vec.append([sota_score, path])
 
-    return sorted(vec)[::-1]
+    return sorted(vec) #minimize score
+    # return sorted(vec)[::-1]
 
 ### FIGURE (1): underfitting ###
 

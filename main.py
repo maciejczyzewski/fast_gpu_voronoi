@@ -96,7 +96,7 @@ np.random.seed(+oo)
 ################################################################################
 
 class Config:
-    N_CALLS = 100 # FIXME: [2500] ustaw czas a nie ilosc iteracji
+    N_CALLS = 400 # FIXME: [2500] ustaw czas a nie ilosc iteracji
     OPTIMIZER = forest_minimize # gbrt_minimize #forest_minimize # "auto"
     DOMAIN = "DOMAIN_SPEC_MEDIUM_HIGH" #"DOMAIN_FAST" # "DOMAIN_JFASTAR"
     
@@ -602,7 +602,7 @@ def save_domain(domain):
     return domain_generated
 
 i_calls, pbar = 0, None # FIXME: progress bar? tqdm?
-best_name, best_score = "?", 0
+best_name, best_score = "?", 1e9
 def optimize(model_ref, space, domain_generated, n_calls=10, prefix=None):
     global i_calls, pbar
     pbar = tqdm(total=n_calls)
@@ -718,8 +718,8 @@ def optimize(model_ref, space, domain_generated, n_calls=10, prefix=None):
     return obj
 
 def fn_metric(loss, speedup): # b/(1+a)
-    # return (math.sqrt(b) * (100-a**1.85))
-    return loss/speedup
+    # return (math.sqrt(speedup) * (100-loss**1.85))
+    return (loss+1)**2/speedup
 
     # FIXME: score is still wrong?
     ######################################
@@ -754,13 +754,12 @@ def do_comparison(model, model_ref, domain_generated=None, k = 0.25):
         else:
             # a, b = valid(model_ref, model, sample)
             a, b = evaluate(model, sample)
-            b/= sample["reference_time"]
-            score = fn_metric(a, b)
+            score = fn_metric(a, sample["reference_time"]/b)
             if Config.IS_ONLY_WORKING:
                 loss_arr.append(score)
             else:
                 loss_arr.append(max(0, score)**2)
-            print(f"shape={sample['shape']} | a={a} b={b} -> score={score}")
+            print(f"shape={sample['shape']} | a={a} b={sample['reference_time']/b} -> score={score}")
         
         log["loss"].append(a)
         log["time"].append(b)
@@ -1059,6 +1058,25 @@ SPACE_SQUARE_NORMAL = [
 ]
 
 SPACE_SQUARE_SPECIAL = [
+    Categorical([mod_step_function__special],
+                name='step_function'),
+
+    Real(1,   2, name='A'), # <1,   2>
+    Real(0,   1, name='B'), # <0,   1>
+    Real(0,   1, name='C'), # <0,   1>
+    Real(1,   2, name='D'), # <1,   2>
+    Real(0.2, 1, name='X'), # <0.2, 1>
+
+    Categorical(["none", "noise", "lnoise"], name='noise'),
+    Categorical([False, True], name='anchor_double'),
+
+    Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_distance_ratio'),
+
+    Categorical([mod_anchor_type__square],
+                name='anchor_type'),
+]
+
+SPACE_SQUARE_LIMITED = [
     Categorical([mod_step_function__limited_factors],
                 name='step_function'),
 
@@ -1093,6 +1111,28 @@ SPACE_CIRCLE_NORMAL = [
 ]
 
 SPACE_CIRCLE_SPECIAL = [
+    Categorical([mod_step_function__special],
+                name='step_function'),
+
+    Real(1,   2, name='A'), # <1,   2>
+    Real(0,   1, name='B'), # <0,   1>
+    Real(0,   1, name='C'), # <0,   1>
+    Real(1,   2, name='D'), # <1,   2>
+    Real(0.2, 1, name='X'), # <0.2, 1>
+
+    # FIXME: Integer(4, 12+6, name='anchor_num'),
+    Integer(9, 16, name='anchor_num'),
+    Categorical(["none", "noise", "lnoise"], name='noise'),
+    Categorical([False, True], name='anchor_double'),
+
+    Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_distance_ratio'),
+    Categorical([1/2, 1/3, 2/3, 1/4, 3/4], name='anchor_number_ratio'),
+
+    Categorical([mod_anchor_type__circle],
+                name='anchor_type'),
+]
+
+SPACE_CIRCLE_LIMITED = [
     Categorical([mod_step_function__limited_factors],
                 name='step_function'),
     Real(0.5,   2, name='factor'), # <1,   2>
@@ -1292,14 +1332,22 @@ if __name__ == "__main__":
     domain_generated = save_domain(domain)
 
     if Config.IS_MULTI_SPACE:
-        for name, SPACE_i in SPACE_ALL.items():
-            opt_result = optimize(
-                MODEL_BRUTEFORCE,
-                SPACE_i,
-                domain_generated, # DOMAIN vs DOMAIN_FAST
-                n_calls=Config.N_CALLS, # BEST:[100] /// (20*60) 100 vs 10*60
-                prefix=name
-            )
+        # "square_normal", SPACE_SQUARE_NORMAL,
+        # "square_special", SPACE_SQUARE_SPECIAL,
+        # "square_limited", SPACE_SQUARE_LIMITED
+        # "circle_normal", SPACE_CIRCLE_NORMAL,
+        # "circle_special", SPACE_CIRCLE_SPECIAL
+        # "circle_limited", SPACE_CIRCLE_LIMITED
+        name, SPACE_i = "circle_special", SPACE_CIRCLE_SPECIAL
+        # for name, SPACE_i in reversed(SPACE_ALL.items()):
+        opt_result = optimize(
+            MODEL_BRUTEFORCE,
+            SPACE_i,
+            domain_generated, # DOMAIN vs DOMAIN_FAST
+            n_calls=Config.N_CALLS, # BEST:[100] /// (20*60) 100 vs 10*60
+            prefix=name
+        )
+        print(opt_result["func_vals"])
     else:
         opt_result = optimize(
             MODEL_BRUTEFORCE,
