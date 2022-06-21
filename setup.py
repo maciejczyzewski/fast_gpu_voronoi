@@ -23,7 +23,7 @@ REQUIRED = [
     'imageio==2.4.1',
     'matplotlib==3.0.3',
     'pyopencl==2018.2.5',
-    'numpy==1.16.2',
+    'numpy==1.22.0',
     'tqdm==4.28.1',
 ]
 
